@@ -300,3 +300,6 @@ mjx-container[display="true"] { margin: 0.4em 0 !important; }
 .maxmark { margin: 0; font-weight: 700; text-align: right; font-size: 0.92rem; }
 .slide.presenting .diagram svg { width: min(100%, 520px); }
 .dg .aheads { fill: var(--sec); }
+.dg .arc { stroke: currentColor; stroke-width: 1.2; fill: none; }
+.dg .bar { fill: var(--sec); fill-opacity: 0.22; stroke: var(--sec); stroke-width: 1.4; }
+.dg .image { fill: var(--hi); fill-opacity: 0.45; stroke: currentColor; stroke-width: 1.5; }

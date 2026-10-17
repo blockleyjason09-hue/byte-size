@@ -1,12 +1,20 @@
 /* Byte Size course catalogue. status: 'live' or 'soon'. diffs: difficulty levels offered; def: default level. */
 (function (g) {
   var BS = g.BS;
-  var ALL = ['fractions', 'percentages', 'indices', 'surds', 'ratio', 'bounds',
-    'expand-factorise', 'linear-equations', 'simultaneous', 'quadratics', 'inequalities', 'rearranging', 'sequences', 'functions', 'differentiation', 'straight-lines',
-    'pythagoras-trig', 'circles', 'polygons', 'volume', 'sine-cosine',
-    'averages', 'probability'];
-  var FOUND = ALL.filter(function (t) { return ['surds', 'functions', 'differentiation', 'sine-cosine'].indexOf(t) < 0; });
-  var Y9 = ['fractions', 'percentages', 'indices', 'ratio', 'expand-factorise', 'linear-equations', 'inequalities', 'sequences', 'straight-lines', 'pythagoras-trig', 'circles', 'polygons', 'volume', 'averages', 'probability'];
+  var GCSE_GROUPS = [
+    ['Number', ['fractions', 'percentages', 'indices', 'surds', 'ratio', 'bounds', 'compound-measures']],
+    ['Algebra', ['expand-factorise', 'linear-equations', 'simultaneous', 'quadratics', 'inequalities', 'rearranging', 'sequences', 'functions', 'straight-lines', 'differentiation', 'kinematic-graphs']],
+    ['Geometry and measures', ['angles-parallel', 'polygons', 'pythagoras-trig', 'sine-cosine', 'circles', 'circle-theorems', 'intersecting-chords', 'similar-shapes', 'volume']],
+    ['Vectors and transformations', ['vectors', 'transformations']],
+    ['Statistics and probability', ['averages', 'stats-diagrams', 'probability', 'sets']],
+    ['Last-question problems', ['last-q']]
+  ];
+  function pickGroups(exclude, only) {
+    return GCSE_GROUPS.map(function (gp) { return [gp[0], gp[1].filter(function (t) { return (!only || only.indexOf(t) > -1) && (!exclude || exclude.indexOf(t) < 0); })]; }).filter(function (gp) { return gp[1].length; });
+  }
+  function flat(groups) { return [].concat.apply([], groups.map(function (g) { return g[1]; })); }
+  var G_ALL = pickGroups(), G_FOUND = pickGroups(['surds', 'functions', 'differentiation', 'sine-cosine', 'circle-theorems', 'intersecting-chords', 'last-q']);
+  var G_Y9 = pickGroups(null, ['fractions', 'percentages', 'indices', 'ratio', 'compound-measures', 'expand-factorise', 'linear-equations', 'inequalities', 'sequences', 'straight-lines', 'kinematic-graphs', 'angles-parallel', 'polygons', 'pythagoras-trig', 'circles', 'similar-shapes', 'volume', 'vectors', 'transformations', 'averages', 'stats-diagrams', 'probability', 'sets']);
 
   BS.LEVELS = { 1: 'Foundation', 2: 'Core', 3: 'Accelerated' };
   var IBL = { 1: 'Standard', 2: 'Exam', 3: 'Challenging' };
@@ -20,10 +28,10 @@
   var IB_ALL = [].concat.apply([], IB_GROUPS.map(function (g) { return g[1]; }));
 
   BS.courses = [
-    { id: 'y9', group: 'Maths', name: 'Year 9 · Pearson Edexcel GCSE', status: 'live', topics: Y9, diffs: [1, 2], def: 2 },
-    { id: 'igcse', group: 'Maths', name: 'Year 10–11 · Pearson Edexcel International GCSE', status: 'live', topics: ALL, diffs: [1, 2, 3], def: 2 },
-    { id: 'igcse-f', group: 'Maths', name: 'Year 11 Foundation · Pearson Edexcel International GCSE', status: 'live', topics: FOUND, diffs: [1, 2], def: 1 },
-    { id: 'igcse-acc', group: 'Maths', name: 'Year 11 Accelerated · Pearson Edexcel International GCSE', status: 'live', topics: ALL, diffs: [2, 3], def: 3 },
+    { id: 'y9', group: 'Maths', name: 'Year 9 · Pearson Edexcel GCSE', status: 'live', topics: flat(G_Y9), groups: G_Y9, diffs: [1, 2], def: 2 },
+    { id: 'igcse', group: 'Maths', name: 'Year 10–11 · Pearson Edexcel International GCSE', status: 'live', topics: flat(G_ALL), groups: G_ALL, diffs: [1, 2, 3], def: 2 },
+    { id: 'igcse-f', group: 'Maths', name: 'Year 11 Foundation · Pearson Edexcel International GCSE', status: 'live', topics: flat(G_FOUND), groups: G_FOUND, diffs: [1, 2], def: 1 },
+    { id: 'igcse-acc', group: 'Maths', name: 'Year 11 Accelerated · Pearson Edexcel International GCSE', status: 'live', topics: flat(G_ALL), groups: G_ALL, diffs: [2, 3], def: 3 },
     { id: 'aqa-fm', group: 'Maths', name: 'Year 11 · AQA Level 2 Further Maths', status: 'soon' },
     { id: 'as', group: 'Maths', name: 'Year 12 · AS Maths (Pure, Statistics, Mechanics) · Pearson', status: 'soon' },
     { id: 'cp1', group: 'Maths', name: 'Year 12 · Further Maths Core Pure · Pearson', status: 'soon' },

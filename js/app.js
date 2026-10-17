@@ -75,6 +75,13 @@
       return '<button type="button" data-d="' + d + '" aria-pressed="' + (d === state.diff) + '">' + lvl(c, d) + '</button>';
     }).join('');
   }
+  // A link such as do-now.html#last-q opens that topic directly
+  var hashT = (location.hash || '').slice(1);
+  if (hashT && BS.topics[hashT]) {
+    var cur = course(state.course);
+    if (!cur || cur.topics.indexOf(hashT) < 0) { var found = live.filter(function (c) { return c.topics.indexOf(hashT) > -1; })[0]; if (found) state.course = found.id; }
+    state.topic = hashT;
+  }
   $course.value = state.course;
   fillTopics();
   if ($count) $count.value = String(state.count);
@@ -119,7 +126,7 @@
   function pickTopics(n) {
     var c = course(state.course);
     if (state.topic !== 'mixed') { var a = []; for (var i = 0; i < n; i++) a.push(state.topic); return a; }
-    var sh = BS.shuffle(c.topics), out = [];
+    var sh = BS.shuffle(c.topics.filter(function (t) { return !BS.topics[t].noMix; })), out = [];
     for (var j = 0; j < n; j++) out.push(sh[j % sh.length]);
     return out;
   }
