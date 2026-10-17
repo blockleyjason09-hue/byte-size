@@ -26,6 +26,14 @@
     ['Topic 5: Calculus', ['ib-derivatives', 'ib-optimisation', 'ib-integration', 'ib-diff-rules', 'ib-volumes', 'ib-kinematics', 'ib-diff-equations', 'ib-coupled']]
   ];
   var IB_ALL = [].concat.apply([], IB_GROUPS.map(function (g) { return g[1]; }));
+  var IB_SL_GROUPS = [
+    ['Topic 1: Number and algebra', ['sl-approx', 'sl-seq', 'sl-finance', 'sl-logs', 'sl-systems']],
+    ['Topic 2: Functions', ['sl-lines', 'sl-functions', 'sl-graphs', 'sl-models']],
+    ['Topic 3: Geometry and trigonometry', ['sl-3d', 'sl-trig', 'sl-sectors', 'sl-voronoi']],
+    ['Topic 4: Statistics and probability', ['sl-descriptive', 'sl-regression', 'sl-probability', 'sl-discrete', 'sl-normal', 'sl-tests']],
+    ['Topic 5: Calculus', ['sl-derivatives', 'sl-optimisation', 'sl-integration']]
+  ];
+  var IB_SL_ALL = [].concat.apply([], IB_SL_GROUPS.map(function (g) { return g[1]; }));
 
   BS.courses = [
     { id: 'y9', group: 'GCSE and International GCSE', name: 'Year 9 · Pearson Edexcel GCSE', status: 'live', topics: flat(G_Y9), groups: G_Y9, diffs: [1, 2], def: 2 },
@@ -39,7 +47,7 @@
     { id: 'cp2', group: 'A Level Further Maths', name: 'Year 13 · Further Maths Core Pure · Pearson', status: 'soon' },
     { id: 'fs1', group: 'A Level Further Maths', name: 'Further Statistics 1 · Pearson', status: 'soon' },
     { id: 'd1', group: 'A Level Further Maths', name: 'Decision Mathematics 1 · Pearson', status: 'soon' },
-    { id: 'ib-ai-sl', group: 'IB Diploma', name: 'IB Maths: Applications and Interpretation SL', status: 'soon' },
+    { id: 'ib-ai-sl', group: 'IB Diploma', name: 'IB Maths: Applications and Interpretation SL', status: 'live', topics: IB_SL_ALL, groups: IB_SL_GROUPS, diffs: [1, 2, 3], def: 2, levels: IBL, style: 'ib' },
     { id: 'ib-ai-hl', group: 'IB Diploma', name: 'IB Maths: Applications and Interpretation HL', status: 'live', topics: IB_ALL, groups: IB_GROUPS, diffs: [1, 2, 3], def: 2, levels: IBL, style: 'ib' },
     { id: 'ocr-cs-1', group: 'Computer Science', name: 'A Level Year 1 · OCR Computer Science', status: 'soon' },
     { id: 'ocr-cs-2', group: 'Computer Science', name: 'A Level Year 2 · OCR Computer Science', status: 'soon' }
