@@ -209,7 +209,7 @@ footer.site .wrap { padding-block: 22px; display: flex; flex-wrap: wrap; justify
 .marks { grid-column: 3; font-weight: 700; white-space: nowrap; align-self: end; }
 .ans { grid-column: 1 / -1; display: none; padding: 8px 12px; border-left: 3px solid var(--za); background: var(--za-soft); border-radius: 0 6px 6px 0; overflow-x: auto; }
 body.uk .ans { border-left-color: var(--uk); background: var(--uk-soft); }
-.ans-k { font-family: var(--mono); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-right: 6px; }
+.ans-k { font-family: var(--mono); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.04em; color: var(--muted); margin-right: 6px; }
 .paper.show .ans { display: block; }
 .total { margin: 2px 0 0; text-align: right; font-weight: 700; font-size: 0.92rem; }
 .qtopic { margin: 0; font-family: var(--mono); font-size: 0.75rem; color: var(--muted); display: none; }
@@ -267,3 +267,36 @@ mjx-container[display="true"] { margin: 0.4em 0 !important; }
 .course-group { margin-top: 22px; }
 .paper .ans { grid-column: 1 / -1; font-weight: 400; color: var(--ink); }
 .paper .ans::before { content: none; }
+
+/* ---------- Diagrams ---------- */
+.diagram { margin: 12px 0; display: grid; justify-items: start; gap: 4px; max-width: 100%; overflow-x: auto; }
+.diagram svg { max-width: 100%; height: auto; display: block; }
+.diagram figcaption { font-size: 0.75rem; color: var(--muted); font-style: italic; }
+.dg { color: var(--ink); font-family: var(--body); }
+.dg text { fill: currentColor; font-size: 13px; }
+.dg text.it { font-style: italic; font-family: "Times New Roman", Georgia, serif; font-size: 15px; }
+.dg .ln, .dg .ax { stroke: currentColor; stroke-width: 1.5; fill: none; }
+.dg .ax { stroke-width: 1.2; }
+.dg .grid { stroke: var(--line); stroke-width: 1; }
+.dg .thin { stroke: currentColor; stroke-width: 1.2; fill: none; }
+.dg .dash { stroke: currentColor; stroke-width: 1.2; stroke-dasharray: 5 4; fill: none; }
+.dg .curve { stroke: var(--sec); stroke-width: 2.2; fill: none; }
+.dg .curvedash { stroke: var(--sec); stroke-width: 1.5; stroke-dasharray: 5 4; fill: none; }
+.dg .accent { stroke: var(--sec); stroke-width: 2.2; fill: none; }
+.dg .accentdash { stroke: var(--sec); stroke-width: 1.6; stroke-dasharray: 5 4; fill: none; }
+.dg .shade { fill: var(--sec); fill-opacity: 0.18; stroke: none; }
+.dg .trap { fill: var(--sec); fill-opacity: 0.14; stroke: var(--sec); stroke-width: 1; }
+.dg .shape { fill: var(--sec-soft); stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; }
+.dg .cell { fill: var(--sec); fill-opacity: 0.06; stroke: var(--sec); stroke-width: 1.6; }
+.dg .pt { fill: currentColor; }
+.dg .hollow { fill: var(--surface); stroke: currentColor; stroke-width: 2; }
+.dg .node { fill: var(--surface); stroke: currentColor; stroke-width: 1.6; }
+.dg .nodet { font-weight: 700; }
+.dg .wlab { fill: var(--surface); stroke: var(--line); }
+.dg .setA, .dg .setB { fill: var(--sec); fill-opacity: 0.08; stroke: currentColor; stroke-width: 1.5; }
+.dg .box { fill: var(--sec-soft); stroke: currentColor; stroke-width: 1.5; }
+.dg .seg { stroke: var(--sec); stroke-width: 1.4; }
+.dg .ahead { fill: currentColor; }
+.maxmark { margin: 0; font-weight: 700; text-align: right; font-size: 0.92rem; }
+.slide.presenting .diagram svg { width: min(100%, 520px); }
+.dg .aheads { fill: var(--sec); }

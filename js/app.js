@@ -20,6 +20,8 @@
   }
   function videoUrl(t) { return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(t.video); }
   function course(id) { return BS.courses.filter(function (c) { return c.id === id; })[0]; }
+  function lvl(c, d) { return (c.levels || BS.LEVELS)[d]; }
+  function isIB() { var c = course(state.course); return c && c.style === 'ib'; }
 
   var prefs = store('bytesize-prefs') || {};
   var live = BS.courses.filter(function (c) { return c.status === 'live'; });
@@ -62,14 +64,15 @@
 
   function fillTopics() {
     var c = course(state.course);
+    function opt(t) { return '<option value="' + t + '">' + esc(BS.topics[t].name) + '</option>'; }
     var opts = '<option value="mixed">' + (mode === 'revise' ? 'All topics (mixed)' : 'Mixed retrieval (all topics)') + '</option>' +
-      c.topics.map(function (t) { return '<option value="' + t + '">' + esc(BS.topics[t].name) + '</option>'; }).join('');
+      (c.groups ? c.groups.map(function (gp) { return '<optgroup label="' + esc(gp[0]) + '">' + gp[1].map(opt).join('') + '</optgroup>'; }).join('') : c.topics.map(opt).join(''));
     $topic.innerHTML = opts;
     if (state.topic !== 'mixed' && c.topics.indexOf(state.topic) < 0) state.topic = 'mixed';
     $topic.value = state.topic;
     if (!state.diff || c.diffs.indexOf(state.diff) < 0) state.diff = c.def;
     $diff.innerHTML = c.diffs.map(function (d) {
-      return '<button type="button" data-d="' + d + '" aria-pressed="' + (d === state.diff) + '">' + BS.LEVELS[d] + '</button>';
+      return '<button type="button" data-d="' + d + '" aria-pressed="' + (d === state.diff) + '">' + lvl(c, d) + '</button>';
     }).join('');
   }
   $course.value = state.course;
@@ -92,21 +95,22 @@
   /* ---------- Rendering ---------- */
   function renderQ(q, n, showTopic) {
     var t = BS.topics[q.topic];
-    var single = q.parts.length === 1;
+    var single = q.parts.length === 1, ib = isIB();
     var parts = q.parts.map(function (p, i) {
       return '<div class="part">' +
         (single ? '' : '<span class="plabel">(' + LET[i] + ')</span>') +
         '<div class="ptext">' + p.q + '</div>' +
-        '<span class="marks">(' + p.m + ')</span>' +
+        '<span class="marks">' + (ib ? '[' + p.m + ']' : '(' + p.m + ')') + '</span>' +
         '<div class="ans"><span class="ans-k">' + (single ? 'Answer' : '(' + LET[i] + ')') + '</span> ' + p.a + '</div>' +
       '</div>';
     }).join('');
     return '<section class="q" data-topic="' + q.topic + '">' +
       '<div class="qnum">' + n + '</div>' +
       '<div class="qbody">' +
+        (ib ? '<p class="maxmark">[Maximum mark: ' + q.marks + ']</p>' : '') +
         (q.stem ? '<div class="stem">' + q.stem + '</div>' : '') +
         parts +
-        '<p class="total">(Total for Question ' + n + ' is ' + q.marks + ' mark' + (q.marks === 1 ? '' : 's') + ')</p>' +
+        (ib ? '' : '<p class="total">(Total for Question ' + n + ' is ' + q.marks + ' mark' + (q.marks === 1 ? '' : 's') + ')</p>') +
         (showTopic ? '<p class="qtopic">' + esc(t.name) + '</p>' : '') +
       '</div>' +
     '</section>';
@@ -129,10 +133,10 @@
     var mins = mode === 'exit' ? Math.max(4, qs.length + 1) : Math.max(5, Math.round(marks * 0.8));
     $stage.innerHTML =
       '<article class="paper slide" id="bs-paper">' +
-        '<header><span class="tag">' + esc(c.name) + ' · ' + BS.LEVELS[state.diff] + '</span><span class="time">' + marks + ' marks · about ' + mins + ' min</span></header>' +
+        '<header><span class="tag">' + esc(c.name) + ' · ' + lvl(course(state.course), state.diff) + '</span><span class="time">' + marks + ' marks · about ' + mins + ' min</span></header>' +
         '<div class="body">' +
           '<h2 class="paper-title">' + esc(title) + '</h2>' +
-          '<p class="instr">Answer all questions. Show all your working.</p>' +
+          '<p class="instr">' + (isIB() ? 'Answer all questions. A graphic display calculator is required. Unless otherwise stated, give answers exactly or correct to three significant figures.' : 'Answer all questions. Show all your working.') + '</p>' +
           qs.map(function (q, i) { return renderQ(q, i + 1, state.topic === 'mixed'); }).join('') +
           (mode === 'exit' ? '<div class="reflect-box"><p><b>How confident do you feel?</b> <span class="scale">1&nbsp;&nbsp;2&nbsp;&nbsp;3&nbsp;&nbsp;4&nbsp;&nbsp;5</span></p><p><b>One thing I am still unsure about:</b></p><div class="write-line"></div></div>' : '') +
         '</div>' +
@@ -188,7 +192,7 @@
     var q = BS.make(t, state.diff);
     $stage.innerHTML =
       '<article class="paper slide revise-card" id="bs-paper">' +
-        '<header><span class="tag">' + esc(BS.topics[t].name) + ' · ' + BS.LEVELS[state.diff] + '</span><span class="time">' + q.marks + ' marks</span></header>' +
+        '<header><span class="tag">' + esc(BS.topics[t].name) + ' · ' + lvl(course(state.course), state.diff) + '</span><span class="time">' + q.marks + ' marks</span></header>' +
         '<div class="body">' + renderQ(q, session.n + 1, false) + '</div>' +
         '<footer class="rev-actions">' +
           '<button type="button" class="btn" data-reveal>Show mark scheme</button>' +
