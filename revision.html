@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Revision | Byte Size</title>
+<meta name="description" content="Practise exam questions by topic and see what you need to work on.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;600&family=Unbounded:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']] }, svg: { fontCache: 'global' }, startup: { typeset: false } };</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+<script defer src="js/core.js"></script>
+<script defer src="js/bank-igcse.js"></script>
+<script defer src="js/courses.js"></script>
+<script defer src="js/app.js"></script>
+</head>
+<body class="uk">
+<header class="site-header">
+  <div class="wrap">
+    <div class="header-left">
+      <button class="back" type="button" data-parent="index.html"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+      <a class="brand" href="index.html"><svg viewBox="0 0 38 20" aria-hidden="true"><defs><mask id="bite"><rect width="38" height="20" fill="#fff"/><circle cx="38" cy="0" r="7" fill="#000"/></mask></defs><g mask="url(#bite)" fill="currentColor"><rect x="0" y="0" width="8.5" height="8.5" rx="1.5"/><rect x="9.8" y="0" width="8.5" height="8.5" rx="1.5"/><rect x="19.6" y="0" width="8.5" height="8.5" rx="1.5"/><rect x="29.4" y="0" width="8.5" height="8.5" rx="1.5"/><rect x="0" y="9.8" width="8.5" height="8.5" rx="1.5"/><rect x="9.8" y="9.8" width="8.5" height="8.5" rx="1.5"/><rect x="19.6" y="9.8" width="8.5" height="8.5" rx="1.5"/><rect x="29.4" y="9.8" width="8.5" height="8.5" rx="1.5" fill="var(--hi)"/></g></svg>Byte Size</a>
+    </div>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="uk.html">UK</a></li>
+        <li><a href="south-africa.html">South Africa</a></li>
+        <li><a href="revision.html" aria-current="page">Revision</a></li>
+        <li><a href="tmua-esat.html">TMUA &amp; ESAT</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+    <section class="hero">
+      <p class="eyebrow">For pupils</p>
+      <h1>Revision</h1>
+      <p class="lede">Choose your course, a topic and a difficulty. Answer each question on paper, then check the mark scheme. Anything you get wrong goes on your list of things to work on, with a video to help.</p>
+    </section>
+    <section>
+      <div id="tool" data-mode="revise"><p class="note">Loading questions&hellip;</p></div>
+      <noscript><p>Turn on JavaScript to generate questions.</p></noscript>
+    </section>
+  </div>
+</main>
+<footer class="site">
+  <div class="wrap">
+    <span>&copy; 2026 Byte Size</span>
+    <span>Free to use in your own classroom.</span>
+  </div>
+</footer>
+<script>
+(function () {
+  // Back button: previous page if it was on this site, otherwise the parent page
+  var back = document.querySelector('.back');
+  if (back) back.addEventListener('click', function () {
+    var ref = document.referrer, same = false;
+    try { same = ref && new URL(ref).origin === location.origin; } catch (e) {}
+    if (same && history.length > 1) history.back(); else location.href = back.dataset.parent;
+  });
+  // Show / hide answers
+  document.querySelectorAll('[data-answers]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var s = b.closest('.slide'); var on = s.classList.toggle('show');
+      b.textContent = on ? 'Hide answers' : 'Show answers';
+      b.setAttribute('aria-pressed', on);
+    });
+  });
+  // Present full screen on the board
+  function stop(s) {
+    s.classList.remove('presenting'); document.body.classList.remove('is-presenting');
+    var p = s.querySelector('.present'); if (p) p.textContent = 'Present';
+    if (document.fullscreenElement) { document.exitFullscreen().catch(function () {}); }
+  }
+  document.querySelectorAll('.present').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var s = b.closest('.slide');
+      if (s.classList.contains('presenting')) { stop(s); return; }
+      s.classList.add('presenting'); document.body.classList.add('is-presenting'); b.textContent = 'Close';
+      if (document.documentElement.requestFullscreen) { document.documentElement.requestFullscreen().catch(function () {}); }
+    });
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { var s = document.querySelector('.slide.presenting'); if (s) stop(s); }
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (!document.fullscreenElement) { var s = document.querySelector('.slide.presenting'); if (s) stop(s); }
+  });
+  // Level filters
+  document.querySelectorAll('.filters').forEach(function (f) {
+    var grid = document.getElementById(f.dataset.for);
+    f.querySelectorAll('.chip').forEach(function (c) {
+      c.addEventListener('click', function () {
+        f.querySelectorAll('.chip').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+        c.setAttribute('aria-pressed', 'true');
+        var lvl = c.dataset.level;
+        grid.querySelectorAll('.slide').forEach(function (s) { s.hidden = !(lvl === 'all' || s.dataset.level === lvl); });
+      });
+    });
+  });
+  // Multiple-choice practice
+  document.querySelectorAll('.mcq').forEach(function (q) {
+    q.querySelectorAll('.opt').forEach(function (o) {
+      o.addEventListener('click', function () {
+        q.querySelectorAll('.opt').forEach(function (x) { x.classList.remove('right', 'wrong'); });
+        o.classList.add(o.dataset.correct ? 'right' : 'wrong');
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
