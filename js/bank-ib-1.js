@@ -289,7 +289,7 @@
       if (Math.abs(re) < 1e-9) re = 0; if (Math.abs(im) < 1e-9) im = 0;
       return { stem: M('z_1 = ' + r1 + 'e^{i' + IB.pif(A[0], A[1]).replace('\\frac{\\pi}', '\\frac{\\pi}') + '}') + ' and ' + M('z_2 = ' + r2 + 'e^{i' + IB.pif(B[0], B[1]) + '}') + '.', parts: [
         { q: 'Find ' + M('z_1 z_2') + ', giving your answer in the form ' + M('re^{i\\theta}') + ', where ' + M('-\\pi < \\theta \\le \\pi') + '.', m: 2, a: M(r1 * r2 + 'e^{i' + IB.pif(sn, sd) + '}') },
-        { q: 'Find ' + M('(z_1)^3') + ', giving your answer in the form ' + M('a + bi') + '.', m: 3, a: M(s3(re) + (im < 0 ? ' - ' : ' + ') + s3(Math.abs(im)) + 'i') }
+        { q: 'Find ' + M('(z_1)^3') + ', giving your answer in the form ' + M('a + bi') + '.', m: 3, a: M(im === 0 ? s3(re) : re === 0 ? s3(im) + 'i' : s3(re) + (im < 0 ? ' - ' : ' + ') + s3(Math.abs(im)) + 'i') }
       ] };
     } }
   ] });
@@ -425,7 +425,7 @@
         D.dot(p.X(0), p.Y(y0)) + D.text(p.X(0) + 8, p.Y(y0) + (a > 0 ? -10 : 12), '(0, ' + y0 + ')', { size: 12 });
       return { stem: 'The diagram shows the graph of the quadratic function ' + M('y = a(x - h)^2 + k') + '. The vertex is at ' + M('(' + h + ',\\ ' + k + ')') + ' and the graph meets the ' + M('y') + '-axis at ' + M('(0,\\ ' + y0 + ')') + '.' + D.svg(300, 280, s, 'Quadratic graph', true), parts: [
         { q: 'Write down the equation of the axis of symmetry.', m: 1, a: M('x = ' + h) },
-        { q: 'Find the value of ' + M('a') + '.', m: 2, a: M(y0 + ' = a(' + (-h) + ')^2 ' + (k < 0 ? '- ' + (-k) : '+ ' + k) + ' \\Rightarrow a = ' + a) },
+        { q: 'Find the value of ' + M('a') + '.', m: 2, a: M(y0 + ' = a(' + (-h) + ')^2' + (k < 0 ? ' - ' + (-k) : k > 0 ? ' + ' + k : '') + ' \\Rightarrow a = ' + a) },
         { q: 'Write down the range of the function.', m: 1, a: M(a > 0 ? 'y \\ge ' + k : 'y \\le ' + k) }
       ] };
     } },
@@ -536,7 +536,7 @@
       var a = pick([2, 3, 0.5]), b = pick([2, 3, 0.5]), h = nz(-3, 3), k = nz(-4, 4), p = nz(-3, 3) * (b === 3 ? 3 : b === 2 ? 2 : 1), q = nz(-4, 4);
       var px = p / b + h, py = a * q + k;
       return { stem: 'The graph of ' + M('y = f(x)') + ' is transformed to the graph of ' + M('y = ' + num(a) + 'f\\left(' + (b === 0.5 ? '\\tfrac{1}{2}' : b) + '(x' + sg(-h) + ')\\right)' + sg(k)) + '.', parts: [
-        { q: 'Describe fully the sequence of transformations.', m: 4, a: 'Horizontal stretch, scale factor ' + num(1 / b) + '; translation ' + Math.abs(h) + ' units ' + (h > 0 ? 'right' : 'left') + '; vertical stretch, scale factor ' + num(a) + '; translation ' + Math.abs(k) + ' units ' + (k > 0 ? 'up' : 'down') + '.' },
+        { q: 'Describe fully the sequence of transformations.', m: 4, a: 'Horizontal stretch, scale factor ' + (b === 3 ? M('\\tfrac{1}{3}') : num(1 / b)) + '; translation ' + Math.abs(h) + ' units ' + (h > 0 ? 'right' : 'left') + '; vertical stretch, scale factor ' + num(a) + '; translation ' + Math.abs(k) + ' units ' + (k > 0 ? 'up' : 'down') + '.' },
         { q: 'The point ' + M('(' + p + ',\\ ' + q + ')') + ' lies on ' + M('y = f(x)') + '. Find its image.', m: 2, a: M('(' + num(px) + ',\\ ' + num(py) + ')') }
       ] };
     } }

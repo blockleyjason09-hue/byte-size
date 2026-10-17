@@ -43,7 +43,7 @@
   }).join('');
 
   var countCtl = mode === 'revise' ? '' :
-    '<label class="ctl"><span>Questions</span><select id="bs-count">' + [3, 4, 5, 6, 8].map(function (n) { return '<option value="' + n + '">' + n + '</option>'; }).join('') + '</select></label>';
+    '<label class="ctl"><span>Questions</span><select id="bs-count">' + [1, 2, 3, 4, 5, 6, 8].map(function (n) { return '<option value="' + n + '">' + n + '</option>'; }).join('') + '</select></label>';
   var newLabel = mode === 'donow' ? 'New Do Now' : mode === 'exit' ? 'New exit ticket' : 'New question';
 
   root.innerHTML =
@@ -77,6 +77,12 @@
   }
   // A link such as do-now.html#last-q opens that topic directly
   var hashT = (location.hash || '').slice(1);
+  // ...and do-now.html#course=igcse opens that course
+  if (hashT.indexOf('course=') === 0) {
+    var hc = course(hashT.slice(7));
+    if (hc && hc.status === 'live') { if (state.course !== hc.id) { state.topic = 'mixed'; state.diff = null; } state.course = hc.id; }
+    hashT = '';
+  }
   if (hashT && BS.topics[hashT]) {
     var cur = course(state.course);
     if (!cur || cur.topics.indexOf(hashT) < 0) { var found = live.filter(function (c) { return c.topics.indexOf(hashT) > -1; })[0]; if (found) state.course = found.id; }
@@ -134,7 +140,7 @@
   function build() {
     if (mode === 'revise') { nextRevise(); return; }
     var c = course(state.course), used = new Set();
-    var qs = pickTopics(state.count).map(function (t) { return BS.make(t, state.diff, used); });
+    var qs = pickTopics(state.count).map(function (t) { return BS.make(t, state.diff, used, !!course(state.course).foundation); });
     var marks = qs.reduce(function (s, q) { return s + q.marks; }, 0);
     var title = state.topic === 'mixed' ? (mode === 'exit' ? 'Exit ticket' : 'Do Now: mixed retrieval') : (mode === 'exit' ? 'Exit ticket: ' : 'Do Now: ') + BS.topics[state.topic].name;
     var mins = mode === 'exit' ? Math.max(4, qs.length + 1) : Math.max(5, Math.round(marks * 0.8));
@@ -196,7 +202,7 @@
 
   function nextRevise() {
     var t = pickTopics(1)[0];
-    var q = BS.make(t, state.diff);
+    var q = BS.make(t, state.diff, null, !!course(state.course).foundation);
     $stage.innerHTML =
       '<article class="paper slide revise-card" id="bs-paper">' +
         '<header><span class="tag">' + esc(BS.topics[t].name) + ' · ' + lvl(course(state.course), state.diff) + '</span><span class="time">' + q.marks + ' marks</span></header>' +

@@ -115,7 +115,7 @@
     { d: [1], f: function () {
       var k = nz(-4, 5), m = ri(2, 6), c = ri(2, 5);
       return { parts: [
-        { q: 'Differentiate ' + M('y = e^{' + k + 'x}') + '.', m: 1, a: M(dydx + ' = ' + k + 'e^{' + k + 'x}') },
+        { q: 'Differentiate ' + M('y = e^{' + (k === 1 ? '' : k === -1 ? '-' : k) + 'x}') + '.', m: 1, a: M(dydx + ' = ' + (k === 1 ? '' : k === -1 ? '-' : k) + 'e^{' + (k === 1 ? '' : k === -1 ? '-' : k) + 'x}') },
         { q: 'Differentiate ' + M('y = \\sin(' + m + 'x)') + '.', m: 1, a: M(dydx + ' = ' + m + '\\cos(' + m + 'x)') },
         { q: 'Differentiate ' + M('y = ' + c + '\\ln x') + '.', m: 1, a: M(dydx + ' = \\frac{' + c + '}{x}') }
       ] };

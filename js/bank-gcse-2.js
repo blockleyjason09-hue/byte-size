@@ -244,7 +244,7 @@
     { d: [3], f: function () {
       var A, B, desc;
       for (;;) {
-        var k = pick([2, 3, 0.5, -1, -2]), base = pick(SHAPES.slice(0, 3)).map(function (p) { return k === 0.5 ? [p[0] * 2, p[1] * 2] : p; });
+        var k = pick([2, 3, 0.5]), base = pick(SHAPES.slice(0, 3)).map(function (p) { return k === 0.5 ? [p[0] * 2, p[1] * 2] : p; });
         var c = [ri(-5, 5), ri(-5, 5)], off = [ri(-6, 5), ri(-6, 5)];
         if (k === 0.5) off = [c[0] + 2 * ri(-3, 2) - 0, c[1] + 2 * ri(-3, 2)];
         A = base.map(function (p) { return [p[0] + off[0], p[1] + off[1]]; });
@@ -295,7 +295,7 @@
       var g = D.lineGraph([[0, 0], [t1, V], [t1 + t2, V], [tot, 0]], { xmax: tot + 5, ymax: V + 4, xstep: 5, ystep: V > 12 ? 4 : 2, grid: true, gx: 5, gy: 2, xl: 'Time (s)', yl: 'Speed (m/s)' });
       var dist = V * (t1 / 2 + t2 + t3 / 2);
       return { stem: 'The speed–time graph shows the first ' + tot + ' seconds of a cyclist’s journey.' + g, parts: [
-        { q: 'Work out the acceleration during the first ' + t1 + ' seconds.', m: 2, a: num(V / t1) + ' m/s²' },
+        { q: 'Work out the acceleration during the first ' + t1 + ' seconds.', m: 2, a: num(Number(sf(V / t1, 3))) + ' m/s²' },
         { q: 'Work out the total distance travelled.', m: 3, a: num(dist) + ' m' },
         { q: 'Work out the average speed for the whole journey.', m: 1, a: sf(dist / tot, 3) + ' m/s' }
       ] };
@@ -312,15 +312,7 @@
   ] });
 
   /* ================= STATISTICAL DIAGRAMS ================= */
-  T({ id: 'stats-diagrams', name: 'Histograms, cumulative frequency and box plots', video: 'corbettmaths histograms', gens: [
-    { d: [1, 2], f: function () {
-      var q1v = ri(20, 35), med = q1v + ri(3, 10), q3v = med + ri(3, 10), lo = q1v - ri(4, 12), hi = q3v + ri(4, 16);
-      return { stem: 'The box plot shows the masses, in kg, of the members of a rowing club.' + D.boxplot([lo, q1v, med, q3v, hi], Math.floor(lo / 10) * 10, Math.ceil((hi + 1) / 10) * 10, 10, 'Mass (kg)'), parts: [
-        { q: 'Write down the median.', m: 1, a: med + ' kg' },
-        { q: 'Work out the interquartile range.', m: 1, a: (q3v - q1v) + ' kg' },
-        { q: 'Work out the range.', m: 1, a: (hi - lo) + ' kg' }
-      ] };
-    } },
+  T({ id: 'stats-diagrams', name: 'Histograms, cumulative frequency and charts', video: 'corbettmaths histograms', gens: [
     { d: [2, 3], f: function () {
       var b = [0, 10, 20, 25, 30, 40, 60], fd, f;
       do { fd = [ri(1, 6) * 0.5, ri(2, 8) * 0.5, ri(1, 8), ri(1, 8), ri(2, 8) * 0.5, ri(1, 6) * 0.5]; f = fd.map(function (v, i) { return v * (b[i + 1] - b[i]); }); } while (f.some(function (v) { return v !== Math.round(v); }));
@@ -370,8 +362,9 @@
   /* ================= COMPOUND MEASURES ================= */
   T({ id: 'compound-measures', name: 'Speed, density and pressure', video: 'corbettmaths compound measures', gens: [
     { d: [1], f: function () {
-      var h = ri(1, 3), m = pick([15, 20, 30, 45]), sp = pick([40, 48, 60, 72, 80]), dist = sp * (h + m / 60);
-      return q1('A car travels ' + num(dist) + ' km in ' + h + ' hour' + (h > 1 ? 's' : '') + ' ' + m + ' minutes. Work out its average speed in km/h.', 3, M(num(dist) + ' \\div ' + num(h + m / 60)) + ' = ' + sp + ' km/h');
+      var h = ri(1, 3), m = pick([15, 20, 30, 40, 45]), sp, dist; do { sp = pick([36, 40, 48, 52, 60, 64, 72, 80]); dist = sp * (h * 60 + m) / 60; } while (dist !== Math.round(dist));
+      var hrs = m % 15 === 0 ? num(h + m / 60) : '\\frac{' + (3 * h + m / 20) + '}{3}';
+      return q1('A car travels ' + num(dist) + ' km in ' + h + ' hour' + (h > 1 ? 's' : '') + ' ' + m + ' minutes. Work out its average speed in km/h.', 3, M(h + '\\text{ h } ' + m + '\\text{ min} = ' + hrs + '\\text{ hours}') + '; ' + M(num(dist) + ' \\div ' + hrs) + ' = ' + sp + ' km/h');
     } },
     { d: [1, 2], f: function () {
       var dens = pick([0.8, 1.2, 2.5, 7.8, 8.9, 11.3]), V = ri(20, 400);

@@ -7,7 +7,15 @@
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
 
   D.svg = function (w, h, inner, label, scaled) {
-    return '<figure class="diagram"><svg class="dg" viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" role="img" aria-label="' + esc(label || 'Diagram') + '">' + inner + '</svg>' +
+    // grow the view box so that no text label is clipped at the edges
+    var x0 = 0, y0 = 0, x1 = w, y1 = h, re = /<text x="([-\d.]+)" y="([-\d.]+)"(?: text-anchor="(\w+)")?[^>]*?(?:font-size="(\d+)")?[^>]*>([^<]*)<\/text>/g, mt;
+    while ((mt = re.exec(inner))) {
+      var tx = +mt[1], ty = +mt[2], fs = +(mt[4] || 14), tw = mt[5].replace(/&\w+;/g, '_').length * fs * 0.56, an = mt[3] || 'start';
+      var lft = an === 'middle' ? tx - tw / 2 : an === 'end' ? tx - tw : tx, rgt = lft + tw;
+      x0 = Math.min(x0, lft - 3); x1 = Math.max(x1, rgt + 3); y0 = Math.min(y0, ty - fs * 0.6 - 2); y1 = Math.max(y1, ty + fs * 0.6 + 2);
+    }
+    x0 = Math.floor(x0); y0 = Math.floor(y0); var W = Math.ceil(x1 - x0), H = Math.ceil(y1 - y0);
+    return '<figure class="diagram"><svg class="dg" viewBox="' + x0 + ' ' + y0 + ' ' + W + ' ' + H + '" width="' + W + '" role="img" aria-label="' + esc(label || 'Diagram') + '">' + inner + '</svg>' +
       (scaled ? '' : '<figcaption>Diagram not to scale</figcaption>') + '</figure>';
   };
   D.text = function (x, y, s, opt) {
@@ -106,10 +114,19 @@
     var sc = Math.min((w - 2 * pad) / (maxx - minx || 1), (h - 2 * pad - 30) / (maxy - miny || 1));
     var T = function (p) { return [pad + (p.x - minx) * sc + ((w - 2 * pad) - (maxx - minx) * sc) / 2, h - pad - (p.y - miny) * sc]; };
     var s = D.arrowDefs, Q = pts.map(T);
-    for (var i = 0; i < Q.length - 1; i++) s += D.line(Q[i][0], Q[i][1], Q[i + 1][0], Q[i + 1][1], 'ln');
+    for (var i = 0; i < Q.length - 1; i++) {
+      s += D.line(Q[i][0], Q[i][1], Q[i + 1][0], Q[i + 1][1], 'ln');
+      if (pts[i + 1].seg) { var mx = (Q[i][0] + Q[i + 1][0]) / 2, my = (Q[i][1] + Q[i + 1][1]) / 2, ddx = Q[i + 1][0] - Q[i][0], ddy = Q[i + 1][1] - Q[i][1], LL = Math.hypot(ddx, ddy) || 1, nx = ddy / LL, ny = -ddx / LL;
+        if (nx < 0) { nx = -nx; ny = -ny; } s += D.text(mx + nx * 26, my + ny * 14, pts[i + 1].seg, { anchor: 'middle', size: 12 }); }
+    }
     if (extra) s += D.line(Q[0][0], Q[0][1], Q[Q.length - 1][0], Q[Q.length - 1][1], 'dash');
     Q.forEach(function (q, k) {
-      s += D.dot(q[0], q[1]) + D.text(q[0] + 10, q[1] + 12, pts[k].name, { cls: 'it' });
+      var nb = [], ox = 0, oy = 0; if (k > 0) nb.push(Q[k - 1]); if (k < Q.length - 1) nb.push(Q[k + 1]); if (extra && (k === 0 || k === Q.length - 1)) nb.push(Q[k === 0 ? Q.length - 1 : 0]);
+      if (northAt.indexOf(pts[k].name) > -1) nb.push([q[0], q[1] - 40]);
+      var dirs = nb.map(function (r) { return Math.atan2(r[1] - q[1], r[0] - q[0]); }).sort(function (a, b) { return a - b; }), best = -1, bestA = Math.PI / 4;
+      for (var z = 0; z < dirs.length; z++) { var a1 = dirs[z], a2 = z + 1 < dirs.length ? dirs[z + 1] : dirs[0] + 2 * Math.PI; if (a2 - a1 > best) { best = a2 - a1; bestA = (a1 + a2) / 2; } }
+      ox = Math.cos(bestA); oy = Math.sin(bestA); var oL = 1;
+      s += D.dot(q[0], q[1]) + D.text(q[0] + ox / oL * 15, q[1] + oy / oL * 15, pts[k].name, { cls: 'it', anchor: 'middle' });
       if (northAt.indexOf(pts[k].name) > -1) s += D.arrow(q[0], q[1], q[0], q[1] - 44, 'thin') + D.text(q[0], q[1] - 52, 'N', { anchor: 'middle', size: 12 });
     });
     return D.svg(w, h, s, 'Bearings diagram');
@@ -169,7 +186,7 @@
   D.venn = function (c, names) {
     var w = 320, h = 200, s = '<rect x="10" y="10" width="300" height="180" rx="6" class="thin"/>';
     s += '<circle cx="125" cy="100" r="62" class="setA"/><circle cx="195" cy="100" r="62" class="setB"/>';
-    s += D.text(80, 36, names[0], { anchor: 'middle', cls: 'it' }) + D.text(240, 36, names[1], { anchor: 'middle', cls: 'it' }) + D.text(296, 176, 'U', { anchor: 'end', cls: 'it' });
+    s += D.text(80, 36, names[0], { anchor: 'middle', cls: 'it' }) + D.text(240, 36, names[1], { anchor: 'middle', cls: 'it' }) + D.text(296, 176, 'ℰ', { anchor: 'end', cls: 'it' });
     s += D.text(100, 100, c[0], { anchor: 'middle' }) + D.text(160, 100, c[1], { anchor: 'middle' }) + D.text(220, 100, c[2], { anchor: 'middle' }) + D.text(40, 170, c[3], { anchor: 'middle' });
     return D.svg(w, h, s, 'Venn diagram');
   };
@@ -260,8 +277,9 @@
     var s = D.line(A[0], A[1], B[0], B[1]) + D.line(B[0], B[1], C[0], C[1]) + D.line(C[0], C[1], Dd[0], Dd[1], 'dash') + D.line(Dd[0], Dd[1], A[0], A[1], 'dash');
     s += D.line(E[0], E[1], F[0], F[1]) + D.line(F[0], F[1], G[0], G[1]) + D.line(G[0], G[1], Hh[0], Hh[1]) + D.line(Hh[0], Hh[1], E[0], E[1]);
     s += D.line(A[0], A[1], E[0], E[1]) + D.line(B[0], B[1], F[0], F[1]) + D.line(C[0], C[1], G[0], G[1]) + D.line(Dd[0], Dd[1], Hh[0], Hh[1], 'dash');
-    if (showDiag) s += D.line(A[0], A[1], G[0], G[1], 'accent') + D.line(A[0], A[1], C[0], C[1], 'accentdash');
-    var lab = [[A, 'A', -12, 8], [B, 'B', 4, 12], [C, 'C', 12, 4], [Dd, 'D', -12, -4], [E, 'E', -12, -4], [F, 'F', -4, -12], [G, 'G', 12, -6], [Hh, 'H', -6, -12]];
+    if (Array.isArray(showDiag)) { var PM = { A: A, B: B, C: C, D: Dd, E: E, F: F, G: G, H: Hh }; showDiag.forEach(function (sg) { s += D.line(PM[sg[0]][0], PM[sg[0]][1], PM[sg[1]][0], PM[sg[1]][1], sg[2] || 'accent'); }); }
+    else if (showDiag) s += D.line(A[0], A[1], G[0], G[1], 'accent') + D.line(A[0], A[1], C[0], C[1], 'accentdash');
+    var lab = [[A, 'A', -12, 8], [B, 'B', 4, 12], [C, 'C', 12, 4], [Dd, 'D', -12, -4], [E, 'E', -12, -4], [F, 'F', 4, -12], [G, 'G', 12, -6], [Hh, 'H', -6, -12]];
     lab.forEach(function (q) { s += D.text(q[0][0] + q[2], q[0][1] + q[3], q[1], { anchor: 'middle', cls: 'it' }); });
     s += D.text((A[0] + B[0]) / 2, A[1] + 16, l + ' cm', { anchor: 'middle', size: 12 }) + D.text((B[0] + C[0]) / 2 + 22, (B[1] + C[1]) / 2 + 6, wdt + ' cm', { anchor: 'middle', size: 12 }) + D.text(A[0] - 26, (A[1] + E[1]) / 2, h + ' cm', { anchor: 'middle', size: 12 });
     return D.svg(W, H, s, 'Cuboid ABCDEFGH');
@@ -274,7 +292,7 @@
     s += D.line(V[0], V[1], A[0], A[1]) + D.line(V[0], V[1], B[0], B[1]) + D.line(V[0], V[1], C[0], C[1]) + D.line(V[0], V[1], Dd[0], Dd[1], 'dash');
     s += D.line(V[0], V[1], M[0], M[1], 'accentdash') + D.dot(M[0], M[1], 2.5);
     [[A, 'A', -12, 8], [B, 'B', 10, 8], [C, 'C', 12, 0], [Dd, 'D', -12, -4], [V, 'V', 0, -12], [M, 'M', 12, 8]].forEach(function (q) { s += D.text(q[0][0] + q[2], q[0][1] + q[3], q[1], { anchor: 'middle', cls: 'it' }); });
-    s += D.text(130, 216, side + ' cm', { anchor: 'middle', size: 12 }) + D.text(176, 100, height + ' cm', { size: 12 });
+    s += D.text(130, 216, side + ' cm', { anchor: 'middle', size: 12 }) + D.text(156, 118, height + ' cm', { size: 12, anchor: 'end' });
     return D.svg(W, H, s, 'Square-based pyramid');
   };
 
@@ -287,7 +305,7 @@
     var large = thetaRad > Math.PI ? 1 : 0;
     var s = D.path('M' + O[0] + ',' + O[1] + 'L' + f2(P[0]) + ',' + f2(P[1]) + 'A' + R + ',' + R + ' 0 ' + large + ' 0 ' + f2(Q[0]) + ',' + f2(Q[1]) + 'Z', 'shape');
     s += D.text(O[0], O[1] + 14, 'O', { anchor: 'middle', cls: 'it' }) + D.text(P[0] + 12, P[1], 'A', { cls: 'it' }) + D.text(Q[0] - 18, Q[1], 'B', { cls: 'it' });
-    s += D.text((O[0] + P[0]) / 2 + 14, (O[1] + P[1]) / 2 + 6, rLabel, { size: 12 }) + D.text(O[0], O[1] - 30, aLabel, { anchor: 'middle', size: 12 });
+    s += D.text((O[0] + P[0]) / 2 + 16 * Math.cos(t0 - Math.PI / 2), (O[1] + P[1]) / 2 - 16 * Math.sin(t0 - Math.PI / 2), rLabel, { size: 12, anchor: 'middle' }) + D.text(O[0], O[1] - 30, aLabel, { anchor: 'middle', size: 12 });
     return D.svg(W, H, s, 'Sector OAB');
   };
 
@@ -375,10 +393,11 @@
         s += D.path('M' + f2(V[0] + ua[0] * 11) + ',' + f2(V[1] + ua[1] * 11) + 'L' + f2(V[0] + (ua[0] + ub[0]) * 11) + ',' + f2(V[1] + (ua[1] + ub[1]) * 11) + 'L' + f2(V[0] + ub[0] * 11) + ',' + f2(V[1] + ub[1] * 11), 'thin');
       } else {
         var cr = ua[0] * ub[1] - ua[1] * ub[0];
-        s += D.path('M' + f2(V[0] + ua[0] * r) + ',' + f2(V[1] + ua[1] * r) + 'A' + r + ',' + r + ' 0 0 ' + (cr > 0 ? 1 : 0) + ' ' + f2(V[0] + ub[0] * r) + ',' + f2(V[1] + ub[1] * r), 'arc');
+        s += D.path('M' + f2(V[0] + ua[0] * r) + ',' + f2(V[1] + ua[1] * r) + 'A' + r + ',' + r + ' 0 ' + (an.reflex ? 1 : 0) + ' ' + ((cr > 0) !== !!an.reflex ? 1 : 0) + ' ' + f2(V[0] + ub[0] * r) + ',' + f2(V[1] + ub[1] * r), 'arc');
       }
       if (an.t) {
         var bx = ua[0] + ub[0], by = ua[1] + ub[1], bl = Math.hypot(bx, by); if (bl < 1e-6) { bx = -ua[1]; by = ua[0]; bl = 1; }
+        if (an.reflex) { bx = -bx; by = -by; }
         var d = an.d || 30;
         s += D.text(V[0] + bx / bl * d, V[1] + by / bl * d, an.t, { anchor: 'middle', size: 12 });
       }
@@ -388,13 +407,24 @@
       var cc = cen, poly_ = (o.polys || []).filter(function (pl) { return pl.indexOf(sl.p) > -1 && pl.indexOf(sl.q) > -1; })[0];
       if (poly_) cc = [poly_.reduce(function (t, n) { return t + Q[n][0]; }, 0) / poly_.length, poly_.reduce(function (t, n) { return t + Q[n][1]; }, 0) / poly_.length];
       var nx = -dy / L, ny = dx / L; if ((mx + nx - cc[0]) * nx + (my + ny - cc[1]) * ny < 0) { nx = -nx; ny = -ny; } if (sl.flip) { nx = -nx; ny = -ny; }
-      s += D.text(mx + nx * 14, my + ny * 12, sl.t, { anchor: 'middle', size: 12 });
+      var tw = String(sl.t).length * 6.4, dist = 7 + Math.abs(nx) * tw / 2 + Math.abs(ny) * 8;
+      s += D.text(mx + nx * dist, my + ny * dist, sl.t, { anchor: 'middle', size: 12 });
     });
     (o.dots || []).forEach(function (n) { s += D.dot(Q[n][0], Q[n][1], 3); });
     names.forEach(function (n) {
       if ((o.nolabel || []).indexOf(n) > -1) return;
       var q = Q[n], dx = q[0] - cen[0], dy = q[1] - cen[1], L = Math.hypot(dx, dy);
-      if (L < 1) { dx = -1; dy = 1; L = Math.SQRT2; }
+      if (L < 1 || (o.circle && L < 0.35 * o.circle[2] * sc)) { // interior point: place label in the widest gap between its lines
+        var dirs = [];
+        (o.segs || []).concat(o.lines || []).forEach(function (sg) { var other = sg[0] === n ? sg[1] : sg[1] === n ? sg[0] : null; if (other) dirs.push(Math.atan2(Q[other][1] - q[1], Q[other][0] - q[0])); });
+        (o.angles || []).forEach(function (an) { if (an.v === n) { var ma = Math.atan2(Q[an.a][1] - q[1], Q[an.a][0] - q[0]), mb = Math.atan2(Q[an.b][1] - q[1], Q[an.b][0] - q[0]); dirs.push(ma, mb); var bx = Math.cos(ma) + Math.cos(mb), by = Math.sin(ma) + Math.sin(mb); if (Math.hypot(bx, by) > 1e-6) dirs.push(Math.atan2(by, bx)); } });
+        if (dirs.length) {
+          dirs.sort(function (a, b) { return a - b; });
+          var best = 0, bestA = 0;
+          for (var k = 0; k < dirs.length; k++) { var a1 = dirs[k], a2 = k + 1 < dirs.length ? dirs[k + 1] : dirs[0] + 2 * Math.PI; if (a2 - a1 > best) { best = a2 - a1; bestA = (a1 + a2) / 2; } }
+          dx = Math.cos(bestA); dy = Math.sin(bestA); L = 1;
+        } else { dx = -1; dy = 1; L = Math.SQRT2; }
+      }
       var off = (o.lab && o.lab[n]) || [dx / L * 15, dy / L * 15];
       s += D.text(q[0] + off[0], q[1] + off[1], n, { anchor: 'middle', cls: 'it' });
     });
@@ -443,9 +473,37 @@
   D.venn3 = function (c, names) {
     var s = '<rect x="10" y="10" width="300" height="250" rx="6" class="thin"/>';
     s += '<circle cx="125" cy="105" r="65" class="setA"/><circle cx="195" cy="105" r="65" class="setB"/><circle cx="160" cy="165" r="65" class="setB"/>';
-    s += D.text(62, 40, names[0], { anchor: 'middle', cls: 'it' }) + D.text(258, 40, names[1], { anchor: 'middle', cls: 'it' }) + D.text(160, 246, names[2], { anchor: 'middle', cls: 'it' }) + D.text(296, 246, 'U', { anchor: 'end', cls: 'it' });
+    s += D.text(62, 40, names[0], { anchor: 'middle', cls: 'it' }) + D.text(258, 40, names[1], { anchor: 'middle', cls: 'it' }) + D.text(160, 246, names[2], { anchor: 'middle', cls: 'it' }) + D.text(296, 246, 'ℰ', { anchor: 'end', cls: 'it' });
     s += D.text(98, 88, c.a, { anchor: 'middle' }) + D.text(222, 88, c.b, { anchor: 'middle' }) + D.text(160, 205, c.c, { anchor: 'middle' });
     s += D.text(160, 78, c.ab, { anchor: 'middle' }) + D.text(118, 150, c.ac, { anchor: 'middle' }) + D.text(202, 150, c.bc, { anchor: 'middle' }) + D.text(160, 125, c.abc, { anchor: 'middle' }) + D.text(36, 236, c.out, { anchor: 'middle' });
     return D.svg(320, 270, s, 'Three-set Venn diagram');
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+(function (g) {
+  var D = g.BS.draw;
+  function f2(x) { return Math.round(x * 10) / 10; }
+  /* Pie chart: values with labels */
+  D.pie = function (vals, labels) {
+    var tot = vals.reduce(function (s, v) { return s + v; }, 0), a0 = -90, s = '', cx = 150, cy = 130, r = 100;
+    vals.forEach(function (v, i) {
+      var a1 = a0 + v / tot * 360, la = (a1 - a0) > 180 ? 1 : 0, r0 = a0 * Math.PI / 180, r1 = a1 * Math.PI / 180;
+      s += '<path d="M' + cx + ',' + cy + 'L' + f2(cx + r * Math.cos(r0)) + ',' + f2(cy + r * Math.sin(r0)) + 'A' + r + ',' + r + ' 0 ' + la + ' 1 ' + f2(cx + r * Math.cos(r1)) + ',' + f2(cy + r * Math.sin(r1)) + 'Z" class="slice s' + (i % 4) + '"/>';
+      var am = (a0 + a1) / 2 * Math.PI / 180;
+      s += D.text(cx + r * 0.62 * Math.cos(am), cy + r * 0.62 * Math.sin(am), labels[i], { anchor: 'middle', size: 12 });
+      a0 = a1;
+    });
+    return D.svg(300, 260, s, 'Pie chart');
+  };
+  /* Number line showing an inequality: lo/hi ends (null = arrow), closed flags */
+  D.numberLine = function (from, to, lo, loClosed, hi, hiClosed) {
+    var w = 340, h = 80, pad = 24, X = function (v) { return pad + (v - from) / (to - from) * (w - 2 * pad); };
+    var s = D.arrowDefs + D.line(X(from), 50, X(to), 50, 'ax');
+    for (var t = from; t <= to; t++) s += D.line(X(t), 45, X(t), 55, 'ax') + D.text(X(t), 68, t, { anchor: 'middle', size: 11 });
+    var a = lo === null ? from : lo, b = hi === null ? to : hi;
+    s += '<line x1="' + f2(X(a)) + '" y1="30" x2="' + f2(X(b)) + '" y2="30" class="accent"' + (lo === null ? ' marker-start="url(#ahs)"' : '') + (hi === null ? ' marker-end="url(#ahs)"' : '') + '/>';
+    if (lo !== null) s += '<circle cx="' + f2(X(lo)) + '" cy="30" r="5" class="' + (loClosed ? 'pt' : 'hollow') + '"/>';
+    if (hi !== null) s += '<circle cx="' + f2(X(hi)) + '" cy="30" r="5" class="' + (hiClosed ? 'pt' : 'hollow') + '"/>';
+    return D.svg(w, h, s, 'Number line', true);
   };
 })(typeof window !== 'undefined' ? window : globalThis);

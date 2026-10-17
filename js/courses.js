@@ -3,7 +3,7 @@
   var BS = g.BS;
   var GCSE_GROUPS = [
     ['Number', ['fractions', 'percentages', 'indices', 'surds', 'ratio', 'bounds', 'compound-measures']],
-    ['Algebra', ['expand-factorise', 'linear-equations', 'simultaneous', 'quadratics', 'inequalities', 'rearranging', 'sequences', 'functions', 'straight-lines', 'differentiation', 'kinematic-graphs']],
+    ['Algebra', ['expand-factorise', 'linear-equations', 'simultaneous', 'quadratics', 'inequalities', 'rearranging', 'sequences', 'functions', 'straight-lines', 'graphs', 'differentiation', 'kinematic-graphs']],
     ['Geometry and measures', ['angles-parallel', 'polygons', 'pythagoras-trig', 'sine-cosine', 'circles', 'circle-theorems', 'intersecting-chords', 'similar-shapes', 'volume']],
     ['Vectors and transformations', ['vectors', 'transformations']],
     ['Statistics and probability', ['averages', 'stats-diagrams', 'probability', 'sets']],
@@ -28,19 +28,19 @@
   var IB_ALL = [].concat.apply([], IB_GROUPS.map(function (g) { return g[1]; }));
 
   BS.courses = [
-    { id: 'y9', group: 'Maths', name: 'Year 9 · Pearson Edexcel GCSE', status: 'live', topics: flat(G_Y9), groups: G_Y9, diffs: [1, 2], def: 2 },
-    { id: 'igcse', group: 'Maths', name: 'Year 10–11 · Pearson Edexcel International GCSE', status: 'live', topics: flat(G_ALL), groups: G_ALL, diffs: [1, 2, 3], def: 2 },
-    { id: 'igcse-f', group: 'Maths', name: 'Year 11 Foundation · Pearson Edexcel International GCSE', status: 'live', topics: flat(G_FOUND), groups: G_FOUND, diffs: [1, 2], def: 1 },
-    { id: 'igcse-acc', group: 'Maths', name: 'Year 11 Accelerated · Pearson Edexcel International GCSE', status: 'live', topics: flat(G_ALL), groups: G_ALL, diffs: [2, 3], def: 3 },
-    { id: 'aqa-fm', group: 'Maths', name: 'Year 11 · AQA Level 2 Further Maths', status: 'soon' },
-    { id: 'as', group: 'Maths', name: 'Year 12 · AS Maths (Pure, Statistics, Mechanics) · Pearson', status: 'soon' },
-    { id: 'cp1', group: 'Maths', name: 'Year 12 · Further Maths Core Pure · Pearson', status: 'soon' },
-    { id: 'a2', group: 'Maths', name: 'Year 13 · A Level Maths (Pure, Statistics, Mechanics) · Pearson', status: 'soon' },
-    { id: 'cp2', group: 'Maths', name: 'Year 13 · Further Maths Core Pure · Pearson', status: 'soon' },
-    { id: 'fs1', group: 'Maths', name: 'Further Statistics 1 · Pearson', status: 'soon' },
-    { id: 'd1', group: 'Maths', name: 'Decision Mathematics 1 · Pearson', status: 'soon' },
-    { id: 'ib-ai-sl', group: 'Maths', name: 'IB Maths: Applications and Interpretation SL', status: 'soon' },
-    { id: 'ib-ai-hl', group: 'Maths', name: 'IB Maths: Applications and Interpretation HL', status: 'live', topics: IB_ALL, groups: IB_GROUPS, diffs: [1, 2, 3], def: 2, levels: IBL, style: 'ib' },
+    { id: 'y9', group: 'GCSE and International GCSE', name: 'Year 9 · Pearson Edexcel GCSE', status: 'live', topics: flat(G_Y9), groups: G_Y9, diffs: [1, 2], def: 2 },
+    { id: 'igcse', group: 'GCSE and International GCSE', name: 'Year 10–11 · Pearson Edexcel International GCSE', status: 'live', topics: flat(G_ALL), groups: G_ALL, diffs: [1, 2, 3], def: 2 },
+    { id: 'igcse-f', group: 'GCSE and International GCSE', name: 'Year 11 Foundation · Pearson Edexcel International GCSE', status: 'live', topics: flat(G_FOUND), groups: G_FOUND, diffs: [1, 2], def: 1, foundation: true },
+    { id: 'igcse-acc', group: 'GCSE and International GCSE', name: 'Year 11 Accelerated · Pearson Edexcel International GCSE', status: 'live', topics: flat(G_ALL), groups: G_ALL, diffs: [2, 3], def: 3 },
+    { id: 'aqa-fm', group: 'GCSE and International GCSE', name: 'Year 11 · AQA Level 2 Further Maths', status: 'soon' },
+    { id: 'as', group: 'A Level Maths', name: 'Year 12 · AS Maths (Pure, Statistics, Mechanics) · Pearson', status: 'soon' },
+    { id: 'a2', group: 'A Level Maths', name: 'Year 13 · A Level Maths (Pure, Statistics, Mechanics) · Pearson', status: 'soon' },
+    { id: 'cp1', group: 'A Level Further Maths', name: 'Year 12 · Further Maths Core Pure · Pearson', status: 'soon' },
+    { id: 'cp2', group: 'A Level Further Maths', name: 'Year 13 · Further Maths Core Pure · Pearson', status: 'soon' },
+    { id: 'fs1', group: 'A Level Further Maths', name: 'Further Statistics 1 · Pearson', status: 'soon' },
+    { id: 'd1', group: 'A Level Further Maths', name: 'Decision Mathematics 1 · Pearson', status: 'soon' },
+    { id: 'ib-ai-sl', group: 'IB Diploma', name: 'IB Maths: Applications and Interpretation SL', status: 'soon' },
+    { id: 'ib-ai-hl', group: 'IB Diploma', name: 'IB Maths: Applications and Interpretation HL', status: 'live', topics: IB_ALL, groups: IB_GROUPS, diffs: [1, 2, 3], def: 2, levels: IBL, style: 'ib' },
     { id: 'ocr-cs-1', group: 'Computer Science', name: 'A Level Year 1 · OCR Computer Science', status: 'soon' },
     { id: 'ocr-cs-2', group: 'Computer Science', name: 'A Level Year 2 · OCR Computer Science', status: 'soon' }
   ];

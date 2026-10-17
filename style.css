@@ -303,3 +303,13 @@ mjx-container[display="true"] { margin: 0.4em 0 !important; }
 .dg .arc { stroke: currentColor; stroke-width: 1.2; fill: none; }
 .dg .bar { fill: var(--sec); fill-opacity: 0.22; stroke: var(--sec); stroke-width: 1.4; }
 .dg .image { fill: var(--hi); fill-opacity: 0.45; stroke: currentColor; stroke-width: 1.5; }
+.dg .slice { stroke: var(--surface); stroke-width: 2; }
+.dg .s0 { fill: var(--sec); fill-opacity: 0.45; } .dg .s1 { fill: var(--sec); fill-opacity: 0.25; }
+.dg .s2 { fill: var(--hi); fill-opacity: 0.7; } .dg .s3 { fill: var(--sec); fill-opacity: 0.12; }
+
+/* Course lists on the subject pages */
+.course-sec { margin-top: 8px; }
+.course-list .cname { min-width: 0; }
+.course-list .acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.course-list .acts a { font-family: var(--mono); font-size: 0.78rem; font-weight: 600; text-decoration: none; padding: 4px 10px; border-radius: 999px; background: var(--hi); color: var(--hi-ink) !important; }
+.course-list .acts a:hover { outline: 2px solid var(--ink); }

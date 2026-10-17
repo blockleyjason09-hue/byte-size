@@ -48,7 +48,7 @@
       var a = ri(1, 9), b = ri(0, 9); while (b === a) b = ri(1, 9);
       var n = 10 * a + b;
       return q1('Prove algebraically that the recurring decimal ' + M('0.\\dot{' + a + '}\\dot{' + b + '}') + ' can be written as ' + M(frac(n, 99)) + '.', 2,
-        M('x = 0.' + a + b + a + b + '\\ldots,\\ 100x = ' + n + '.' + a + b + '\\ldots') + '<br>' + M('99x = ' + n + ' \\Rightarrow x = \\frac{' + n + '}{99} = ' + frac(n, 99)));
+        M('x = 0.' + a + b + a + b + '\\ldots,\\ 100x = ' + n + '.' + a + b + '\\ldots') + '<br>' + M('99x = ' + n + ' \\Rightarrow x = \\frac{' + n + '}{99}' + (frac(n, 99) === '\\frac{' + n + '}{99}' ? '' : ' = ' + frac(n, 99))));
     } }
   ] });
 
@@ -233,6 +233,7 @@
     } },
     { d: [1, 2], f: function () {
       var a = ri(2, 6), b = ri(2, 9), c = ri(2, 5);
+      while (gcd(b, c) > 1) b = ri(2, 9);
       return q1('Factorise fully ' + M(a * c + 'x^{2}y + ' + a * b + 'xy^{2}'), 2, M(a + 'xy(' + c + 'x + ' + b + 'y)'));
     } },
     { d: [2], f: function () {
@@ -280,7 +281,7 @@
       var x, a, b, c;
       do { x = ri(15, 35); a = ri(5, 30); b = ri(5, 20); c = 180 - 6 * x - a + b; } while (c < -10 || c > 40 || c === 0 || 2 * x - b <= 0 || 3 * x + c <= 0);
       return q1('The angles of a triangle are ' + M('(x' + sg(a) + ')^\\circ') + ', ' + M('(2x - ' + b + ')^\\circ') + ' and ' + M('(3x' + sg(c) + ')^\\circ') + '.<br>Work out the size of the largest angle.', 4,
-        M('6x' + sg(a - b + c) + ' = 180 \\Rightarrow x = ' + x) + '; largest angle ' + Math.max(x + a, 2 * x - b, 3 * x + c) + '°');
+        M('6x' + (a - b + c ? sg(a - b + c) : '') + ' = 180 \\Rightarrow x = ' + x) + '; largest angle ' + Math.max(x + a, 2 * x - b, 3 * x + c) + '°');
     } },
     { d: [3], f: function () {
       var x, p, q, k1, k2, a, b;
@@ -417,16 +418,6 @@
         'No. ' + M(poly([d, a - d], 'n') + ' = ' + target) + ' gives ' + M('n = ' + frac(target - a + d, d)) + ', which is not a whole number.';
       return q1('The first four terms of an arithmetic sequence are ' + M(terms.join(',\\ ')) + '.<br>Is ' + target + ' a term of this sequence? You must show how you get your answer.', 2, ans);
     } },
-    { d: [3], f: function () {
-      var a = ri(1, 3), b = ri(-5, 5), c = ri(-6, 8);
-      var terms = [1, 2, 3, 4, 5].map(function (n) { return a * n * n + b * n + c; });
-      return q1('Here are the first five terms of a quadratic sequence.<br>' + M(terms.join(',\\quad ')) + '<br>Find an expression, in terms of ' + M('n') + ', for the ' + M('n') + 'th term of the sequence.', 3, M(poly([a, b, c], 'n')));
-    } },
-    { d: [3], f: function () {
-      var a = ri(2, 6), r = pick([2, 3, -2]), N = ri(6, 9);
-      var terms = [0, 1, 2, 3].map(function (i) { return a * Math.pow(r, i); });
-      return q1('The first four terms of a geometric sequence are ' + M(terms.join(',\\ ')) + '.<br>Find the ' + N + 'th term of the sequence.', 2, M(num(a * Math.pow(r, N - 1))));
-    } }
   ] });
 
   T({ id: 'functions', name: 'Functions', video: 'corbettmaths composite functions', gens: [
@@ -458,7 +449,7 @@
     } },
     { d: [3], f: function () {
       var a = ri(1, 5), b = nz(-16, 16);
-      return q1('A curve has equation ' + M('y = ' + a + 'x^2' + (b < 0 ? ' - ' : ' + ') + '\\frac{' + Math.abs(b) + '}{x}') + '.<br>Find ' + M('\\frac{\\mathrm{d}y}{\\mathrm{d}x}') + '.', 2,
+      return q1('A curve has equation ' + M('y = ' + (a === 1 ? '' : a) + 'x^2' + (b < 0 ? ' - ' : ' + ') + '\\frac{' + Math.abs(b) + '}{x}') + '.<br>Find ' + M('\\frac{\\mathrm{d}y}{\\mathrm{d}x}') + '.', 2,
         M(2 * a + 'x' + (b < 0 ? ' + ' : ' - ') + '\\frac{' + Math.abs(b) + '}{x^2}'));
     } },
     { d: [3], f: function () {
@@ -583,7 +574,7 @@
       return q1('Each exterior angle of a regular polygon is ' + 360 / n + '°.<br>How many sides does the polygon have?', 2, M('360 \\div ' + 360 / n + ' = ' + n));
     } },
     { d: [3], f: function () {
-      var k = ri(2, 8);
+      var k = pick([2, 3, 4, 5, 8, 9]);
       return q1('Each interior angle of a regular polygon is ' + k + ' times the size of each exterior angle.<br>Work out the number of sides of the polygon.', 3, M('e + ' + k + 'e = 180 \\Rightarrow e = ' + num(180 / (k + 1)) + '^\\circ') + ', so ' + M('n = ' + 2 * (k + 1)));
     } },
     { d: [2, 3], f: function () {

@@ -68,10 +68,24 @@
   BS.topic = function (t) { BS.topics[t.id] = t; };
 
   // Make one question for a topic at difficulty d, avoiding generators already used (set of indices)
-  BS.make = function (topicId, d, used) {
+  /* Content that is Higher tier only in the Pearson Edexcel 4MA1 specification. Used to keep Foundation courses on Foundation content. */
+  BS.HIGHER = /histogram|frequency density|cumulative frequency|quartile|tree diagram|without replacement|independent|given that|\\mid|cubic|reciprocal|\\sin x|\\cos x|\\tan x|mathrm\{f\}\(x [+-]|f\(x\) [+-] |sphere|cone|sector|arc length|completing the square|\(x \+ p\)\^2|x\^2 \+ y\^2|y &= x\^\{2\}|inversely proportional|proportional to|upper bound|lower bound|recurring|magnitude|cosine rule|sine rule|\\sin \d|angle between|elevation|depression|ABCDEFGH|pyramid|mathematically similar|area of the larger|area of the enlarged|[Pp]rove|single fraction|Simplify fully \\frac\{x|n\(A|arithmetic series|S_\{|drawn on the grid\.List all|x\^\{2\}[^=]*\\[lg]e|x\^\{2\}[^=]*[<>]|x\^2 \\ge|\^\{\\frac|\\left\(\\frac|fractional|by drawing a suitable|parallel\. Find the value of p|the subject of [^.]*\\frac\{1\}\{|the subject of [^.]*\\sqrt|the subject of [^.]*\\frac\{x|interior angle of a regular polygon is \d+ times|\^\{-\\frac|Give your solutions correct to|area of the segment|perpendicular to L|line that is perpendicular|overrightarrow\{O|overrightarrow\{A[BD]\} = \\mathbf|have volumes|Solve \d+x\^\{2\}|Factorise fully \d+x\^\{2\} [+-] \d+x|\)\([^)]*\)\(/;
+  BS.isHigher = function (t, i) {
+    var g = BS.topics[t].gens[i];
+    if (g.hi === undefined) {
+      g.hi = false;
+      for (var r = 0; r < 4 && !g.hi; r++) {
+        var q = g.f(g.d[r % g.d.length]), txt = ((q.stem || '') + ' ' + q.parts.map(function (p) { return p.q; }).join(' ')).replace(/<figure[\s\S]*?<\/figure>/g, ' ').replace(/<[^>]+>/g, '').replace(/\\\(|\\\)/g, '');
+        g.hi = BS.HIGHER.test(txt);
+      }
+    }
+    return g.hi;
+  };
+  BS.make = function (topicId, d, used, foundation) {
     var t = BS.topics[topicId];
-    var cands = [];
-    t.gens.forEach(function (gn, i) { if (gn.d.indexOf(d) > -1) cands.push(i); });
+    var cands = [], ok = function (i) { return !foundation || !BS.isHigher(topicId, i); };
+    t.gens.forEach(function (gn, i) { if (gn.d.indexOf(d) > -1 && ok(i)) cands.push(i); });
+    if (!cands.length && foundation) t.gens.forEach(function (gn, i) { if (ok(i)) cands.push(i); });
     if (!cands.length) {
       // fall back to the nearest difficulty available
       var best = 99;
@@ -83,7 +97,7 @@
       // all templates at this level used: borrow unused ones from the next level down, then up
       [d - 1, d + 1].forEach(function (dd) {
         if (fresh.length) return;
-        t.gens.forEach(function (gn, k) { if (gn.d.indexOf(dd) > -1 && !used.has(topicId + ':' + k)) fresh.push(k); });
+        t.gens.forEach(function (gn, k) { if (gn.d.indexOf(dd) > -1 && !used.has(topicId + ':' + k) && ok(k)) fresh.push(k); });
       });
     }
     var i = BS.pick(fresh.length ? fresh : cands);
