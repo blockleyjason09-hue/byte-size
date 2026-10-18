@@ -396,7 +396,9 @@
     var p = PLEN[key] && PLEN[key]();
     if (!p) { plStage.innerHTML = '<p class="note">No suitable question was found for this topic. Choose another topic or “Mixed retrieval” above.</p>'; return; }
     var c = course(state.course);
-    plStage.innerHTML = '<article class="paper slide plenary" id="pl-paper">' +
+    var grid = plRoot.querySelector('.ideas'); if (grid) grid.hidden = true;
+    plStage.innerHTML = '<p class="pl-back"><button type="button" class="back" data-pl-back>All plenary ideas</button></p>' +
+      '<article class="paper slide plenary" id="pl-paper">' +
       '<header><span class="tag">Plenary · ' + esc(c.name) + (state.topic === 'mixed' ? '' : ' · ' + esc(BS.topics[state.topic].name)) + '</span><span class="time">about 5 min</span></header>' +
       '<div class="body"><h2 class="paper-title">' + esc(p.title) + '</h2>' + p.body + '</div>' +
       '<footer>' + (p.answers ? '<button type="button" data-pl-ans aria-pressed="false">Show answers</button>' : '') +
@@ -411,9 +413,12 @@
       art.classList.add('presenting'); document.body.classList.add('is-presenting'); pres.textContent = 'Close';
       if (document.documentElement.requestFullscreen && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(function () {});
     });
-    plRoot.querySelectorAll('[data-plenary]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.plenary === key); });
+    plStage.querySelector('[data-pl-back]').addEventListener('click', function () {
+      stopPresent(); plStage.innerHTML = ''; if (grid) grid.hidden = false;
+      try { plRoot.scrollIntoView({ block: 'start' }); } catch (e) {}
+    });
     tex(plStage);
-    art.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    try { plRoot.scrollIntoView({ block: 'start' }); } catch (e) {}
   }
   if (plRoot && plStage) plRoot.querySelectorAll('[data-plenary]').forEach(function (b) { b.addEventListener('click', function () { showPlenary(b.dataset.plenary); }); });
   if (mode === 'revise') { $course.addEventListener('change', renderProgress); renderProgress(); }

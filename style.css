@@ -355,3 +355,5 @@ button.idea[aria-pressed="true"] { border-color: var(--pri); box-shadow: 0 0 0 2
 .slide.plenary li::before { content: none; }
 .slide.plenary .pl-opts li { display: flex; align-items: baseline; gap: 4px; }
 .slide.plenary .pl-list { list-style: none; }
+.pl-back { margin: 0 0 14px; }
+#plenary-stage { margin-top: 0; }
