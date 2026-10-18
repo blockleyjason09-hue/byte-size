@@ -17,6 +17,16 @@
   var G_Y9 = pickGroups(null, ['fractions', 'percentages', 'indices', 'ratio', 'compound-measures', 'expand-factorise', 'linear-equations', 'inequalities', 'sequences', 'straight-lines', 'kinematic-graphs', 'angles-parallel', 'polygons', 'pythagoras-trig', 'circles', 'similar-shapes', 'volume', 'vectors', 'transformations', 'averages', 'stats-diagrams', 'probability', 'sets']);
 
   BS.LEVELS = { 1: 'Foundation', 2: 'Core', 3: 'Accelerated' };
+  var FML = { 1: 'Standard', 2: 'Exam', 3: 'Challenging' };
+  var FM_GROUPS = [
+    ['Number', ['fm-counting', 'fm-surds']],
+    ['Algebra', ['fm-functions', 'fm-algebra', 'fm-binomial', 'fm-factor', 'fm-quadratics', 'fm-graphs', 'fm-equations', 'fm-inequalities', 'fm-indices', 'fm-proof', 'fm-sequences']],
+    ['Coordinate geometry', ['fm-coord', 'fm-circles']],
+    ['Calculus', ['fm-calculus']],
+    ['Matrix transformations', ['fm-matrices']],
+    ['Geometry and trigonometry', ['fm-trig', 'fm-geometry']]
+  ];
+  var FM_ALL = [].concat.apply([], FM_GROUPS.map(function (g) { return g[1]; }));
   var IBL = { 1: 'Standard', 2: 'Exam', 3: 'Challenging' };
   var IB_GROUPS = [
     ['Topic 1: Number and algebra', ['ib-approx', 'ib-arith', 'ib-geom', 'ib-finance', 'ib-logs', 'ib-systems', 'ib-complex', 'ib-matrices', 'ib-eigen']],
@@ -40,7 +50,7 @@
     { id: 'igcse', group: 'GCSE and International GCSE', name: 'Year 10–11 · Pearson Edexcel International GCSE', status: 'live', topics: flat(G_ALL), groups: G_ALL, diffs: [1, 2, 3], def: 2 },
     { id: 'igcse-f', group: 'GCSE and International GCSE', name: 'Year 11 Foundation · Pearson Edexcel International GCSE', status: 'live', topics: flat(G_FOUND), groups: G_FOUND, diffs: [1, 2], def: 1, foundation: true },
     { id: 'igcse-acc', group: 'GCSE and International GCSE', name: 'Year 11 Accelerated · Pearson Edexcel International GCSE', status: 'live', topics: flat(G_ALL), groups: G_ALL, diffs: [2, 3], def: 3 },
-    { id: 'aqa-fm', group: 'GCSE and International GCSE', name: 'Year 11 · AQA Level 2 Further Maths', status: 'soon' },
+    { id: 'aqa-fm', group: 'GCSE and International GCSE', name: 'Year 11 · AQA Level 2 Further Maths', status: 'live', topics: FM_ALL, groups: FM_GROUPS, diffs: [1, 2, 3], def: 2, levels: FML },
     { id: 'as', group: 'A Level Maths', name: 'Year 12 · AS Maths (Pure, Statistics, Mechanics) · Pearson', status: 'soon' },
     { id: 'a2', group: 'A Level Maths', name: 'Year 13 · A Level Maths (Pure, Statistics, Mechanics) · Pearson', status: 'soon' },
     { id: 'cp1', group: 'A Level Further Maths', name: 'Year 12 · Further Maths Core Pure · Pearson', status: 'soon' },

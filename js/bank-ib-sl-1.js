@@ -25,6 +25,7 @@
       var v = a * Math.pow(10, k) * b * Math.pow(10, j), e = Math.floor(Math.log10(v)), man = v / Math.pow(10, e);
       var man3 = Number(man.toPrecision(3)), e3 = e; if (man3 >= 10) { man3 = 1; e3++; }
       var rounded = Number(man.toPrecision(1)) * Math.pow(10, e), pe = Math.abs(rounded - v) / v * 100;
+      if (pe < 0.05) { a += 0.1; return BS.topics['sl-approx'].gens[4].f(); }
       return { stem: M('p = (' + a + ' \\times 10^{' + k + '}) \\times (' + b + ' \\times 10^{' + j + '})') + '.', parts: [
         { q: 'Find the value of ' + M('p') + '. Give your answer in the form ' + M('a \\times 10^{k}') + ', where ' + M('1 \\le a < 10') + ' and ' + M('k \\in \\mathbb{Z}') + ', correct to three significant figures.', m: 2, a: M(man3.toFixed(2) + ' \\times 10^{' + e3 + '}') },
         { q: 'Jo rounds ' + M('p') + ' to one significant figure. Find the percentage error in Jo’s value.', m: 2, a: M('\\left|\\frac{' + BS.sf(rounded, 1) + ' - ' + s3(v) + '}{' + s3(v) + '}\\right| \\times 100\\% = ' + s3(pe) + '\\%') }

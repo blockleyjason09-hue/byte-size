@@ -52,7 +52,7 @@
     { d: [2], f: function () {
       var a = ri(6, 16), b = ri(6, 16), C = ri(35, 120);
       var P = triFromSAS(a, b, C), c = Math.sqrt(a * a + b * b - 2 * a * b * Math.cos(C * DEG));
-      var A = deg(Math.asin(a * Math.sin(C * DEG) / c)); if (a * a > b * b + c * c) A = 180 - A;
+      var A = deg(Math.acos(Math.max(-1, Math.min(1, (b * b + c * c - a * a) / (2 * b * c)))));
       return { stem: 'In triangle ' + M('ABC') + ', ' + M('CA = ' + b) + ' cm, ' + M('CB = ' + a) + ' cm and ' + M('A\\hat{C}B = ' + C + '^\\circ') + '.' + D.triangle(P, { sides: [null, a + ' cm', b + ' cm'], ang: [null, null, C + '°'] }), parts: [
         { q: 'Find ' + M('AB') + '.', m: 3, a: s3(c) + ' cm' },
         { q: 'Find ' + M('C\\hat{A}B') + '.', m: 3, a: s3(A) + '°' }
