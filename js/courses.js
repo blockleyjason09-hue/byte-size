@@ -30,12 +30,14 @@
   var AS_GROUPS = [
     ['Pure', ['al-indices', 'al-quadratics', 'al-equations', 'al-graphs', 'al-lines', 'al-circles', 'al-algebraic', 'al-binomial', 'al-trig', 'al-vectors', 'al-differentiation', 'al-integration', 'al-explog']],
     ['Statistics', ['al-sampling', 'al-location', 'al-representations', 'al-correlation', 'al-probability', 'al-binomial-dist', 'al-hypothesis']],
-    ['Mechanics', ['al-suvat', 'al-forces', 'al-variable-acc']]
+    ['Mechanics', ['al-suvat', 'al-forces', 'al-variable-acc']],
+    ['Large data set', ['al-lds']]
   ];
   var A2_GROUPS = [
     ['Pure', ['a2-proof', 'a2-functions', 'a2-sequences', 'a2-binomial', 'a2-radians', 'a2-trigfn', 'a2-trigadd', 'a2-parametric', 'a2-differentiation', 'a2-numerical', 'a2-integration', 'a2-vectors']],
     ['Statistics', ['a2-regression', 'a2-probability', 'a2-normal']],
-    ['Mechanics', ['a2-moments', 'a2-friction', 'a2-projectiles', 'a2-statics', 'a2-kinematics']]
+    ['Mechanics', ['a2-moments', 'a2-friction', 'a2-projectiles', 'a2-statics', 'a2-kinematics']],
+    ['Large data set', ['al-lds']]
   ];
   function allOf(gs) { return [].concat.apply([], gs.map(function (g) { return g[1]; })); }
   var IBL = { 1: 'Standard', 2: 'Exam', 3: 'Challenging' };
