@@ -39,6 +39,7 @@
     return s || '0';
   };
   // " + 5" / " - 5"
+  BS.vt = function (cs, us) { var o = ''; cs.forEach(function (c, i) { c = String(c); if (c === '0') return; var neg = c.charAt(0) === '-', a = neg ? c.slice(1) : c; if (a === '1') a = ''; o += (o ? (neg ? ' - ' : ' + ') : (neg ? '-' : '')) + a + us[i]; }); return o || '\\mathbf{0}'; };
   BS.sg = function (b) { return b < 0 ? ' - ' + (-b) : ' + ' + b; };
   // Bracket factor like (x - 3) or (2x + 1)
   BS.br = function (p, q, v) { return '(' + BS.poly([p, q], v) + ')'; };

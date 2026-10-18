@@ -27,6 +27,17 @@
     ['Geometry and trigonometry', ['fm-trig', 'fm-geometry']]
   ];
   var FM_ALL = [].concat.apply([], FM_GROUPS.map(function (g) { return g[1]; }));
+  var AS_GROUPS = [
+    ['Pure', ['al-indices', 'al-quadratics', 'al-equations', 'al-graphs', 'al-lines', 'al-circles', 'al-algebraic', 'al-binomial', 'al-trig', 'al-vectors', 'al-differentiation', 'al-integration', 'al-explog']],
+    ['Statistics', ['al-sampling', 'al-location', 'al-representations', 'al-correlation', 'al-probability', 'al-binomial-dist', 'al-hypothesis']],
+    ['Mechanics', ['al-suvat', 'al-forces', 'al-variable-acc']]
+  ];
+  var A2_GROUPS = [
+    ['Pure', ['a2-proof', 'a2-functions', 'a2-sequences', 'a2-binomial', 'a2-radians', 'a2-trigfn', 'a2-trigadd', 'a2-parametric', 'a2-differentiation', 'a2-numerical', 'a2-integration', 'a2-vectors']],
+    ['Statistics', ['a2-regression', 'a2-probability', 'a2-normal']],
+    ['Mechanics', ['a2-moments', 'a2-friction', 'a2-projectiles', 'a2-statics', 'a2-kinematics']]
+  ];
+  function allOf(gs) { return [].concat.apply([], gs.map(function (g) { return g[1]; })); }
   var IBL = { 1: 'Standard', 2: 'Exam', 3: 'Challenging' };
   var IB_GROUPS = [
     ['Topic 1: Number and algebra', ['ib-approx', 'ib-arith', 'ib-geom', 'ib-finance', 'ib-logs', 'ib-systems', 'ib-complex', 'ib-matrices', 'ib-eigen']],
@@ -51,8 +62,8 @@
     { id: 'igcse-f', group: 'GCSE and International GCSE', name: 'Year 11 Foundation · Pearson Edexcel International GCSE', status: 'live', topics: flat(G_FOUND), groups: G_FOUND, diffs: [1, 2], def: 1, foundation: true },
     { id: 'igcse-acc', group: 'GCSE and International GCSE', name: 'Year 11 Accelerated · Pearson Edexcel International GCSE', status: 'live', topics: flat(G_ALL), groups: G_ALL, diffs: [2, 3], def: 3 },
     { id: 'aqa-fm', group: 'GCSE and International GCSE', name: 'Year 11 · AQA Level 2 Further Maths', status: 'live', topics: FM_ALL, groups: FM_GROUPS, diffs: [1, 2, 3], def: 2, levels: FML },
-    { id: 'as', group: 'A Level Maths', name: 'Year 12 · AS Maths (Pure, Statistics, Mechanics) · Pearson', status: 'soon' },
-    { id: 'a2', group: 'A Level Maths', name: 'Year 13 · A Level Maths (Pure, Statistics, Mechanics) · Pearson', status: 'soon' },
+    { id: 'as', group: 'A Level Maths', name: 'Year 12 · A Level Maths Year 1 (Pure, Statistics, Mechanics) · Pearson', status: 'live', topics: allOf(AS_GROUPS), groups: AS_GROUPS, diffs: [1, 2, 3], def: 2, levels: FML },
+    { id: 'a2', group: 'A Level Maths', name: 'Year 13 · A Level Maths Year 2 (Pure, Statistics, Mechanics) · Pearson', status: 'live', topics: allOf(A2_GROUPS), groups: A2_GROUPS, diffs: [1, 2, 3], def: 2, levels: FML },
     { id: 'cp1', group: 'A Level Further Maths', name: 'Year 12 · Further Maths Core Pure · Pearson', status: 'soon' },
     { id: 'cp2', group: 'A Level Further Maths', name: 'Year 13 · Further Maths Core Pure · Pearson', status: 'soon' },
     { id: 'fs1', group: 'A Level Further Maths', name: 'Further Statistics 1 · Pearson', status: 'soon' },

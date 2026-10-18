@@ -9,7 +9,7 @@
   function from(id, idx) { var gs = BS.topics[id].gens; return (idx || gs.map(function (_, i) { return i; })).map(function (i) { return gs[i]; }); }
   function comb(n, k) { var r = 1; for (var i = 1; i <= k; i++) r = r * (n - k + i) / i; return Math.round(r); }
   function c1(c, v) { return c === 1 ? v : c === -1 ? '-' + v : c + v; } // coefficient beside a letter
-  function tc(c, t) { return (c < 0 ? ' - ' : ' + ') + (Math.abs(c) === 1 ? '' : Math.abs(c)) + t; } // signed term
+  function tc(c, t) { if (c === 0) return ''; return (c < 0 ? ' - ' : ' + ') + (Math.abs(c) === 1 ? '' : Math.abs(c)) + t; } // signed term
   var FM = BS.fm = { from: from, comb: comb, c1: c1, tc: tc };
 
   /* =============== NUMBER =============== */
