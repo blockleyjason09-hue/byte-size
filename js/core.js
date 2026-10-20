@@ -82,10 +82,24 @@
     }
     return g.hi;
   };
+  // Extension questions: BS.ext(['topic-id', ...], [{ f: fn }, ...]) adds them at the top level of each topic.
+  BS.ext = function (ids, gens) {
+    [].concat(ids).forEach(function (id) {
+      var t = BS.topics[id]; if (!t) return;
+      gens.forEach(function (g) { t.gens.push({ d: [3], x: true, f: g.f || g }); });
+    });
+  };
   BS.make = function (topicId, d, used, foundation) {
     var t = BS.topics[topicId];
-    var cands = [], ok = function (i) { return !foundation || !BS.isHigher(topicId, i); };
-    t.gens.forEach(function (gn, i) { if (gn.d.indexOf(d) > -1 && ok(i)) cands.push(i); });
+    var cands = [], ok = function (i) { return (!foundation || !BS.isHigher(topicId, i)) && (!t.gens[i].x || (d === 3 && !foundation)); };
+    // The top level (Challenging / Accelerated) uses the extension questions where a topic has them;
+    // the older level-3 questions then join the Exam level.
+    var hasX = !foundation && d === 3 && t.gens.some(function (gn) { return gn.x; });
+    t.gens.forEach(function (gn, i) {
+      if (!ok(i)) return;
+      if (hasX) { if (gn.x) cands.push(i); return; }
+      if (gn.d.indexOf(d) > -1 || (d === 2 && !gn.x && gn.d.indexOf(3) > -1 && t.gens.some(function (g2) { return g2.x; }))) cands.push(i);
+    });
     if (!cands.length && foundation) t.gens.forEach(function (gn, i) { if (ok(i)) cands.push(i); });
     if (!cands.length) {
       // fall back to the nearest difficulty available
