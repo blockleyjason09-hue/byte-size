@@ -124,11 +124,12 @@
       var p = ri(2, 3), q = nz(-5, 5), r = 1, s = nz(-6, 6), u = 1, v = nz(-6, 6); while (v === s) v = nz(-6, 6);
       while (gcd(p, Math.abs(q)) > 1) q = nz(-5, 5);
       var top = [p * r, p * s + q * r, q * s], bot = [p * u, p * v + q * u, q * v];
-      var a = nz(-4, 4), b = nz(-4, 4), c = nz(-4, 4);
-      return Q('', [
-        ['Simplify fully ' + M('\\frac{' + poly(top) + '}{' + poly(bot) + '}') + '.', 3, M('\\frac{' + br(p, q) + br(r, s) + '}{' + br(p, q) + br(u, v) + '} = \\frac{' + poly([r, s]) + '}{' + poly([u, v]) + '}')],
-        ['Expand and simplify ' + M(br(1, a) + br(1, b) + br(1, c)) + '.', 3, M(poly([1, a + b + c, a * b + b * c + a * c, a * b * c]))]
-      ]);
+      var ks = [-4, -3, -2, 2, 3, 4, 5].filter(function (k) { var x = (s - k * v) / (k - 1); return Number.isInteger(x) && x !== -v && p * x + q !== 0 && x !== -s; });
+      var a = ri(2, 3), b = ri(1, 5), c = nz(-4, 4);
+      var parts = [['Simplify fully ' + M('\\frac{' + poly(top) + '}{' + poly(bot) + '}') + '.', 3, M('\\frac{' + br(p, q) + br(r, s) + '}{' + br(p, q) + br(u, v) + '} = \\frac{' + poly([r, s]) + '}{' + poly([u, v]) + '}')]];
+      if (ks.length) { var k = pick(ks), xs = (s - k * v) / (k - 1); parts.push(['Hence solve ' + M('\\frac{' + poly(top) + '}{' + poly(bot) + '} = ' + k) + '.', 3, M(poly([1, s]) + ' = ' + k + '(' + poly([1, v]) + ')') + ', so ' + M('x = ' + xs)]); }
+      parts.push(['Expand and simplify ' + M(br(a, c) + br(1, b) + br(1, -b)) + '.', 3, M(br(a, c) + '(x^2 - ' + (b * b) + ') = ' + poly([a, c, -a * b * b, -c * b * b]))]);
+      return Q('', parts);
     },
     function () {
       var P = pick([

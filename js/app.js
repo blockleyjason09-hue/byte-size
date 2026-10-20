@@ -37,13 +37,26 @@
   var live = BS.courses.filter(function (c) { return c.status === 'live'; });
   var state = {
     course: (prefs.course && course(prefs.course) && course(prefs.course).status === 'live') ? prefs.course : 'igcse',
-    topic: prefs.topic || 'mixed',
+    topic: 'mixed', sel: Array.isArray(prefs.topics) ? prefs.topics.slice() : (prefs.topic && prefs.topic !== 'mixed' && prefs.topic !== 'multi' ? [prefs.topic] : []),
     diff: prefs.diff || null,
     count: 5, mins: prefs.mins || 45
   };
+  // Topic selection: state.sel is the list of chosen topics (empty = all topics).
+  // state.topic is 'mixed' (none chosen), the single topic id, or 'multi'.
+  function setSel(a) { state.sel = a.filter(function (t, i) { return BS.topics[t] && a.indexOf(t) === i; }); state.topic = !state.sel.length ? 'mixed' : state.sel.length === 1 ? state.sel[0] : 'multi'; }
+  function single() { return state.sel.length === 1; }
+  function names(list) { return list.map(function (t) { return BS.topics[t].name; }); }
+  function topicTitle() {
+    if (!state.sel.length) return '';
+    if (state.sel.length <= 3) return names(state.sel).join(' · ');
+    return state.sel.length + ' topics';
+  }
+  setSel(state.sel);
   var COUNTS = { donow: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], exit: [1, 2, 3, 4, 5, 6, 8], revise: [5, 8, 10, 12, 15, 20] };
   var DEFN = { donow: 5, exit: 3, revise: 10 };
   if (COUNTS[mode]) { var pc = prefs['n_' + mode]; state.count = COUNTS[mode].indexOf(pc) > -1 ? pc : DEFN[mode]; }
+  var EXT = mode === 'donow' || mode === 'exit';
+  state.ext = EXT && prefs['x_' + mode] === true;
 
   /* ---------- Controls ---------- */
   var groups = {};
@@ -60,9 +73,9 @@
   var newLabel = { donow: 'New Do Now', exit: 'New exit ticket', revise: 'New worksheet', practise: 'New question', paper: 'New paper' }[mode];
 
   var LEDE = {
-    donow: 'A fresh set of exam-style starter questions every time you press <b>New Do Now</b>. Choose one topic or mixed retrieval, then press <b>Present</b> to put it on the board.',
+    donow: 'A fresh set of exam-style starter questions every time you press <b>New Do Now</b>. Choose one or more topics (or leave it on mixed retrieval), then press <b>Present</b> to put it on the board.',
     exit: 'A short check at the end of the lesson, finishing with a confidence rating. Plenary ideas for any lesson are below.',
-    plenary: 'Choose the topic and difficulty, then pick a plenary below. Each one is made from questions in this course.',
+    plenary: 'Choose one or more topics and the difficulty, then pick a plenary below. Each one is made from questions in this course.',
     revise: 'A longer set of exam-style questions for a revision lesson or homework. Press <b>Print</b> for a paper copy; show the answers first to print the mark scheme too.',
     practise: 'One question at a time. Answer on paper, then check the mark scheme. Anything you get wrong goes on your list of things to work on, with a video to help.',
     paper: 'A timed practice paper made from questions across the course, getting harder as you go. Start the timer, answer on paper, then mark your work with the mark scheme.'
@@ -74,27 +87,49 @@
   root.innerHTML = tabs +
     '<div class="controls">' +
       '<label class="ctl wide"' + (fixed ? ' hidden' : '') + '><span>Course</span><select id="bs-course">' + courseOpts + '</select></label>' +
-      '<label class="ctl wide"><span>Topic</span><select id="bs-topic"></select></label>' +
+      '<div class="ctl wide tpick-wrap"><span id="bs-topic-label">Topics</span><button type="button" class="tpick" id="bs-topic" aria-haspopup="true" aria-expanded="false" aria-labelledby="bs-topic-label bs-topic"></button>' +
+        '<div class="tpanel" id="bs-tpanel" hidden role="dialog" aria-label="Choose topics"></div></div>' +
       '<div class="ctl"' + (mode === 'paper' ? ' hidden' : '') + '><span id="bs-diff-label">Difficulty</span><div class="seg" id="bs-diff" role="group" aria-labelledby="bs-diff-label"></div></div>' +
       countCtl +
+      (EXT ? '<div class="ctl"><span id="bs-ext-label">Extension question</span><div class="seg" id="bs-ext" role="group" aria-labelledby="bs-ext-label"><button type="button" data-x="0" aria-pressed="' + !state.ext + '">None</button><button type="button" data-x="1" aria-pressed="' + state.ext + '">Add one</button></div></div>' : '') +
       (mode === 'plenary' ? '' : '<button type="button" class="btn" id="bs-new">' + newLabel + '</button>') +
     '</div>' +
     (mode === 'practise'
       ? '<div class="revise-grid"><div id="bs-stage"></div><aside class="progress" id="bs-progress" aria-live="polite"></aside></div>'
       : '<div id="bs-stage"></div>');
 
-  var $course = document.getElementById('bs-course'), $topic = document.getElementById('bs-topic'),
+  var $course = document.getElementById('bs-course'), $topic = document.getElementById('bs-topic'), $tpanel = document.getElementById('bs-tpanel'),
       $diff = document.getElementById('bs-diff'), $count = document.getElementById('bs-count'),
       $stage = document.getElementById('bs-stage'), $mins = document.getElementById('bs-mins');
 
+  var allLabel = mode === 'practise' ? 'All topics (mixed)' : mode === 'paper' ? 'Whole course' : 'Mixed retrieval (all topics)';
+  function topicButtonText() {
+    if (!state.sel.length) return allLabel;
+    if (state.sel.length === 1) return BS.topics[state.sel[0]].name;
+    return state.sel.length + ' topics: ' + names(state.sel).join(', ');
+  }
+  function groupsOf(c) { return c.groups || [['Topics', c.topics]]; }
+  function fillPanel() {
+    var c = course(state.course), on = function (t) { return state.sel.indexOf(t) > -1; };
+    function box(t) { return '<label class="tp-item"><input type="checkbox" value="' + t + '"' + (on(t) ? ' checked' : '') + '> <span>' + esc(BS.topics[t].name) + '</span></label>'; }
+    var gl = groupsOf(c);
+    $tpanel.innerHTML =
+      '<div class="tp-top"><b>Choose one or more topics</b><span class="tp-count">' + (state.sel.length ? state.sel.length + ' chosen' : 'None chosen, so all topics are used') + '</span></div>' +
+      '<div class="tp-groups">' + gl.map(function (gp, gi) {
+        var all = gp[1].every(on);
+        return '<fieldset class="tp-group"><legend><label class="tp-item tp-g"><input type="checkbox" data-group="' + gi + '"' + (all ? ' checked' : '') + '> <span>' + esc(gp[0]) + '</span></label></legend>' + gp[1].map(box).join('') + '</fieldset>';
+      }).join('') + '</div>' +
+      '<div class="tp-foot"><button type="button" class="tp-clear" data-tp="clear">Clear: use all topics</button><button type="button" class="btn" data-tp="done">Done</button></div>';
+    $tpanel.querySelectorAll('input[data-group]').forEach(function (g) {
+      var list = gl[+g.dataset.group][1];
+      g.indeterminate = !g.checked && list.some(on);
+    });
+  }
   function fillTopics() {
     var c = course(state.course);
-    function opt(t) { return '<option value="' + t + '">' + esc(BS.topics[t].name) + '</option>'; }
-    var opts = '<option value="mixed">' + (mode === 'practise' ? 'All topics (mixed)' : mode === 'paper' ? 'Whole course' : 'Mixed retrieval (all topics)') + '</option>' +
-      (c.groups ? c.groups.map(function (gp) { return '<optgroup label="' + esc(gp[0]) + '">' + gp[1].map(opt).join('') + '</optgroup>'; }).join('') : c.topics.map(opt).join(''));
-    $topic.innerHTML = opts;
-    if (state.topic !== 'mixed' && c.topics.indexOf(state.topic) < 0) state.topic = 'mixed';
-    $topic.value = state.topic;
+    setSel(state.sel.filter(function (t) { return c.topics.indexOf(t) > -1; }));
+    $topic.textContent = topicButtonText();
+    if (!$tpanel.hidden) fillPanel();
     if (!state.diff || c.diffs.indexOf(state.diff) < 0) state.diff = c.def;
     $diff.innerHTML = c.diffs.map(function (d) {
       return '<button type="button" data-d="' + d + '" aria-pressed="' + (d === state.diff) + '">' + lvl(c, d) + '</button>';
@@ -105,19 +140,19 @@
   // ...and do-now.html#course=igcse opens that course
   if (hashT.indexOf('course=') === 0) {
     var hc = course(hashT.slice(7).split('&')[0]);
-    if (hc && hc.status === 'live') { if (state.course !== hc.id) { state.topic = 'mixed'; state.diff = null; } state.course = hc.id; }
+    if (hc && hc.status === 'live') { if (state.course !== hc.id) { setSel([]); state.diff = null; } state.course = hc.id; }
     hashT = '';
   }
   if (hashT && BS.topics[hashT]) {
     var cur = course(state.course);
     if (!cur || cur.topics.indexOf(hashT) < 0) { var found = live.filter(function (c) { return c.topics.indexOf(hashT) > -1; })[0]; if (found) state.course = found.id; }
-    state.topic = hashT;
+    setSel([hashT]);
   }
   if (fixed) {
     var fc = course((location.hash.match(/course=([\w-]+)/) || [])[1]);
     if (!fc || fc.status !== 'live') { location.replace('maths.html'); return; }
     var ft = (location.hash.match(/[&#]t=([\w-]+)/) || [])[1];
-    if (ft && fc.topics.indexOf(ft) > -1) { state.topic = ft; fillTopics(); }
+    if (ft && fc.topics.indexOf(ft) > -1) { setSel([ft]); fillTopics(); }
     var T = (window.BS_TITLES || {})[fc.id] || [fc.name, ''];
     var h = document.getElementById('course-title'), sub = document.getElementById('course-sub');
     if (h) h.textContent = T[0]; if (sub) sub.textContent = T[1];
@@ -129,14 +164,46 @@
   fillTopics();
   if ($count) $count.value = String(state.count);
 
-  function save() { if (COUNTS[mode]) prefs['n_' + mode] = state.count; prefs.course = state.course; prefs.topic = state.topic; prefs.diff = state.diff; prefs.mins = state.mins; store('bytesize-prefs', prefs); }
+  function save() { if (COUNTS[mode]) prefs['n_' + mode] = state.count; if (EXT) prefs['x_' + mode] = state.ext; prefs.course = state.course; prefs.topic = state.topic; prefs.topics = state.sel; prefs.diff = state.diff; prefs.mins = state.mins; store('bytesize-prefs', prefs); }
 
   $course.addEventListener('change', function () { state.course = $course.value; state.diff = null; fillTopics(); save(); build(); });
-  $topic.addEventListener('change', function () { state.topic = $topic.value; save(); build(); });
+  var selAtOpen = null;
+  function openPanel() { selAtOpen = state.sel.join(','); fillPanel(); $tpanel.hidden = false; $topic.setAttribute('aria-expanded', 'true'); }
+  function closePanel() {
+    if ($tpanel.hidden) return;
+    $tpanel.hidden = true; $topic.setAttribute('aria-expanded', 'false');
+    if (state.sel.join(',') !== selAtOpen) { save(); build(); }
+  }
+  $topic.addEventListener('click', function () { if ($tpanel.hidden) openPanel(); else closePanel(); });
+  $tpanel.addEventListener('change', function (e) {
+    var inp = e.target, c = course(state.course), gl = groupsOf(c), sel = state.sel.slice();
+    if (inp.dataset.group !== undefined) {
+      var list = gl[+inp.dataset.group][1];
+      if (inp.checked) list.forEach(function (t) { if (sel.indexOf(t) < 0) sel.push(t); });
+      else sel = sel.filter(function (t) { return list.indexOf(t) < 0; });
+    } else if (inp.checked) sel.push(inp.value); else sel = sel.filter(function (t) { return t !== inp.value; });
+    setSel(c.topics.filter(function (t) { return sel.indexOf(t) > -1; })); // keep course order
+    $topic.textContent = topicButtonText();
+    var keep = $tpanel.querySelector('.tp-groups').scrollTop; fillPanel(); $tpanel.querySelector('.tp-groups').scrollTop = keep;
+  });
+  $tpanel.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-tp]'); if (!b) return;
+    if (b.dataset.tp === 'clear') { setSel([]); $topic.textContent = topicButtonText(); }
+    closePanel();
+  });
+  document.addEventListener('click', function (e) { if (!$tpanel.hidden && !e.target.closest('.tpick-wrap')) closePanel(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$tpanel.hidden) { closePanel(); $topic.focus(); } });
   $diff.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     state.diff = Number(b.dataset.d);
     $diff.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+    save(); build();
+  });
+  var $ext = document.getElementById('bs-ext');
+  if ($ext) $ext.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    state.ext = b.dataset.x === '1';
+    $ext.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
     save(); build();
   });
   if ($count) $count.addEventListener('change', function () { state.count = Number($count.value); save(); build(); });
@@ -169,8 +236,8 @@
 
   function pickTopics(n) {
     var c = course(state.course);
-    if (state.topic !== 'mixed') { var a = []; for (var i = 0; i < n; i++) a.push(state.topic); return a; }
-    var sh = BS.shuffle(c.topics.filter(function (t) { return !BS.topics[t].noMix; })), out = [];
+    if (single()) { var a = []; for (var i = 0; i < n; i++) a.push(state.sel[0]); return a; }
+    var sh = BS.shuffle(state.sel.length ? state.sel : c.topics.filter(function (t) { return !BS.topics[t].noMix; })), out = [];
     for (var j = 0; j < n; j++) out.push(sh[j % sh.length]);
     return out;
   }
@@ -182,16 +249,24 @@
     var c = course(state.course), used = new Set();
     var qs = pickTopics(state.count).map(function (t) { return BS.make(t, state.diff, used, !!course(state.course).foundation); });
     var marks = qs.reduce(function (s, q) { return s + q.marks; }, 0);
+    // Extension question for early finishers: the top-level (extension) question for one of the topics in the set
+    var xq = null;
+    if (EXT && state.ext) {
+      var cand = qs.map(function (q) { return q.topic; }).filter(function (t) { return BS.topics[t].gens.some(function (g) { return g.x; }); });
+      var xt = cand.length ? BS.pick(cand) : qs[0].topic;
+      xq = BS.make(xt, 3, used, !!c.foundation);
+    }
     var lead = { donow: 'Do Now', exit: 'Exit ticket', revise: 'Revision worksheet' }[mode];
-    var title = state.topic === 'mixed' ? (mode === 'donow' ? 'Do Now: mixed retrieval' : lead) : lead + ': ' + BS.topics[state.topic].name;
+    var title = !state.sel.length ? (mode === 'donow' ? 'Do Now: mixed retrieval' : lead) : lead + ': ' + topicTitle();
     var mins = mode === 'exit' ? Math.max(4, qs.length + 1) : Math.max(5, Math.round(marks * 0.8));
     $stage.innerHTML =
       '<article class="paper slide" id="bs-paper">' +
-        '<header><span class="tag">' + esc(c.name) + ' · ' + lvl(course(state.course), state.diff) + '</span><span class="time">' + marks + ' marks · about ' + mins + ' min</span></header>' +
+        '<header><span class="tag">' + esc(c.name) + ' · ' + lvl(course(state.course), state.diff) + '</span><span class="time">' + marks + ' marks · about ' + mins + ' min' + (xq ? ' + extension' : '') + '</span></header>' +
         '<div class="body">' +
           '<h2 class="paper-title">' + esc(title) + '</h2>' +
           '<p class="instr">' + (isIB() ? 'Answer all questions. A graphic display calculator is required. Unless otherwise stated, give answers exactly or correct to three significant figures.' : 'Answer all questions. Show all your working.') + '</p>' +
-          qs.map(function (q, i) { return renderQ(q, i + 1, state.topic === 'mixed'); }).join('') +
+          qs.map(function (q, i) { return renderQ(q, i + 1, !single()); }).join('') +
+          (xq ? '<div class="ext-block"><p class="ext-head"><span class="ext-badge">Extension</span> Finished early? Try this.</p>' + renderQ(xq, '★', true).replace('<section class="q"', '<section class="q ext"').replace('Total for Question ★', 'Total for the extension question') + '</div>' : '') +
           (mode === 'exit' ? '<div class="reflect-box"><p><b>How confident do you feel?</b> <span class="scale">1&nbsp;&nbsp;2&nbsp;&nbsp;3&nbsp;&nbsp;4&nbsp;&nbsp;5</span></p><p><b>One thing I am still unsure about:</b></p><div class="write-line"></div></div>' : '') +
         '</div>' +
         '<footer><button type="button" data-answers aria-pressed="false">Show answers</button><button type="button" data-new>New questions</button>' + (mode === 'revise' ? '<button type="button" data-print>Print</button>' : '') + '<button type="button" class="present">Present</button></footer>' +
@@ -210,7 +285,7 @@
   function buildPaper() {
     if (timer) { clearInterval(timer); timer = null; }
     var c = course(state.course), ds = c.diffs.slice().sort(), target = Math.round(state.mins * (isIB() ? 0.9 : 1)), qs = [], used = new Set(), total = 0, guard = 0;
-    var pool = state.topic === 'mixed' ? BS.shuffle(c.topics.filter(function (t) { return !BS.topics[t].noMix; })) : [state.topic];
+    var pool = !state.sel.length ? BS.shuffle(c.topics.filter(function (t) { return !BS.topics[t].noMix; })) : BS.shuffle(state.sel);
     while (total < target - 2 && guard++ < 200) {
       var stage = total / target, d = ds[Math.min(ds.length - 1, Math.floor(stage * ds.length))];
       var q = BS.make(pool[qs.length % pool.length], d, used, !!c.foundation);
@@ -222,7 +297,7 @@
       '<article class="paper slide exam" id="bs-paper">' +
         '<header><span class="tag">Practice paper · ' + esc(c.name) + '</span><span class="time">' + total + ' marks · ' + state.mins + ' minutes</span></header>' +
         '<div class="body">' +
-          '<div class="exam-top"><h2 class="paper-title">Practice paper' + (state.topic === 'mixed' ? '' : ': ' + esc(BS.topics[state.topic].name)) + '</h2>' +
+          '<div class="exam-top"><h2 class="paper-title">Practice paper' + (state.sel.length ? ': ' + esc(topicTitle()) : '') + '</h2>' +
           '<div class="clock"><span id="bs-clock" aria-live="off">' + state.mins + ':00</span><button type="button" class="btn" data-start>Start timer</button></div></div>' +
           '<p class="instr">' + (isIB() ? 'Answer all questions. A graphic display calculator is required. Unless otherwise stated, give answers exactly or correct to three significant figures.' : 'Answer all questions on paper. Show all your working. Questions get harder as you go through the paper.') + ' Total ' + total + ' marks.</p>' +
           '<p class="instr note">This paper is made from Byte Size Classroom questions. It is not an official past paper.</p>' +
@@ -363,7 +438,7 @@
       '<p class="note">Progress is saved on this device for ' + esc(c.name) + '.</p>' +
       (rows.length ? '<button type="button" class="reset" id="bs-reset">' + (confirmReset ? 'Click again to clear all progress' : 'Reset progress') + '</button>' : '');
     box.querySelectorAll('[data-practise]').forEach(function (b) {
-      b.addEventListener('click', function () { state.topic = b.dataset.practise; $topic.value = state.topic; save(); nextRevise(); window.scrollTo({ top: root.offsetTop - 20, behavior: 'smooth' }); });
+      b.addEventListener('click', function () { setSel([b.dataset.practise]); $topic.textContent = topicButtonText(); save(); nextRevise(); window.scrollTo({ top: root.offsetTop - 20, behavior: 'smooth' }); });
     });
     var rs = document.getElementById('bs-reset');
     if (rs) rs.addEventListener('click', function () {
@@ -418,13 +493,12 @@
     }
     return null;
   }
-  function topicLabel() { return state.topic === 'mixed' ? 'this lesson' : BS.topics[state.topic].name.toLowerCase(); }
+  function topicLabel() { return !state.sel.length ? 'this lesson' : state.sel.length <= 3 ? names(state.sel).join(' and ').toLowerCase() : 'today’s topics'; }
   function siblings(n) {
     var c = course(state.course), list = c.topics;
-    if (state.topic !== 'mixed' && c.groups) c.groups.forEach(function (g) { if (g[1].indexOf(state.topic) > -1) list = g[1]; });
-    var l = BS.shuffle(list.filter(function (t) { return t !== state.topic; })).slice(0, n - (state.topic === 'mixed' ? 0 : 1));
-    if (state.topic !== 'mixed') l.unshift(state.topic);
-    return l;
+    if (single() && c.groups) c.groups.forEach(function (g) { if (g[1].indexOf(state.sel[0]) > -1) list = g[1]; });
+    var base = BS.shuffle(state.sel).slice(0, n);
+    return base.concat(BS.shuffle(list.filter(function (t) { return base.indexOf(t) < 0; })).slice(0, n - base.length));
   }
   function partsUpTo(q, j) {
     return (q.stem ? '<div class="stem">' + q.stem + '</div>' : '') + q.parts.slice(0, j + 1).map(function (p, i) {
@@ -436,7 +510,7 @@
     '321': function () {
       var sib = siblings(4).filter(function (t) { return t !== state.topic; });
       var link = sib.length ? BS.topics[sib[0]].name.toLowerCase() : 'another topic';
-      return { title: '3-2-1: ' + (state.topic === 'mixed' ? 'today’s lesson' : BS.topics[state.topic].name), answers: false, body:
+      return { title: '3-2-1: ' + (!state.sel.length ? 'today’s lesson' : topicTitle()), answers: false, body:
         '<ol class="pl-list"><li><b>3</b> things you can now do in ' + esc(topicLabel()) + '. Write each one as “I can …”.</li>' +
         '<li><b>2</b> questions you still have about ' + esc(topicLabel()) + '.</li>' +
         '<li><b>1</b> way ' + esc(topicLabel()) + ' links to ' + esc(link) + '.</li></ol>' };
@@ -452,7 +526,7 @@
     muddy: function () {
       var qs = [], used = new Set(); for (var i = 0; i < 3; i++) qs.push(BS.make(pickTopics(1)[0], state.diff, used, !!course(state.course).foundation));
       return { title: 'Muddiest point', answers: true, body: '<p class="instr">Look at questions A, B and C. Which would you find hardest? Write the letter and the step you are least sure about.</p>' +
-        qs.map(function (q, i) { return renderQ(q, 'ABC'[i], state.topic === 'mixed'); }).join('') };
+        qs.map(function (q, i) { return renderQ(q, 'ABC'[i], !single()); }).join('') };
     },
     mistake: function () {
       var r = choiceQuestion(60); if (!r) return null;
@@ -464,7 +538,7 @@
     },
     explain: function () {
       var q = BS.make(pickTopics(1)[0], state.diff, null, !!course(state.course).foundation);
-      return { title: 'Explain it to a Year 7', answers: true, body: '<p class="instr">Do not work it out. In two sentences, explain to a younger pupil how you would start this question and why.</p>' + renderQ(q, 1, state.topic === 'mixed') };
+      return { title: 'Explain it to a Year 7', answers: true, body: '<p class="instr">Do not work it out. In two sentences, explain to a younger pupil how you would start this question and why.</p>' + renderQ(q, 1, !single()) };
     },
     traffic: function () {
       var ts = siblings(5);
@@ -481,7 +555,7 @@
     var grid = plRoot.querySelector('.ideas'); if (grid) grid.hidden = true;
     plStage.innerHTML = '<p class="pl-back"><button type="button" class="back" data-pl-back>All plenary ideas</button></p>' +
       '<article class="paper slide plenary" id="pl-paper">' +
-      '<header><span class="tag">Plenary · ' + esc(c.name) + (state.topic === 'mixed' ? '' : ' · ' + esc(BS.topics[state.topic].name)) + '</span><span class="time">about 5 min</span></header>' +
+      '<header><span class="tag">Plenary · ' + esc(c.name) + (state.sel.length ? ' · ' + esc(topicTitle()) : '') + '</span><span class="time">about 5 min</span></header>' +
       '<div class="body"><h2 class="paper-title">' + esc(p.title) + '</h2>' + p.body + '</div>' +
       '<footer>' + (p.answers ? '<button type="button" data-pl-ans aria-pressed="false">Show answers</button>' : '') +
       '<button type="button" data-pl-new>New version</button><button type="button" class="present">Present</button></footer></article>';
