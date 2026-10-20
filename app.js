@@ -3,9 +3,16 @@
   var BS = window.BS;
   var root = document.getElementById('tool');
   if (!root) return;
-  var MODES = { donow: 'Do Now', exit: 'Exit ticket', revise: 'Revision' };
+  var TEACHER = { donow: 'Do Now', exit: 'Exit ticket', plenary: 'Plenary', revise: 'Revision worksheet' };
+  var PUPIL = { practise: 'Practise', paper: 'Practice paper' };
   var qm = null; try { qm = new URLSearchParams(location.search).get('m'); } catch (e) {}
-  var mode = MODES[qm] ? qm : (root.dataset.mode || 'donow'); // donow | exit | revise
+  var savedRole = null; try { savedRole = localStorage.getItem('bsc-role'); } catch (e) {}
+  var role = PUPIL[qm] ? 'pupil' : TEACHER[qm] ? 'teacher' : (savedRole === 'pupil' ? 'pupil' : 'teacher');
+  var MODES = role === 'pupil' ? PUPIL : TEACHER;
+  var mode = MODES[qm] ? qm : (role === 'pupil' ? 'practise' : 'donow');
+  try { localStorage.setItem('bsc-role', role); } catch (e) {}
+  document.body.setAttribute('data-role', role);
+  document.querySelectorAll('.role-switch [data-set-role]').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-set-role') === role); });
   var fixed = root.dataset.fixed === '1'; // course page: the course comes from the address
   var LET = 'abcdefghij';
 
@@ -32,10 +39,13 @@
     course: (prefs.course && course(prefs.course) && course(prefs.course).status === 'live') ? prefs.course : 'igcse',
     topic: prefs.topic || 'mixed',
     diff: prefs.diff || null,
-    count: prefs.count || (mode === 'exit' ? 3 : 5)
+    count: 5, mins: prefs.mins || 45
   };
-  if (mode === 'exit' && !prefs.exitCount) state.count = 3;
-  if (mode !== 'donow' && state.count > 8) state.count = 8;
+  var COUNTS = { donow: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], exit: [1, 2, 3, 4, 5, 6, 8], revise: [5, 8, 10, 12, 15, 20] };
+  var DEFN = { donow: 5, exit: 3, revise: 10 };
+  if (COUNTS[mode]) { var pc = prefs['n_' + mode]; state.count = COUNTS[mode].indexOf(pc) > -1 ? pc : DEFN[mode]; }
+  var EXT = mode === 'donow' || mode === 'exit';
+  state.ext = EXT && prefs['x_' + mode] === true;
 
   /* ---------- Controls ---------- */
   var groups = {};
@@ -46,15 +56,20 @@
     }).join('') + '</optgroup>';
   }).join('');
 
-  var countCtl = mode === 'revise' ? '' :
-    '<label class="ctl"><span>Questions</span><select id="bs-count">' + (mode === 'donow' ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] : [1, 2, 3, 4, 5, 6, 8]).map(function (n) { return '<option value="' + n + '">' + n + '</option>'; }).join('') + '</select></label>';
-  var newLabel = mode === 'donow' ? 'New Do Now' : mode === 'exit' ? 'New exit ticket' : 'New question';
+  var countCtl = COUNTS[mode] ?
+    '<label class="ctl"><span>Questions</span><select id="bs-count">' + COUNTS[mode].map(function (n) { return '<option value="' + n + '">' + n + '</option>'; }).join('') + '</select></label>'
+    : mode === 'paper' ? '<label class="ctl"><span>Length</span><select id="bs-mins">' + [30, 45, 60, 90].map(function (n) { return '<option value="' + n + '">' + n + ' minutes</option>'; }).join('') + '</select></label>' : '';
+  var newLabel = { donow: 'New Do Now', exit: 'New exit ticket', revise: 'New worksheet', practise: 'New question', paper: 'New paper' }[mode];
 
   var LEDE = {
     donow: 'A fresh set of exam-style starter questions every time you press <b>New Do Now</b>. Choose one topic or mixed retrieval, then press <b>Present</b> to put it on the board.',
     exit: 'A short check at the end of the lesson, finishing with a confidence rating. Plenary ideas for any lesson are below.',
-    revise: 'One question at a time. Answer on paper, then check the mark scheme. Anything you get wrong goes on your list of things to work on, with a video to help.'
+    plenary: 'Choose the topic and difficulty, then pick a plenary below. Each one is made from questions in this course.',
+    revise: 'A longer set of exam-style questions for a revision lesson or homework. Press <b>Print</b> for a paper copy; show the answers first to print the mark scheme too.',
+    practise: 'One question at a time. Answer on paper, then check the mark scheme. Anything you get wrong goes on your list of things to work on, with a video to help.',
+    paper: 'A timed practice paper made from questions across the course, getting harder as you go. Start the timer, answer on paper, then mark your work with the mark scheme.'
   };
+  LEDE.exit = 'A short check at the end of the lesson, finishing with a confidence rating.';
   var tabs = fixed ? '<nav class="modes" aria-label="Activity">' + Object.keys(MODES).map(function (m) {
     return '<a href="course.html?m=' + m + location.hash + '"' + (m === mode ? ' aria-current="page"' : '') + '>' + MODES[m] + '</a>';
   }).join('') + '</nav><p class="mode-lede">' + LEDE[mode] + '</p>' : '';
@@ -62,22 +77,23 @@
     '<div class="controls">' +
       '<label class="ctl wide"' + (fixed ? ' hidden' : '') + '><span>Course</span><select id="bs-course">' + courseOpts + '</select></label>' +
       '<label class="ctl wide"><span>Topic</span><select id="bs-topic"></select></label>' +
-      '<div class="ctl"><span id="bs-diff-label">Difficulty</span><div class="seg" id="bs-diff" role="group" aria-labelledby="bs-diff-label"></div></div>' +
+      '<div class="ctl"' + (mode === 'paper' ? ' hidden' : '') + '><span id="bs-diff-label">Difficulty</span><div class="seg" id="bs-diff" role="group" aria-labelledby="bs-diff-label"></div></div>' +
       countCtl +
-      '<button type="button" class="btn" id="bs-new">' + newLabel + '</button>' +
+      (EXT ? '<div class="ctl"><span id="bs-ext-label">Extension question</span><div class="seg" id="bs-ext" role="group" aria-labelledby="bs-ext-label"><button type="button" data-x="0" aria-pressed="' + !state.ext + '">None</button><button type="button" data-x="1" aria-pressed="' + state.ext + '">Add one</button></div></div>' : '') +
+      (mode === 'plenary' ? '' : '<button type="button" class="btn" id="bs-new">' + newLabel + '</button>') +
     '</div>' +
-    (mode === 'revise'
+    (mode === 'practise'
       ? '<div class="revise-grid"><div id="bs-stage"></div><aside class="progress" id="bs-progress" aria-live="polite"></aside></div>'
       : '<div id="bs-stage"></div>');
 
   var $course = document.getElementById('bs-course'), $topic = document.getElementById('bs-topic'),
       $diff = document.getElementById('bs-diff'), $count = document.getElementById('bs-count'),
-      $stage = document.getElementById('bs-stage');
+      $stage = document.getElementById('bs-stage'), $mins = document.getElementById('bs-mins');
 
   function fillTopics() {
     var c = course(state.course);
     function opt(t) { return '<option value="' + t + '">' + esc(BS.topics[t].name) + '</option>'; }
-    var opts = '<option value="mixed">' + (mode === 'revise' ? 'All topics (mixed)' : 'Mixed retrieval (all topics)') + '</option>' +
+    var opts = '<option value="mixed">' + (mode === 'practise' ? 'All topics (mixed)' : mode === 'paper' ? 'Whole course' : 'Mixed retrieval (all topics)') + '</option>' +
       (c.groups ? c.groups.map(function (gp) { return '<optgroup label="' + esc(gp[0]) + '">' + gp[1].map(opt).join('') + '</optgroup>'; }).join('') : c.topics.map(opt).join(''));
     $topic.innerHTML = opts;
     if (state.topic !== 'mixed' && c.topics.indexOf(state.topic) < 0) state.topic = 'mixed';
@@ -109,13 +125,14 @@
     var h = document.getElementById('course-title'), sub = document.getElementById('course-sub');
     if (h) h.textContent = T[0]; if (sub) sub.textContent = T[1];
     document.title = T[0] + ' · ' + MODES[mode] + ' | Byte Size Classroom';
-    var pl = document.getElementById('plenaries'); if (pl) pl.hidden = mode !== 'exit';
+    var pl = document.getElementById('plenaries'); if (pl) pl.hidden = mode !== 'plenary';
+    var pp = document.getElementById('past-papers'); if (pp) pp.hidden = mode !== 'paper';
   }
   $course.value = state.course;
   fillTopics();
   if ($count) $count.value = String(state.count);
 
-  function save() { store('bytesize-prefs', { course: state.course, topic: state.topic, diff: state.diff, count: state.count, exitCount: mode === 'exit' ? true : prefs.exitCount }); }
+  function save() { if (COUNTS[mode]) prefs['n_' + mode] = state.count; if (EXT) prefs['x_' + mode] = state.ext; prefs.course = state.course; prefs.topic = state.topic; prefs.diff = state.diff; prefs.mins = state.mins; store('bytesize-prefs', prefs); }
 
   $course.addEventListener('change', function () { state.course = $course.value; state.diff = null; fillTopics(); save(); build(); });
   $topic.addEventListener('change', function () { state.topic = $topic.value; save(); build(); });
@@ -125,8 +142,16 @@
     $diff.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
     save(); build();
   });
+  var $ext = document.getElementById('bs-ext');
+  if ($ext) $ext.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    state.ext = b.dataset.x === '1';
+    $ext.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+    save(); build();
+  });
   if ($count) $count.addEventListener('change', function () { state.count = Number($count.value); save(); build(); });
-  document.getElementById('bs-new').addEventListener('click', build);
+  if ($mins) { $mins.value = String(state.mins); $mins.addEventListener('change', function () { state.mins = Number($mins.value); save(); build(); }); }
+  var $new = document.getElementById('bs-new'); if ($new) $new.addEventListener('click', build);
 
   /* ---------- Rendering ---------- */
   function renderQ(q, n, showTopic) {
@@ -161,24 +186,98 @@
   }
 
   function build() {
-    if (mode === 'revise') { nextRevise(); return; }
+    if (mode === 'practise') { nextRevise(); return; }
+    if (mode === 'plenary') { $stage.innerHTML = ''; return; }
+    if (mode === 'paper') { buildPaper(); return; }
     var c = course(state.course), used = new Set();
     var qs = pickTopics(state.count).map(function (t) { return BS.make(t, state.diff, used, !!course(state.course).foundation); });
     var marks = qs.reduce(function (s, q) { return s + q.marks; }, 0);
-    var title = state.topic === 'mixed' ? (mode === 'exit' ? 'Exit ticket' : 'Do Now: mixed retrieval') : (mode === 'exit' ? 'Exit ticket: ' : 'Do Now: ') + BS.topics[state.topic].name;
+    // Extension question for early finishers: the top-level (extension) question for one of the topics in the set
+    var xq = null;
+    if (EXT && state.ext) {
+      var cand = qs.map(function (q) { return q.topic; }).filter(function (t) { return BS.topics[t].gens.some(function (g) { return g.x; }); });
+      var xt = cand.length ? BS.pick(cand) : qs[0].topic;
+      xq = BS.make(xt, 3, used, !!c.foundation);
+    }
+    var lead = { donow: 'Do Now', exit: 'Exit ticket', revise: 'Revision worksheet' }[mode];
+    var title = state.topic === 'mixed' ? (mode === 'donow' ? 'Do Now: mixed retrieval' : lead) : lead + ': ' + BS.topics[state.topic].name;
     var mins = mode === 'exit' ? Math.max(4, qs.length + 1) : Math.max(5, Math.round(marks * 0.8));
     $stage.innerHTML =
       '<article class="paper slide" id="bs-paper">' +
-        '<header><span class="tag">' + esc(c.name) + ' · ' + lvl(course(state.course), state.diff) + '</span><span class="time">' + marks + ' marks · about ' + mins + ' min</span></header>' +
+        '<header><span class="tag">' + esc(c.name) + ' · ' + lvl(course(state.course), state.diff) + '</span><span class="time">' + marks + ' marks · about ' + mins + ' min' + (xq ? ' + extension' : '') + '</span></header>' +
         '<div class="body">' +
           '<h2 class="paper-title">' + esc(title) + '</h2>' +
           '<p class="instr">' + (isIB() ? 'Answer all questions. A graphic display calculator is required. Unless otherwise stated, give answers exactly or correct to three significant figures.' : 'Answer all questions. Show all your working.') + '</p>' +
           qs.map(function (q, i) { return renderQ(q, i + 1, state.topic === 'mixed'); }).join('') +
+          (xq ? '<div class="ext-block"><p class="ext-head"><span class="ext-badge">Extension</span> Finished early? Try this.</p>' + renderQ(xq, '★', true).replace('<section class="q"', '<section class="q ext"').replace('Total for Question ★', 'Total for the extension question') + '</div>' : '') +
           (mode === 'exit' ? '<div class="reflect-box"><p><b>How confident do you feel?</b> <span class="scale">1&nbsp;&nbsp;2&nbsp;&nbsp;3&nbsp;&nbsp;4&nbsp;&nbsp;5</span></p><p><b>One thing I am still unsure about:</b></p><div class="write-line"></div></div>' : '') +
         '</div>' +
-        '<footer><button type="button" data-answers aria-pressed="false">Show answers</button><button type="button" data-new>New questions</button><button type="button" class="present">Present</button></footer>' +
+        '<footer><button type="button" data-answers aria-pressed="false">Show answers</button><button type="button" data-new>New questions</button>' + (mode === 'revise' ? '<button type="button" data-print>Print</button>' : '') + '<button type="button" class="present">Present</button></footer>' +
       '</article>';
     wirePaper();
+    tex($stage);
+  }
+
+  /* ---------- Practice paper (pupils) ---------- */
+  var timer = null;
+  function boardLinks(c) {
+    if (c.id === 'aqa-fm') return '<a href="https://www.aqa.org.uk/find-past-papers-and-mark-schemes" target="_blank" rel="noopener">AQA past papers and mark schemes</a>';
+    if (c.style === 'ib') return 'IB past papers are sold by the IB, so ask your teacher for school copies.';
+    return '<a href="https://qualifications.pearson.com/en/support/support-topics/exams/past-papers.html" target="_blank" rel="noopener">Pearson Edexcel past papers and mark schemes</a>';
+  }
+  function buildPaper() {
+    if (timer) { clearInterval(timer); timer = null; }
+    var c = course(state.course), ds = c.diffs.slice().sort(), target = Math.round(state.mins * (isIB() ? 0.9 : 1)), qs = [], used = new Set(), total = 0, guard = 0;
+    var pool = state.topic === 'mixed' ? BS.shuffle(c.topics.filter(function (t) { return !BS.topics[t].noMix; })) : [state.topic];
+    while (total < target - 2 && guard++ < 200) {
+      var stage = total / target, d = ds[Math.min(ds.length - 1, Math.floor(stage * ds.length))];
+      var q = BS.make(pool[qs.length % pool.length], d, used, !!c.foundation);
+      if (total + q.marks > target + 3 && qs.length) continue;
+      q.stage = d; qs.push(q); total += q.marks;
+    }
+    qs.sort(function (a, b) { return a.stage - b.stage; });
+    $stage.innerHTML =
+      '<article class="paper slide exam" id="bs-paper">' +
+        '<header><span class="tag">Practice paper · ' + esc(c.name) + '</span><span class="time">' + total + ' marks · ' + state.mins + ' minutes</span></header>' +
+        '<div class="body">' +
+          '<div class="exam-top"><h2 class="paper-title">Practice paper' + (state.topic === 'mixed' ? '' : ': ' + esc(BS.topics[state.topic].name)) + '</h2>' +
+          '<div class="clock"><span id="bs-clock" aria-live="off">' + state.mins + ':00</span><button type="button" class="btn" data-start>Start timer</button></div></div>' +
+          '<p class="instr">' + (isIB() ? 'Answer all questions. A graphic display calculator is required. Unless otherwise stated, give answers exactly or correct to three significant figures.' : 'Answer all questions on paper. Show all your working. Questions get harder as you go through the paper.') + ' Total ' + total + ' marks.</p>' +
+          '<p class="instr note">This paper is made from Byte Size Classroom questions. It is not an official past paper.</p>' +
+          qs.map(function (q, i) { return renderQ(q, i + 1, false); }).join('') +
+          '<div class="score" id="bs-score" hidden></div>' +
+        '</div>' +
+        '<footer><button type="button" class="btn" data-finish>Finish and mark</button><button type="button" data-new>New paper</button><button type="button" data-print>Print</button></footer>' +
+      '</article>';
+    var paper = document.getElementById('bs-paper'), clock = document.getElementById('bs-clock'), left = state.mins * 60;
+    paper.querySelector('[data-start]').addEventListener('click', function (e) {
+      var b = e.currentTarget;
+      if (timer) { clearInterval(timer); timer = null; b.textContent = 'Resume timer'; return; }
+      b.textContent = 'Pause timer';
+      timer = setInterval(function () {
+        left--; var m = Math.floor(Math.max(left, 0) / 60), sec = Math.max(left, 0) % 60;
+        clock.textContent = m + ':' + (sec < 10 ? '0' : '') + sec;
+        if (left <= 0) { clearInterval(timer); timer = null; clock.textContent = 'Time is up'; paper.classList.add('timeup'); b.hidden = true; }
+      }, 1000);
+    });
+    paper.querySelector('[data-new]').addEventListener('click', build);
+    paper.querySelector('[data-print]').addEventListener('click', function () { window.print(); });
+    paper.querySelector('[data-finish]').addEventListener('click', function (e) {
+      if (timer) { clearInterval(timer); timer = null; }
+      paper.classList.add('show'); e.currentTarget.hidden = true;
+      paper.querySelectorAll('.q').forEach(function (qe, i) {
+        var m = qs[i].marks, lab = document.createElement('label'); lab.className = 'selfmark';
+        lab.innerHTML = 'Your mark <input type="number" min="0" max="' + m + '" step="1" inputmode="numeric"> / ' + m;
+        qe.querySelector('.qbody').appendChild(lab);
+      });
+      var score = document.getElementById('bs-score'); score.hidden = false;
+      function sum() {
+        var got = 0, done = 0; paper.querySelectorAll('.selfmark input').forEach(function (inp, i) { var v = Math.max(0, Math.min(qs[i].marks, Number(inp.value) || 0)); if (inp.value !== '') done++; got += v; });
+        score.innerHTML = '<b>Your score: ' + got + ' / ' + total + ' (' + Math.round(got / total * 100) + '%)</b> <span>' + done + ' of ' + qs.length + ' questions marked</span>';
+      }
+      paper.addEventListener('input', sum); sum();
+    });
+    var pp = document.getElementById('past-papers-links'); if (pp) pp.innerHTML = boardLinks(c);
     tex($stage);
   }
 
@@ -194,6 +293,7 @@
       build();
       if (presenting) { var p = document.getElementById('bs-paper'); p.classList.add('presenting'); p.querySelector('.present').textContent = 'Close'; }
     });
+    var pr = paper.querySelector('[data-print]'); if (pr) pr.addEventListener('click', function () { window.print(); });
     var pres = paper.querySelector('.present');
     pres.addEventListener('click', function () {
       if (paper.classList.contains('presenting')) { stopPresent(); return; }
@@ -421,6 +521,6 @@
     try { plRoot.scrollIntoView({ block: 'start' }); } catch (e) {}
   }
   if (plRoot && plStage) plRoot.querySelectorAll('[data-plenary]').forEach(function (b) { b.addEventListener('click', function () { showPlenary(b.dataset.plenary); }); });
-  if (mode === 'revise') { $course.addEventListener('change', renderProgress); renderProgress(); }
+  if (mode === 'practise') { $course.addEventListener('change', renderProgress); renderProgress(); }
   build();
 })();

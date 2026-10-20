@@ -389,3 +389,11 @@ button.idea[aria-pressed="true"] { border-color: var(--pri); box-shadow: 0 0 0 2
   .slide header { background: none; padding-left: 0; }
   .q { break-inside: avoid; }
 }
+
+/* Extension question for early finishers (Do Now / Exit ticket) */
+.ext-block { margin-top: 18px; border: 2px dashed var(--pri); border-radius: 10px; padding: 4px 14px 0; background: color-mix(in srgb, var(--pri) 5%, transparent); }
+.ext-head { margin: 10px 0 0; font-weight: 700; color: var(--ink); }
+.ext-badge { display: inline-block; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; background: var(--pri); color: var(--on-pri, #fff); border-radius: 4px; padding: 2px 7px; margin-right: 6px; vertical-align: 1px; }
+.ext-block .q { border-top: 0; }
+.ext-block .qnum { border-color: var(--pri); color: var(--pri); }
+@media print { .ext-block { background: none; } }
