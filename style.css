@@ -357,3 +357,35 @@ button.idea[aria-pressed="true"] { border-color: var(--pri); box-shadow: 0 0 0 2
 .slide.plenary .pl-list { list-style: none; }
 .pl-back { margin: 0 0 14px; }
 #plenary-stage { margin-top: 0; }
+
+/* Teacher or pupil */
+.header-right { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
+.role-switch { display: inline-flex; border: 2px solid var(--ink); border-radius: 999px; padding: 2px; background: var(--surface); }
+.role-switch button { font: inherit; font-weight: 700; font-size: 0.88rem; border: 0; background: none; color: var(--muted); padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+.role-switch button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.role-ask h2 { font-size: clamp(1.7rem, 3.6vw, 2.5rem); margin-bottom: 18px; }
+.role-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 20px; }
+.role-choice { font: inherit; text-align: left; cursor: pointer; display: grid; gap: 8px; align-content: start; padding: 26px; background: var(--surface); color: var(--ink); border: 2px solid var(--ink); border-radius: var(--radius); }
+.role-choice b { font-family: var(--serif); font-size: 1.6rem; }
+.role-choice > span:not(.sym) { color: var(--muted); }
+.role-choice .sym { font-family: var(--serif); font-style: italic; font-size: 2.6rem; line-height: 1; color: var(--pri); }
+.role-choice:hover { background: var(--pri-soft); }
+.cta { margin: 22px 0 0; }
+
+/* Practice paper */
+.exam-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 20px; margin-bottom: 4px; }
+.clock { display: flex; align-items: center; gap: 12px; }
+.clock span { font-family: var(--serif); font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 5ch; text-align: right; }
+.exam.timeup .clock span { color: var(--bad); }
+.selfmark { display: flex; align-items: center; gap: 8px; justify-self: end; font-weight: 700; font-size: 0.95rem; }
+.selfmark input { width: 4.2rem; font: inherit; padding: 4px 8px; border: 2px solid var(--pri); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.score { margin-top: 18px; padding: 14px 16px; border-radius: 8px; background: var(--pri-soft); display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; }
+.score b { font-family: var(--serif); font-size: 1.3rem; }
+
+@media print {
+  .site-header, footer.site, .controls, .modes, .mode-lede, .hero, .slide footer, #plenaries, #past-papers, .progress, .clock .btn { display: none !important; }
+  body { background: #fff; }
+  .slide { border: 0; }
+  .slide header { background: none; padding-left: 0; }
+  .q { break-inside: avoid; }
+}

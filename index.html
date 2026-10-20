@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;600&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400;1,700&display=swap">
-<link rel="stylesheet" href="style.css?v=20261018d">
+<link rel="stylesheet" href="style.css?v=20261020a">
 </head>
 <body class="">
 <header class="site-header">
@@ -17,6 +17,7 @@
       
       <a class="brand" href="index.html" aria-label="Byte Size Classroom home"><svg class="mark" viewBox="0 0 46 46" aria-hidden="true"><path class="pie" d="M21,25 L37.45,15.5 A19,19 0 1 1 21,6 Z"/><path class="bite" d="M23,21.54 L23,2.54 A19,19 0 0 1 39.45,12.04 Z"/><text class="pi" x="12.5" y="35" font-size="20">&#960;</text></svg><span class="bname">Byte Size <span class="cls">Classroom</span></span></a>
     </div>
+    <div class="header-right">
     <nav aria-label="Main">
       <ul>
         <li><a href="index.html" aria-current="page">Home</a></li>
@@ -25,6 +26,10 @@
         <li><a href="tmua-esat.html">TMUA &amp; ESAT</a></li>
       </ul>
     </nav>
+    <div class="role-switch" role="group" aria-label="I am a">
+      <button type="button" data-set-role="teacher" aria-pressed="false">Teacher</button><button type="button" data-set-role="pupil" aria-pressed="false">Pupil</button>
+    </div>
+    </div>
   </div>
 </header>
 <main>
@@ -32,39 +37,44 @@
     <section class="home-hero">
       <svg class="hero-plot" viewBox="0 0 480 240" aria-hidden="true"><line class="ax" x1="10" y1="120" x2="474" y2="120"/><line class="ax" x1="10" y1="12" x2="10" y2="228"/><polyline class="curve" points="10.0,120.0 11.9,116.4 13.8,112.8 15.8,109.2 17.7,105.8 19.6,102.4 21.5,99.1 23.4,95.9 25.3,92.8 27.2,89.8 29.2,87.0 31.1,84.2 33.0,81.6 34.9,79.2 36.8,76.8 38.8,74.6 40.7,72.6 42.6,70.7 44.5,69.0 46.4,67.4 48.3,66.0 50.2,64.8 52.2,63.7 54.1,62.8 56.0,62.1 57.9,61.5 59.8,61.1 61.8,60.9 63.7,60.8 65.6,60.9 67.5,61.2 69.4,61.6 71.3,62.2 73.2,62.9 75.2,63.8 77.1,64.8 79.0,66.0 80.9,67.3 82.8,68.7 84.8,70.3 86.7,72.0 88.6,73.8 90.5,75.6 92.4,77.6 94.3,79.7 96.2,81.9 98.2,84.2 100.1,86.5 102.0,88.9 103.9,91.3 105.8,93.8 107.8,96.4 109.7,99.0 111.6,101.6 113.5,104.2 115.4,106.8 117.3,109.5 119.2,112.1 121.2,114.8 123.1,117.4 125.0,120.0 126.9,122.6 128.8,125.1 130.8,127.6 132.7,130.0 134.6,132.4 136.5,134.7 138.4,137.0 140.3,139.2 142.2,141.3 144.2,143.3 146.1,145.2 148.0,147.1 149.9,148.8 151.8,150.5 153.8,152.0 155.7,153.4 157.6,154.8 159.5,156.0 161.4,157.1 163.3,158.1 165.2,158.9 167.2,159.7 169.1,160.3 171.0,160.8 172.9,161.2 174.8,161.5 176.8,161.7 178.7,161.7 180.6,161.7 182.5,161.5 184.4,161.2 186.3,160.8 188.2,160.2 190.2,159.6 192.1,158.9 194.0,158.1 195.9,157.2 197.8,156.2 199.8,155.1 201.7,153.9 203.6,152.6 205.5,151.3 207.4,149.9 209.3,148.4 211.2,146.9 213.2,145.3 215.1,143.6 217.0,142.0 218.9,140.2 220.8,138.5 222.8,136.7 224.7,134.8 226.6,133.0 228.5,131.1 230.4,129.3 232.3,127.4 234.2,125.5 236.2,123.7 238.1,121.8 240.0,120.0 241.9,118.2 243.8,116.4 245.7,114.6 247.7,112.9 249.6,111.2 251.5,109.6 253.4,108.0 255.3,106.5 257.2,105.0 259.2,103.6 261.1,102.2 263.0,100.9 264.9,99.7 266.8,98.5 268.8,97.4 270.7,96.4 272.6,95.5 274.5,94.6 276.4,93.8 278.3,93.2 280.2,92.5 282.2,92.0 284.1,91.6 286.0,91.2 287.9,90.9 289.8,90.7 291.8,90.6 293.7,90.6 295.6,90.6 297.5,90.8 299.4,91.0 301.3,91.2 303.2,91.6 305.2,92.0 307.1,92.6 309.0,93.1 310.9,93.8 312.8,94.5 314.8,95.3 316.7,96.1 318.6,97.0 320.5,97.9 322.4,98.9 324.3,100.0 326.2,101.0 328.2,102.2 330.1,103.3 332.0,104.5 333.9,105.7 335.8,107.0 337.8,108.2 339.7,109.5 341.6,110.8 343.5,112.1 345.4,113.5 347.3,114.8 349.2,116.1 351.2,117.4 353.1,118.7 355.0,120.0 356.9,121.3 358.8,122.5 360.8,123.8 362.7,125.0 364.6,126.2 366.5,127.3 368.4,128.5 370.3,129.5 372.2,130.6 374.2,131.6 376.1,132.5 378.0,133.5 379.9,134.3 381.8,135.2 383.8,135.9 385.7,136.6 387.6,137.3 389.5,137.9 391.4,138.4 393.3,138.9 395.2,139.4 397.2,139.7 399.1,140.1 401.0,140.3 402.9,140.5 404.8,140.7 406.8,140.7 408.7,140.8 410.6,140.7 412.5,140.6 414.4,140.5 416.3,140.3 418.2,140.0 420.2,139.7 422.1,139.4 424.0,138.9 425.9,138.5 427.8,138.0 429.8,137.4 431.7,136.9 433.6,136.2 435.5,135.6 437.4,134.9 439.3,134.1 441.2,133.4 443.2,132.6 445.1,131.8 447.0,130.9 448.9,130.1 450.8,129.2 452.8,128.3 454.7,127.4 456.6,126.5 458.5,125.5 460.4,124.6 462.3,123.7 464.2,122.8 466.2,121.8 468.1,120.9 470.0,120.0"/><circle class="pt" cx="63.4" cy="60.8" r="6"/></svg>
       <h1 class="wordmark"><svg class="mark" viewBox="0 0 46 46" aria-hidden="true"><path class="pie" d="M21,25 L37.45,15.5 A19,19 0 1 1 21,6 Z"/><path class="bite" d="M23,21.54 L23,2.54 A19,19 0 0 1 39.45,12.04 Z"/><text class="pi" x="12.5" y="35" font-size="20">&#960;</text></svg><span class="wm-text"><span>Byte Size</span> <span class="cls">Classroom</span></span></h1>
-      <p class="lede">Free exam-style maths questions for the classroom. Pick a course and get a fresh Do Now, exit ticket or revision question, with answers, every time.</p>
+      <p class="lede">Free exam-style maths questions, with answers, from Year 9 to A level and IB.</p>
     </section>
 
-    <section>
-      <div class="subjects-grid">
-        <a class="subject" href="maths.html">
+    <section class="role-ask" id="role-ask">
+      <h2>Are you a teacher or a pupil?</h2>
+      <div class="role-choices">
+        <button type="button" class="role-choice" data-set-role="teacher">
           <span class="sym">&#8721;</span>
-          <h2>Maths</h2>
-          <p>GCSE, International GCSE, Further Maths, A level and IB courses.</p>
-          <span class="go">Choose a course</span>
-        </a>
-        <a class="subject" href="tmua-esat.html">
-          <span class="sym">&#8756;</span>
-          <h2>TMUA &amp; ESAT</h2>
-          <p>What the university admissions tests look like, with practice questions.</p>
-          <span class="go">Prepare for the tests</span>
-        </a>
-        <a class="subject soon" href="computer-science.html">
-          <span class="sym">&#123;&#125;</span>
-          <h2>Computer Science</h2>
-          <p>OCR A level Computer Science, coming soon.</p>
-          <span class="go">See what is planned</span>
-        </a>
+          <b>I’m a teacher</b>
+          <span>Do Now starters, exit tickets, plenaries and revision worksheets for your lessons.</span>
+        </button>
+        <button type="button" class="role-choice" data-set-role="pupil">
+          <span class="sym">&#8730;</span>
+          <b>I’m a pupil</b>
+          <span>Practise exam questions, sit a timed practice paper and find past papers.</span>
+        </button>
       </div>
     </section>
 
-    <section>
-      <div class="section-head"><h2>Every course has three activities</h2></div>
+    <section data-role-only="teacher" hidden>
+      <div class="section-head"><h2>For your lessons</h2><p>Every course has four ready-made activities, at three levels of difficulty.</p></div>
       <ul class="tools-explained">
-        <li><h3>Do Now</h3><p>1 to 8 starter questions on one topic or mixed retrieval, ready to present on the board.</p></li>
-        <li><h3>Exit ticket</h3><p>A short end-of-lesson check with a confidence rating, plus plenary ideas.</p></li>
-        <li><h3>Revision</h3><p>Pupils work through questions and build a list of topics to work on, each with a video.</p></li>
+        <li><h3>Do Now</h3><p>1 to 15 starter questions on one topic or mixed retrieval, ready to present on the board.</p></li>
+        <li><h3>Exit ticket</h3><p>A short end-of-lesson check that finishes with a confidence rating.</p></li>
+        <li><h3>Plenary</h3><p>3-2-1, hinge questions, mistake hunts and more, made from questions in your course.</p></li>
+        <li><h3>Revision worksheet</h3><p>Up to 20 exam-style questions with a mark scheme, to present or print.</p></li>
       </ul>
+      <p class="cta"><a class="btn" href="maths.html">Choose your course</a></p>
+    </section>
+
+    <section data-role-only="pupil" hidden>
+      <div class="section-head"><h2>For your revision</h2><p>Pick your course, then choose how you want to work.</p></div>
+      <ul class="tools-explained">
+        <li><h3>Practise</h3><p>One question at a time, on one topic or all of them. Questions you get wrong go on your list of things to work on, each with a video.</p></li>
+        <li><h3>Practice paper</h3><p>A timed paper of 30 to 90 minutes from across your course. Mark it yourself with the mark scheme and see your score.</p></li>
+        <li><h3>Past papers</h3><p>Links to the official past papers and mark schemes from your exam board.</p></li>
+      </ul>
+      <p class="cta"><a class="btn" href="maths.html">Choose your course</a></p>
     </section>
   </div>
 </main>
@@ -76,6 +86,25 @@
 </footer>
 <script>
 (function () {
+  // Teacher or pupil: remembered on this device, chosen on the home page or with the switch in the header
+  var KEY = 'bsc-role', role = null;
+  try { role = localStorage.getItem(KEY); } catch (e) {}
+  if (!role && document.body.getAttribute('data-role')) role = document.body.getAttribute('data-role');
+  function apply() {
+    document.querySelectorAll('[data-role-only]').forEach(function (el) { el.hidden = el.getAttribute('data-role-only') !== role; });
+    var ask = document.getElementById('role-ask'); if (ask) ask.hidden = !!role;
+    document.querySelectorAll('.role-switch [data-set-role]').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-set-role') === role); });
+  }
+  document.querySelectorAll('[data-set-role]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var r = b.getAttribute('data-set-role'), changed = r !== role; role = r;
+      try { localStorage.setItem(KEY, r); } catch (e) {}
+      var tool = document.querySelector('#tool[data-fixed]');
+      if (tool && changed) { location.href = 'course.html?m=' + (r === 'pupil' ? 'practise' : 'donow') + location.hash; return; }
+      apply();
+    });
+  });
+  apply();
   // Back button: previous page if it was on this site, otherwise the parent page
   var back = document.querySelector('.back');
   if (back) back.addEventListener('click', function () {

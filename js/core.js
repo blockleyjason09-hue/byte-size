@@ -101,10 +101,14 @@
         t.gens.forEach(function (gn, k) { if (gn.d.indexOf(dd) > -1 && !used.has(topicId + ':' + k) && ok(k)) fresh.push(k); });
       });
     }
+    if (!fresh.length && used) { // every template has been used: start a new cycle so long sets spread evenly
+      cands.forEach(function (k) { used.delete(topicId + ':' + k); });
+      fresh = cands.slice();
+    }
     var i = BS.pick(fresh.length ? fresh : cands);
     if (used) used.add(topicId + ':' + i);
     var q = t.gens[i].f(d);
-    q.topic = topicId;
+    q.topic = topicId; q.gen = i; q.d = d;
     q.marks = q.parts.reduce(function (s, p) { return s + (p.m || 0); }, 0);
     return q;
   };

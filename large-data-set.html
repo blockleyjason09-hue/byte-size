@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;600&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400;1,700&display=swap">
-<link rel="stylesheet" href="style.css?v=20261018d">
+<link rel="stylesheet" href="style.css?v=20261020a">
 </head>
 <body class="uk">
 <header class="site-header">
@@ -17,6 +17,7 @@
       <button class="back" type="button" data-parent="maths.html"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
       <a class="brand" href="index.html" aria-label="Byte Size Classroom home"><svg class="mark" viewBox="0 0 46 46" aria-hidden="true"><path class="pie" d="M21,25 L37.45,15.5 A19,19 0 1 1 21,6 Z"/><path class="bite" d="M23,21.54 L23,2.54 A19,19 0 0 1 39.45,12.04 Z"/><text class="pi" x="12.5" y="35" font-size="20">&#960;</text></svg><span class="bname">Byte Size <span class="cls">Classroom</span></span></a>
     </div>
+    <div class="header-right">
     <nav aria-label="Main">
       <ul>
         <li><a href="index.html">Home</a></li>
@@ -25,6 +26,10 @@
         <li><a href="tmua-esat.html">TMUA &amp; ESAT</a></li>
       </ul>
     </nav>
+    <div class="role-switch" role="group" aria-label="I am a">
+      <button type="button" data-set-role="teacher" aria-pressed="false">Teacher</button><button type="button" data-set-role="pupil" aria-pressed="false">Pupil</button>
+    </div>
+    </div>
   </div>
 </header>
 <main>
@@ -164,7 +169,7 @@
     </section>
 
     <section>
-      <p class="note">To practise, open Year 12 or Year 13 A Level Maths on the Maths page, choose Revision and pick the topic “The large data set: learning it”.</p>
+      <p class="note">To practise, open Year 12 or Year 13 A Level Maths on the Maths page and pick the topic “The large data set: learning it”.</p>
     </section>
   </div>
 </main>
@@ -176,6 +181,25 @@
 </footer>
 <script>
 (function () {
+  // Teacher or pupil: remembered on this device, chosen on the home page or with the switch in the header
+  var KEY = 'bsc-role', role = null;
+  try { role = localStorage.getItem(KEY); } catch (e) {}
+  if (!role && document.body.getAttribute('data-role')) role = document.body.getAttribute('data-role');
+  function apply() {
+    document.querySelectorAll('[data-role-only]').forEach(function (el) { el.hidden = el.getAttribute('data-role-only') !== role; });
+    var ask = document.getElementById('role-ask'); if (ask) ask.hidden = !!role;
+    document.querySelectorAll('.role-switch [data-set-role]').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-set-role') === role); });
+  }
+  document.querySelectorAll('[data-set-role]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var r = b.getAttribute('data-set-role'), changed = r !== role; role = r;
+      try { localStorage.setItem(KEY, r); } catch (e) {}
+      var tool = document.querySelector('#tool[data-fixed]');
+      if (tool && changed) { location.href = 'course.html?m=' + (r === 'pupil' ? 'practise' : 'donow') + location.hash; return; }
+      apply();
+    });
+  });
+  apply();
   // Back button: previous page if it was on this site, otherwise the parent page
   var back = document.querySelector('.back');
   if (back) back.addEventListener('click', function () {
