@@ -3,7 +3,7 @@
 (function (g) {
   var BS = g.BS, X = BS.ext;
   var ri = BS.ri, pick = BS.pick, nz = BS.nz, gcd = BS.gcd, frac = BS.frac, poly = BS.poly, sg = BS.sg, num = BS.num, M = BS.m;
-  function Q(stem, parts) { return { stem: stem || '', parts: parts.map(function (p) { return { q: p[0], m: p[1], a: p[2] }; }) }; }
+  function Q(stem, parts) { return { stem: stem || '', parts: parts.map(function (p) { return { q: p[0], m: p[1], a: String(p[2]) }; }) }; }
   function sf3(x) { if (Math.abs(x - Math.round(x)) < 1e-9) return String(Math.round(x)); var s = BS.sf(x, 3); return s; }
   function F(n, d) { return frac(n, d); }
   function c1(c, v) { return c === 1 ? v : c === -1 ? '-' + v : c + v; }
