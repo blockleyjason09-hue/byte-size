@@ -17,7 +17,7 @@
   --bad: #B8322A;
   --hi: #F7DB4F;
   --tab: #EFE7D6;
-  --head: "Alegreya", "Iowan Old Style", Georgia, serif; --body: "Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif; --serif: "STIX Two Text", "Cambria Math", Cambria, Georgia, serif; --display: "Alegreya", "Iowan Old Style", Georgia, serif; --mono: "Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif;
+  --head: "Alegreya", "Iowan Old Style", Georgia, serif; --body: "Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif; --serif: "STIX Two Text", "Cambria Math", Cambria, Georgia, serif; --display: "Alegreya", "Iowan Old Style", Georgia, serif; --mono: "Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif; --code: "Cascadia Mono", "SF Mono", Consolas, "Liberation Mono", monospace;
   --pri: var(--pen); --pri-deep: var(--pen-deep); --pri-soft: var(--pen-soft);
   --sec: var(--pen); --sec-soft: var(--pen-soft); --surface: var(--sheet); --bg: var(--paper);
   --red: var(--margin); --ok: var(--green); --ok-soft: var(--green-soft); --grid: var(--rule);
@@ -75,6 +75,7 @@ body {
   body::after { left: calc(56px + 4px); }
 }
 body > * { position: relative; z-index: 1; }
+body > main { z-index: 2; }  /* menus such as the topic list open over the footer */
 ::selection { background: var(--hi); color: #1D2B53; }
 :focus-visible { outline: 3px solid var(--hi); outline-offset: 2px; }
 a { color: var(--pen); text-decoration-thickness: 1px; }
@@ -173,6 +174,12 @@ h3 { font-weight: 700; }
 .ans-k { font-family: var(--head); font-style: italic; font-weight: 700; letter-spacing: 0; font-size: .95rem; color: var(--green); }
 .slide .ans { color: var(--green); }
 .qtopic { font-family: var(--head); font-style: italic; font-size: .9rem; }
+
+/* Program listings (Computer Science): code written on a sheet pinned to the page */
+.qcode { margin: 10px 0; padding: 10px 14px; overflow-x: auto; background: var(--sheet); border: 1px solid var(--line); border-left: 3px solid var(--ink); border-radius: 0; font-family: var(--code); font-size: .92rem; line-height: 1.55; white-space: pre; tab-size: 4; color: var(--ink); }
+.qcode .ln { display: inline-block; width: 2.2em; color: var(--muted); user-select: none; }
+code.ic { font-family: var(--code); font-size: .92em; background: var(--pen-soft); padding: 0 4px; border-radius: 2px; }
+.slide .qcode { font-size: 1.05rem; }
 
 /* Extension question: a stuck-on slip */
 .ext-block { border: 1.5px dashed var(--pen); border-radius: var(--radius); background: var(--pen-soft); }

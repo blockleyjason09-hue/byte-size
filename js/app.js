@@ -32,6 +32,7 @@
   function course(id) { return BS.courses.filter(function (c) { return c.id === id; })[0]; }
   function lvl(c, d) { return (c.levels || BS.LEVELS)[d]; }
   function isIB() { var c = course(state.course); return c && c.style === 'ib'; }
+  function isCS() { var c = course(state.course); return c && c.subject === 'cs'; }
 
   var prefs = store('bytesize-prefs') || {};
   var live = BS.courses.filter(function (c) { return c.status === 'live'; });
@@ -158,7 +159,11 @@
   }
   if (fixed) {
     var fc = course((location.hash.match(/course=([\w-]+)/) || [])[1]);
-    if (!fc || fc.status !== 'live') { location.replace('maths.html'); return; }
+    if (!fc || fc.status !== 'live') { location.replace(/^ocr-cs/.test((location.hash.match(/course=([\w-]+)/) || [])[1] || '') ? 'computer-science.html' : 'maths.html'); return; }
+    if (fc.subject === 'cs') {
+      var bk = document.querySelector('.back'); if (bk) bk.dataset.parent = 'computer-science.html';
+      document.querySelectorAll('nav[aria-label="Main"] a').forEach(function (a) { var h = a.getAttribute('href'); if (h === 'maths.html') a.removeAttribute('aria-current'); if (h === 'computer-science.html') a.setAttribute('aria-current', 'page'); });
+    }
     var ft = (location.hash.match(/[&#]t=([\w-]+)/) || [])[1];
     if (ft && fc.topics.indexOf(ft) > -1) { setSel([ft]); fillTopics(); }
     var T = (window.BS_TITLES || {})[fc.id] || [fc.name, ''];
@@ -408,7 +413,10 @@
       return { topic: t, marks: 2, render: function (n) { return shell(n, 'mistake', t, 2, inner, (steps.length > 1 ? '(' + LET[r.j] + ') is wrong. ' : '') + 'Correct answer: ' + r.q.parts[r.j].a); } };
     },
     explain: function (t, used) {
-      var q = stdItem(t, used); if (q.marks < 2) return null;
+      var q = stdItem(t, used);
+      // in Computer Science, only questions with a calculation have a method to explain
+      for (var k = 0; k < 8 && isCS() && !q.parts.some(function (p) { return numAns(finalOf(p.a)); }); k++) q = stdItem(t, used);
+      if (q.marks < 2 || (isCS() && !q.parts.some(function (p) { return numAns(finalOf(p.a)); }))) return null;
       var inner = (q.stem ? '<div class="stem">' + q.stem + '</div>' : '') + q.parts.map(function (p, i) { return '<div class="part">' + (q.parts.length > 1 ? '<span class="plabel">(' + LET[i] + ')</span>' : '') + '<div class="ptext">' + p.q + '</div></div>'; }).join('') +
         '<div class="part"><div class="ptext"><b>Do not work it out.</b> Write the steps you would take' + (q.parts.length > 1 ? ' for each part' : '') + ', in order, and say which facts or formulae you would use.</div><span class="marks">' + (isIB() ? '[2]' : '(2)') + '</span></div>';
       return { topic: t, marks: 2, render: function (n) { return shell(n, 'explain', t, 2, inner, 'Look for a clear method. Mark scheme for reference: ' + q.parts.map(function (p, i) { return (q.parts.length > 1 ? '(' + LET[i] + ') ' : '') + p.a; }).join('; ')); } };
@@ -466,6 +474,7 @@
   /* ---------- Practice paper (pupils) ---------- */
   var timer = null;
   function boardLinks(c) {
+    if (c.subject === 'cs') return '<a href="https://www.ocr.org.uk/qualifications/past-paper-finder/" target="_blank" rel="noopener">OCR past papers and mark schemes</a> (choose A Level Computer Science H446)';
     if (c.id === 'aqa-fm') return '<a href="https://www.aqa.org.uk/find-past-papers-and-mark-schemes" target="_blank" rel="noopener">AQA past papers and mark schemes</a>';
     if (c.style === 'ib') return 'IB past papers are sold by the IB, so ask your teacher for school copies.';
     return '<a href="https://qualifications.pearson.com/en/support/support-topics/exams/past-papers.html" target="_blank" rel="noopener">Pearson Edexcel past papers and mark schemes</a>';
@@ -643,11 +652,12 @@
     var m = plain(a).match(/^(?:[a-z]\s*=\s*)?(-?[0-9][0-9,]*(?:\.[0-9]+)?)\s*([a-zA-Z°²³⁻¹\/% ]{0,12})$/);
     if (!m) return null;
     var str = m[1].replace(/,/g, ''), v = Number(str); if (!isFinite(v)) return null;
+    if (isCS() && /^[01]{4,}$/.test(str)) return null; // a binary pattern, not a denary number
     return { v: v, dp: (str.split('.')[1] || '').length, unit: m[2].trim() };
   }
   function fmt(n, x) { var t = x.dp ? Number(n).toFixed(x.dp) : String(Math.round(n * 1000) / 1000); if (Math.abs(n) >= 1000 && !x.dp) t = Number(t).toLocaleString('en-GB'); return t.replace(/^-/, '−') + (x.unit ? ' ' + x.unit : ''); }
   function wrongs(x, k) {
-    var v = x.v, c = v === 0 ? [1, -1, 2, 0.5, 10] : [2 * v, v / 2, v + 1, v - 1, v * 10, v / 10, v + 2, v * 3].concat(x.unit ? [] : [-v]);
+    var v = x.v, c = v === 0 ? [1, -1, 2, 0.5, 10] : [2 * v, v / 2, v + 1, v - 1, v * 10, v / 10, v + 2, v * 3].concat(x.unit || (isCS() && v > 0) ? [] : [-v]);
     var out = [], seen = {}; seen[fmt(v, x)] = 1;
     BS.shuffle(c).forEach(function (n) { var f = fmt(n, x); if (out.length < k && !seen[f] && !/NaN/.test(f)) { seen[f] = 1; out.push(f); } });
     return out;

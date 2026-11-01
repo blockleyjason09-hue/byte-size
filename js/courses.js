@@ -29,6 +29,16 @@
   var FM_ALL = [].concat.apply([], FM_GROUPS.map(function (g) { return g[1]; }));
   var CP1_GROUPS = [['Core Pure 1', ['cp-complex1', 'cp-roots', 'cp-matrices', 'cp-series1', 'cp-induction', 'cp-vectors', 'cp-volumes1']]];
   var CP2_GROUPS = [['Core Pure 2', ['cp-complex2', 'cp-series2', 'cp-calculus', 'cp-polar', 'cp-hyperbolic', 'cp-de1', 'cp-de2']]];
+  var CS_SYS = ['cs-processor', 'cs-storage', 'cs-os', 'cs-translators', 'cs-lmc', 'cs-softdev'];
+  var CS2_GROUPS = [
+    ['Processors, software and development', CS_SYS],
+    ['Exchanging data', ['cs-exchange', 'cs-databases', 'cs-networks', 'cs-web']],
+    ['Data types, data structures and Boolean algebra', ['cs-data-types', 'cs-float', 'cs-data-structures', 'cs-boolean']],
+    ['Legal, moral, cultural and ethical issues', ['cs-legal']],
+    ['Computational thinking and programming', ['cs-thinking', 'cs-programming', 'cs-oop', 'cs-methods']],
+    ['Algorithms', ['cs-search-sort', 'cs-complexity', 'cs-graph-algorithms']]
+  ];
+  var CS1_GROUPS = CS2_GROUPS.map(function (g) { return [g[0], g[1].filter(function (t) { return ['cs-float', 'cs-methods', 'cs-complexity', 'cs-graph-algorithms'].indexOf(t) < 0; })]; });
   var D1_GROUPS = [['Decision Mathematics 1', ['d-algorithms', 'd-graphs', 'd-network-algorithms', 'd-route', 'd-tsp', 'd-lp', 'd-simplex', 'd-cpa']]];
   var FS1_GROUPS = [['Further Statistics 1', ['fs-drv', 'fs-poisson', 'fs-geometric', 'fs-hypothesis', 'fs-clt', 'fs-chisq', 'fs-pgf', 'fs-quality']]];
   var AS_GROUPS = [
@@ -76,7 +86,7 @@
     { id: 'd1', group: 'A Level Further Maths', name: 'Decision Mathematics 1 · Pearson', status: 'live', topics: allOf(D1_GROUPS), groups: D1_GROUPS, diffs: [1, 2, 3], def: 2, levels: FML },
     { id: 'ib-ai-sl', group: 'IB Diploma', name: 'IB Maths: Applications and Interpretation SL', status: 'live', topics: IB_SL_ALL, groups: IB_SL_GROUPS, diffs: [1, 2, 3], def: 2, levels: IBL, style: 'ib' },
     { id: 'ib-ai-hl', group: 'IB Diploma', name: 'IB Maths: Applications and Interpretation HL', status: 'live', topics: IB_ALL, groups: IB_GROUPS, diffs: [1, 2, 3], def: 2, levels: IBL, style: 'ib' },
-    { id: 'ocr-cs-1', group: 'Computer Science', name: 'A Level Year 1 · OCR Computer Science', status: 'soon' },
-    { id: 'ocr-cs-2', group: 'Computer Science', name: 'A Level Year 2 · OCR Computer Science', status: 'soon' }
+    { id: 'ocr-cs-1', group: 'Computer Science', name: 'Year 12 · OCR A Level Computer Science Year 1', status: 'live', topics: allOf(CS1_GROUPS), groups: CS1_GROUPS, diffs: [1, 2, 3], def: 2, levels: FML, subject: 'cs' },
+    { id: 'ocr-cs-2', group: 'Computer Science', name: 'Year 13 · OCR A Level Computer Science (full course)', status: 'live', topics: allOf(CS2_GROUPS), groups: CS2_GROUPS, diffs: [1, 2, 3], def: 2, levels: FML, subject: 'cs' }
   ];
 })(typeof window !== 'undefined' ? window : globalThis);
