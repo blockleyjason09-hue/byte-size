@@ -244,7 +244,7 @@
     },
     function () {
       var r = pick([2, 3]), a = ri(1, 5), n = ri(5, 10);
-      return Q('A geometric series has ' + M('S_n = ' + a + '(' + r + '^n - 1)') + '.', [
+      return Q('A geometric series has ' + M('S_n = ' + (a === 1 ? '' : a + '(') + r + '^n - 1' + (a === 1 ? '' : ')')) + '.', [
         ['Find the first term and the common ratio.', 2, M('u_1 = ' + a * (r - 1)) + ', ' + M('r = ' + r)],
         ['Find ' + M('u_n') + '.', 2, M('S_n - S_{n - 1} = ' + a * (r - 1) + ' \\times ' + r + '^{n - 1}')],
         ['Explain why the series has no sum to infinity.', 1, M('|r| > 1')]
