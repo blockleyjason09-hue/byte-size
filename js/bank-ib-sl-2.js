@@ -283,7 +283,7 @@
       ] };
     } },
     { d: [3], f: function () { // normal then binomial
-      var mu = ri(150, 190), sd = ri(5, 12), x = mu + ri(5, 15), p = 1 - IB.ncdf(x, mu, sd), n = ri(8, 15), k = ri(1, 3);
+      var mu = ri(150, 190), sd = ri(5, 12), x = mu + Math.max(1, Math.round(sd * (0.3 + Math.random() * 1.3))), p = 1 - IB.ncdf(x, mu, sd), n = ri(8, 15), k = ri(1, 3);
       return { stem: 'The heights of a type of plant are normally distributed with mean ' + mu + ' cm and standard deviation ' + sd + ' cm.', parts: [
         { q: 'Find the probability that a plant is taller than ' + x + ' cm.', m: 2, a: s3(p) },
         { q: 'A random sample of ' + n + ' plants is taken. Find the probability that exactly ' + k + ' of them are taller than ' + x + ' cm.', m: 3, a: M('X \\sim B(' + n + ',\\ ' + s3(p) + ')') + ', ' + M('P(X = ' + k + ') = ' + s3(IB.bpdf(n, p, k))) },
@@ -441,7 +441,7 @@
       depths.forEach(function (v, i) { d += 'L' + (20 + i * h * sx) + ',' + (30 + v * sy); if (i > 0 && i < n) s += D.line(20 + i * h * sx, 30, 20 + i * h * sx, 30 + v * sy, 'dash'); });
       s += D.path(d, 'curve') + D.text(W / 2, 20, (n * h) + ' m', { anchor: 'middle', size: 12 });
       return { stem: 'The depth of a river, ' + M('d') + ' metres, is measured at intervals of ' + h + ' m across its width.' + table([M('x') + ' (m)'].concat(depths.map(function (_, i) { return num(i * h); })), [[M('d') + ' (m)'].concat(depths.map(function (v) { return num(v); }))]) + D.svg(W, H, s, 'Cross-section of a river', true), parts: [
-        { q: 'Use the trapezoidal rule to estimate the area of the cross-section of the river.', m: 3, a: M('\\frac{' + h + '}{2}\\left[0 + 0 + 2(' + depths.slice(1, n).map(num).join(' + ') + ')\\right] = ' + s3(est)) + ' m²' },
+        { q: 'Use the trapezoidal rule to estimate the area of the cross-section of the river.', m: 3, a: M((h === 2 ? '' : '\\frac{' + h + '}{2}') + '\\left[0 + 0 + 2(' + depths.slice(1, n).map(num).join(' + ') + ')\\right] = ' + s3(est)) + ' m²' },
         { q: 'The water flows at 0.' + ri(3, 9) + ' m s⁻¹. Estimate the volume of water passing the measuring point each minute.', m: 2, a: '' }
       ] };
     } },

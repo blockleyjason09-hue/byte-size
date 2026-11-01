@@ -275,7 +275,7 @@
       ]);
     }],
     [[2, 3], function () {
-      var d1 = [nz(-3, 3), nz(-3, 3), ri(-3, 3)], d2 = [nz(-3, 3), ri(-3, 3), nz(-3, 3)], cs = Math.min(1, Math.abs(dot(d1, d2)) / (norm(d1) * norm(d2)));
+      var d1 = [nz(-3, 3), nz(-3, 3), ri(-3, 3)], d2; do { d2 = [nz(-3, 3), ri(-3, 3), nz(-3, 3)]; } while (d1[1] * d2[2] === d1[2] * d2[1] && d1[0] * d2[2] === d1[2] * d2[0] && d1[0] * d2[1] === d1[1] * d2[0]); var cs = Math.min(1, Math.abs(dot(d1, d2)) / (norm(d1) * norm(d2)));
       return Q('Two lines have direction vectors ' + M(vv(d1)) + ' and ' + M(vv(d2)) + '.', [
         ['Find the acute angle between the lines.', 3, M('\\cos\\theta = \\frac{|' + dot(d1, d2) + '|}{\\sqrt{' + dot(d1, d1) + '}\\sqrt{' + dot(d2, d2) + '}}') + ', ' + M(s3(Math.acos(cs) * 180 / Math.PI) + '^\\circ')],
         ['State, with a reason, whether the lines are perpendicular.', 1, dot(d1, d2) === 0 ? 'Yes: the scalar product is 0.' : 'No: the scalar product is ' + dot(d1, d2) + ', not 0.']

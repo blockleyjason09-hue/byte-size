@@ -48,7 +48,7 @@
   function names(list) { return list.map(function (t) { return BS.topics[t].name; }); }
   function topicTitle() {
     if (!state.sel.length) return '';
-    if (state.sel.length <= 3) return names(state.sel).join(' · ');
+    if (state.sel.length <= 3) return names(state.sel).join(', ');
     return state.sel.length + ' topics';
   }
   setSel(state.sel);
@@ -277,7 +277,7 @@
     var mins = mode === 'exit' ? Math.max(4, qs.length + 1) : Math.max(5, Math.round(marks * 0.8));
     $stage.innerHTML =
       '<article class="paper slide" id="bs-paper">' +
-        '<header><span class="tag">' + esc(c.name) + ' · ' + lvl(course(state.course), state.diff) + '</span><span class="time">' + marks + ' marks · about ' + mins + ' min' + (xq ? ' + extension' : '') + '</span></header>' +
+        '<header><span class="tag">' + esc(c.name.replace(/ · /g, ', ')) + ' (' + lvl(course(state.course), state.diff) + ')</span><span class="time">' + marks + ' marks, about ' + mins + ' min' + (xq ? ' + extension' : '') + '</span></header>' +
         '<div class="body">' +
           '<h2 class="paper-title">' + esc(title) + '</h2>' +
           '<p class="instr">' + (isIB() ? 'Answer all questions. A graphic display calculator is required. Unless otherwise stated, give answers exactly or correct to three significant figures.' : 'Answer all questions. Show all your working.') + '</p>' +
@@ -483,7 +483,7 @@
     qs.sort(function (a, b) { return a.stage - b.stage; });
     $stage.innerHTML =
       '<article class="paper slide exam" id="bs-paper">' +
-        '<header><span class="tag">Practice paper · ' + esc(c.name) + '</span><span class="time">' + total + ' marks · ' + state.mins + ' minutes</span></header>' +
+        '<header><span class="tag">Practice paper: ' + esc(c.name.replace(/ · /g, ', ')) + '</span><span class="time">' + total + ' marks, ' + state.mins + ' minutes</span></header>' +
         '<div class="body">' +
           '<div class="exam-top"><h2 class="paper-title">Practice paper' + (state.sel.length ? ': ' + esc(topicTitle()) : '') + '</h2>' +
           '<div class="clock"><span id="bs-clock" aria-live="off">' + state.mins + ':00</span><button type="button" class="btn" data-start>Start timer</button></div></div>' +
@@ -573,7 +573,7 @@
     var q = BS.make(t, state.diff, null, !!course(state.course).foundation);
     $stage.innerHTML =
       '<article class="paper slide revise-card" id="bs-paper">' +
-        '<header><span class="tag">' + esc(BS.topics[t].name) + ' · ' + lvl(course(state.course), state.diff) + '</span><span class="time">' + q.marks + ' marks</span></header>' +
+        '<header><span class="tag">' + esc(BS.topics[t].name) + ' (' + lvl(course(state.course), state.diff) + ')</span><span class="time">' + q.marks + ' marks</span></header>' +
         '<div class="body">' + renderQ(q, session.n + 1, false) + '</div>' +
         '<footer class="rev-actions">' +
           '<button type="button" class="btn" data-reveal>Show mark scheme</button>' +
@@ -749,7 +749,7 @@
     var grid = plRoot.querySelector('.ideas'); if (grid) grid.hidden = true;
     plStage.innerHTML = '<p class="pl-back"><button type="button" class="back" data-pl-back>All plenary ideas</button></p>' +
       '<article class="paper slide plenary" id="pl-paper">' +
-      '<header><span class="tag">Plenary · ' + esc(c.name) + (state.sel.length ? ' · ' + esc(topicTitle()) : '') + '</span><span class="time">about 5 min</span></header>' +
+      '<header><span class="tag">Plenary: ' + esc(c.name.replace(/ · /g, ', ')) + (state.sel.length ? '; ' + esc(topicTitle()) : '') + '</span><span class="time">about 5 min</span></header>' +
       '<div class="body"><h2 class="paper-title">' + esc(p.title) + '</h2>' + p.body + '</div>' +
       '<footer>' + (p.answers ? '<button type="button" data-pl-ans aria-pressed="false">Show answers</button>' : '') +
       '<button type="button" data-pl-new>New version</button><button type="button" class="present">Present</button></footer></article>';

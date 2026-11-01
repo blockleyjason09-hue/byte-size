@@ -27,6 +27,10 @@
     ['Geometry and trigonometry', ['fm-trig', 'fm-geometry']]
   ];
   var FM_ALL = [].concat.apply([], FM_GROUPS.map(function (g) { return g[1]; }));
+  var CP1_GROUPS = [['Core Pure 1', ['cp-complex1', 'cp-roots', 'cp-matrices', 'cp-series1', 'cp-induction', 'cp-vectors', 'cp-volumes1']]];
+  var CP2_GROUPS = [['Core Pure 2', ['cp-complex2', 'cp-series2', 'cp-calculus', 'cp-polar', 'cp-hyperbolic', 'cp-de1', 'cp-de2']]];
+  var D1_GROUPS = [['Decision Mathematics 1', ['d-algorithms', 'd-graphs', 'd-network-algorithms', 'd-route', 'd-tsp', 'd-lp', 'd-simplex', 'd-cpa']]];
+  var FS1_GROUPS = [['Further Statistics 1', ['fs-drv', 'fs-poisson', 'fs-geometric', 'fs-hypothesis', 'fs-clt', 'fs-chisq', 'fs-pgf', 'fs-quality']]];
   var AS_GROUPS = [
     ['Pure', ['al-indices', 'al-quadratics', 'al-equations', 'al-graphs', 'al-lines', 'al-circles', 'al-algebraic', 'al-binomial', 'al-trig', 'al-vectors', 'al-differentiation', 'al-integration', 'al-explog']],
     ['Statistics', ['al-sampling', 'al-location', 'al-representations', 'al-correlation', 'al-probability', 'al-binomial-dist', 'al-hypothesis']],
@@ -66,10 +70,10 @@
     { id: 'aqa-fm', group: 'GCSE and International GCSE', name: 'Year 11 · AQA Level 2 Further Maths', status: 'live', topics: FM_ALL, groups: FM_GROUPS, diffs: [1, 2, 3], def: 2, levels: FML },
     { id: 'as', group: 'A Level Maths', name: 'Year 12 · A Level Maths Year 1 (Pure, Statistics, Mechanics) · Pearson', status: 'live', topics: allOf(AS_GROUPS), groups: AS_GROUPS, diffs: [1, 2, 3], def: 2, levels: FML },
     { id: 'a2', group: 'A Level Maths', name: 'Year 13 · A Level Maths Year 2 (Pure, Statistics, Mechanics) · Pearson', status: 'live', topics: allOf(A2_GROUPS), groups: A2_GROUPS, diffs: [1, 2, 3], def: 2, levels: FML },
-    { id: 'cp1', group: 'A Level Further Maths', name: 'Year 12 · Further Maths Core Pure · Pearson', status: 'soon' },
-    { id: 'cp2', group: 'A Level Further Maths', name: 'Year 13 · Further Maths Core Pure · Pearson', status: 'soon' },
-    { id: 'fs1', group: 'A Level Further Maths', name: 'Further Statistics 1 · Pearson', status: 'soon' },
-    { id: 'd1', group: 'A Level Further Maths', name: 'Decision Mathematics 1 · Pearson', status: 'soon' },
+    { id: 'cp1', group: 'A Level Further Maths', name: 'Year 12 · Further Maths Core Pure 1 · Pearson', status: 'live', topics: allOf(CP1_GROUPS), groups: CP1_GROUPS, diffs: [1, 2, 3], def: 2, levels: FML },
+    { id: 'cp2', group: 'A Level Further Maths', name: 'Year 13 · Further Maths Core Pure 2 · Pearson', status: 'live', topics: allOf(CP2_GROUPS), groups: CP2_GROUPS, diffs: [1, 2, 3], def: 2, levels: FML },
+    { id: 'fs1', group: 'A Level Further Maths', name: 'Further Statistics 1 · Pearson', status: 'live', topics: allOf(FS1_GROUPS), groups: FS1_GROUPS, diffs: [1, 2, 3], def: 2, levels: FML },
+    { id: 'd1', group: 'A Level Further Maths', name: 'Decision Mathematics 1 · Pearson', status: 'live', topics: allOf(D1_GROUPS), groups: D1_GROUPS, diffs: [1, 2, 3], def: 2, levels: FML },
     { id: 'ib-ai-sl', group: 'IB Diploma', name: 'IB Maths: Applications and Interpretation SL', status: 'live', topics: IB_SL_ALL, groups: IB_SL_GROUPS, diffs: [1, 2, 3], def: 2, levels: IBL, style: 'ib' },
     { id: 'ib-ai-hl', group: 'IB Diploma', name: 'IB Maths: Applications and Interpretation HL', status: 'live', topics: IB_ALL, groups: IB_GROUPS, diffs: [1, 2, 3], def: 2, levels: IBL, style: 'ib' },
     { id: 'ocr-cs-1', group: 'Computer Science', name: 'A Level Year 1 · OCR Computer Science', status: 'soon' },

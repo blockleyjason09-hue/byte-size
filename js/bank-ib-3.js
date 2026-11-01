@@ -109,7 +109,7 @@
       ] };
     } },
     { d: [2], f: function () {
-      var n = ri(10, 25), p = pick([0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]), r = ri(2, Math.min(7, n - 2)), k = ri(2, 6);
+      var n = ri(10, 25), p = pick([0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]), r = Math.max(1, Math.min(n - 1, Math.round(n * p) + ri(-1, 2))), k = ri(2, 6);
       return { stem: 'The probability that a seed germinates is ' + p + '. A gardener plants ' + n + ' seeds. Let ' + M('X') + ' be the number that germinate.', parts: [
         { q: 'Find ' + M('P(X = ' + r + ')') + '.', m: 2, a: s3(IB.bpdf(n, p, r)) },
         { q: 'Find the probability that at least ' + k + ' seeds germinate.', m: 2, a: s3(1 - IB.bcdf(n, p, k - 1)) },
@@ -128,7 +128,7 @@
 
   T({ id: 'ib-normal', name: 'The normal distribution', video: 'IB maths AI normal distribution inverse normal', gens: [
     { d: [1], f: function () {
-      var mu = 5 * ri(30, 80), sd = ri(4, 15), a = mu - ri(3, 18), b = mu + ri(3, 18);
+      var mu = 5 * ri(30, 80), sd = ri(4, 15), a = mu - Math.max(1, Math.round(sd * (0.2 + Math.random() * 1.8))), b = mu + Math.max(1, Math.round(sd * (0.2 + Math.random() * 1.8)));
       return { stem: 'The masses of apples are normally distributed with mean ' + mu + ' g and standard deviation ' + sd + ' g.' + D.normal(mu, sd, a, b, { mu: String(mu), a: String(a), b: String(b) }), parts: [
         { q: 'Find the probability that an apple has a mass less than ' + a + ' g.', m: 2, a: s3(IB.ncdf(a, mu, sd)) },
         { q: 'Find the probability that an apple has a mass between ' + a + ' g and ' + b + ' g (the shaded region).', m: 2, a: s3(IB.ncdf(b, mu, sd) - IB.ncdf(a, mu, sd)) }
