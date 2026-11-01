@@ -844,7 +844,7 @@
       var L = ri(4, 8), m = ri(10, 30), xg = Math.round(L * (0.3 + Math.random() * 0.4) * 10) / 10, T1 = m * G * (L - xg) / L, T2 = m * G * xg / L, k = ri(5, 15);
       return Q('A non-uniform rod ' + M('AB') + ' of length ' + L + ' m and mass ' + m + ' kg hangs horizontally from two vertical strings at ' + M('A') + ' and ' + M('B') + '. The tension at ' + M('A') + ' is ' + s3(T1) + ' N.', [
         ['Find the distance of the centre of mass from ' + M('A') + ' and the tension at ' + M('B') + '.', 4, M('x = ' + s3(xg)) + ' m; ' + M('T_B = ' + s3(T2)) + ' N'],
-        ['A particle of mass ' + k + ' kg is attached to the rod so that the tensions become equal. Find where it is attached.', 3, M('(' + m + ' + ' + k + ')\\frac{g}{2}') + ' each; moments about ' + M('A') + ': ' + M('y = \\frac{(' + m + ' + ' + k + ')\\tfrac{' + L + '}{2} - ' + m + '(' + s3(xg) + ')}{' + k + '} = ' + s3(((m + k) * L / 2 - m * xg) / k)) + ' m from ' + M('A') + (((m + k) * L / 2 - m * xg) / k > L || ((m + k) * L / 2 - m * xg) / k < 0 ? ' (outside the rod, so it is impossible)' : '')]
+        ['A particle of mass ' + k + ' kg is attached to the rod so that the tensions become equal. Find where it is attached.', 3, M('(' + m + ' + ' + k + ')\\frac{g}{2}') + ' each; moments about ' + M('A') + ': ' + M('y = \\frac{(' + m + ' + ' + k + ')\\tfrac{' + L + '}{2} - ' + m + '(' + s3(xg) + ')}{' + k + '} = ' + s3(Math.abs(((m + k) * L / 2 - m * xg) / k) < 1e-9 ? 0 : ((m + k) * L / 2 - m * xg) / k)) + ' m from ' + M('A') + (((m + k) * L / 2 - m * xg) / k > L || ((m + k) * L / 2 - m * xg) / k < 0 ? ' (outside the rod, so it is impossible)' : '')]
       ]);
     }
   ]);

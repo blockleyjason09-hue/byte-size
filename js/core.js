@@ -89,6 +89,7 @@
       gens.forEach(function (g) { t.gens.push({ d: [3], x: true, f: g.f || g }); });
     });
   };
+  BS.hist = BS.hist || {}; BS.tick = BS.tick || 0;
   BS.make = function (topicId, d, used, foundation) {
     var t = BS.topics[topicId];
     var cands = [], ok = function (i) { return (!foundation || !BS.isHigher(topicId, i)) && (!t.gens[i].x || (d === 3 && !foundation)); };
@@ -100,6 +101,8 @@
       if (hasX) { if (gn.x) cands.push(i); return; }
       if (gn.d.indexOf(d) > -1 || (d === 2 && !gn.x && gn.d.indexOf(3) > -1 && t.gens.some(function (g2) { return g2.x; }))) cands.push(i);
     });
+    // Topics with very few introductory templates also draw on the next level up, so sets don't repeat.
+    if (d === 1 && cands.length < 3) t.gens.forEach(function (gn, i) { if (!gn.x && ok(i) && gn.d.indexOf(2) > -1 && cands.indexOf(i) < 0) cands.push(i); });
     if (!cands.length && foundation) t.gens.forEach(function (gn, i) { if (ok(i)) cands.push(i); });
     if (!cands.length) {
       // fall back to the nearest difficulty available
@@ -119,7 +122,14 @@
       cands.forEach(function (k) { used.delete(topicId + ':' + k); });
       fresh = cands.slice();
     }
-    var i = BS.pick(fresh.length ? fresh : cands);
+    // Prefer the templates used least recently (across sets, not just within one), so a new set looks different.
+    var pool = fresh.length ? fresh : cands;
+    var age = function (k) { return BS.hist[topicId + ':' + k] || 0; };
+    pool = pool.slice().sort(function (x, y) { return age(x) - age(y); });
+    var keep = pool.filter(function (k) { return age(k) <= age(pool[0]); });
+    if (keep.length < 2 && pool.length > 2) keep = pool.slice(0, Math.ceil(pool.length / 2));
+    var i = BS.pick(keep);
+    BS.hist[topicId + ':' + i] = ++BS.tick;
     if (used) used.add(topicId + ':' + i);
     var q = t.gens[i].f(d);
     q.topic = topicId; q.gen = i; q.d = d;

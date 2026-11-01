@@ -419,3 +419,18 @@ button.idea[aria-pressed="true"] { border-color: var(--pri); box-shadow: 0 0 0 2
 .tp-clear { font: inherit; font-size: 0.9rem; background: none; border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; color: var(--ink); cursor: pointer; }
 .tp-clear:hover { border-color: var(--pri); }
 @media (max-width: 640px) { .tpanel { position: fixed; left: 16px; right: 16px; top: auto; bottom: 16px; width: auto; max-height: 75vh; } }
+
+/* Varied question types (Do Now / Exit ticket) */
+.vq-kind { display: inline-block; margin: 0 0 8px; font-family: var(--mono); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--pri-deep, var(--pri)); background: var(--pri-soft); border-radius: 4px; padding: 2px 8px; }
+.vq-statement { font-size: 1.12rem; font-weight: 700; margin: 4px 0 8px; padding: 10px 14px; border-left: 4px solid var(--pri); background: color-mix(in srgb, var(--pri) 6%, transparent); border-radius: 0 8px 8px 0; }
+.vq-claim { margin: 10px 0 6px; padding: 8px 14px; border: 2px dashed var(--line); border-radius: 8px; }
+.vq-claim ul { margin: 4px 0 0; padding-left: 1.1rem; display: grid; gap: 4px; }
+.vq-answer { font-size: 1.2rem; font-weight: 700; text-align: center; }
+.vq-ask { margin: 10px 0 4px; font-weight: 700; }
+.vq-opts { margin-bottom: 6px; }
+.paper.show .vq-opts li.right { border-color: var(--ok); background: var(--ok-soft); }
+.slide.presenting .vq-kind { font-size: 0.6em; }
+.slide .vq-opts li, .slide .vq-claim li { counter-increment: none; display: block; }
+.slide .vq-opts li::before, .slide .vq-claim li::before { content: none; }
+.slide .vq-opts li { display: flex; align-items: baseline; gap: 4px; }
+.slide .vq-claim ul { list-style: disc; }

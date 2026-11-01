@@ -57,6 +57,13 @@
   if (COUNTS[mode]) { var pc = prefs['n_' + mode]; state.count = COUNTS[mode].indexOf(pc) > -1 ? pc : DEFN[mode]; }
   var EXT = mode === 'donow' || mode === 'exit';
   state.ext = EXT && prefs['x_' + mode] === true;
+  state.style = EXT && prefs['s_' + mode] === 'exam' ? 'exam' : 'varied';
+  (function () { var h = store('bytesize-hist'); if (h && h.h) { BS.hist = h.h; BS.tick = h.t || 0; } })();
+  function saveHist() {
+    var keys = Object.keys(BS.hist);
+    if (keys.length > 4000) { keys.sort(function (a, b) { return BS.hist[a] - BS.hist[b]; }).slice(0, keys.length - 3000).forEach(function (k) { delete BS.hist[k]; }); }
+    store('bytesize-hist', { h: BS.hist, t: BS.tick });
+  }
 
   /* ---------- Controls ---------- */
   var groups = {};
@@ -91,6 +98,7 @@
         '<div class="tpanel" id="bs-tpanel" hidden role="dialog" aria-label="Choose topics"></div></div>' +
       '<div class="ctl"' + (mode === 'paper' ? ' hidden' : '') + '><span id="bs-diff-label">Difficulty</span><div class="seg" id="bs-diff" role="group" aria-labelledby="bs-diff-label"></div></div>' +
       countCtl +
+      (EXT ? '<div class="ctl"><span id="bs-style-label">Question types</span><div class="seg" id="bs-style" role="group" aria-labelledby="bs-style-label"><button type="button" data-s="varied" aria-pressed="' + (state.style === 'varied') + '">Varied</button><button type="button" data-s="exam" aria-pressed="' + (state.style === 'exam') + '">Exam-style only</button></div></div>' : '') +
       (EXT ? '<div class="ctl"><span id="bs-ext-label">Extension question</span><div class="seg" id="bs-ext" role="group" aria-labelledby="bs-ext-label"><button type="button" data-x="0" aria-pressed="' + !state.ext + '">None</button><button type="button" data-x="1" aria-pressed="' + state.ext + '">Add one</button></div></div>' : '') +
       (mode === 'plenary' ? '' : '<button type="button" class="btn" id="bs-new">' + newLabel + '</button>') +
     '</div>' +
@@ -164,7 +172,7 @@
   fillTopics();
   if ($count) $count.value = String(state.count);
 
-  function save() { if (COUNTS[mode]) prefs['n_' + mode] = state.count; if (EXT) prefs['x_' + mode] = state.ext; prefs.course = state.course; prefs.topic = state.topic; prefs.topics = state.sel; prefs.diff = state.diff; prefs.mins = state.mins; store('bytesize-prefs', prefs); }
+  function save() { if (COUNTS[mode]) prefs['n_' + mode] = state.count; if (EXT) { prefs['x_' + mode] = state.ext; prefs['s_' + mode] = state.style; } prefs.course = state.course; prefs.topic = state.topic; prefs.topics = state.sel; prefs.diff = state.diff; prefs.mins = state.mins; store('bytesize-prefs', prefs); }
 
   $course.addEventListener('change', function () { state.course = $course.value; state.diff = null; fillTopics(); save(); build(); });
   var selAtOpen = null;
@@ -200,6 +208,13 @@
     save(); build();
   });
   var $ext = document.getElementById('bs-ext');
+  var $style = document.getElementById('bs-style');
+  if ($style) $style.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    state.style = b.dataset.s;
+    $style.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+    save(); build();
+  });
   if ($ext) $ext.addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     state.ext = b.dataset.x === '1';
@@ -222,7 +237,7 @@
         '<div class="ans"><span class="ans-k">' + (single ? 'Answer' : '(' + LET[i] + ')') + '</span> ' + p.a + '</div>' +
       '</div>';
     }).join('');
-    return '<section class="q" data-topic="' + q.topic + '">' +
+    return '<section class="q" data-topic="' + q.topic + '" data-g="' + q.gen + '">' +
       '<div class="qnum">' + n + '</div>' +
       '<div class="qbody">' +
         (ib ? '<p class="maxmark">[Maximum mark: ' + q.marks + ']</p>' : '') +
@@ -247,7 +262,8 @@
     if (mode === 'plenary') { $stage.innerHTML = ''; return; }
     if (mode === 'paper') { buildPaper(); return; }
     var c = course(state.course), used = new Set();
-    var qs = pickTopics(state.count).map(function (t) { return BS.make(t, state.diff, used, !!course(state.course).foundation); });
+    var tops = pickTopics(state.count), kinds = EXT && state.style === 'varied' ? planKinds(tops.length) : tops.map(function () { return 'std'; });
+    var qs = tops.map(function (t, i) { return makeItem(kinds[i], t, used); });
     var marks = qs.reduce(function (s, q) { return s + q.marks; }, 0);
     // Extension question for early finishers: the top-level (extension) question for one of the topics in the set
     var xq = null;
@@ -265,7 +281,7 @@
         '<div class="body">' +
           '<h2 class="paper-title">' + esc(title) + '</h2>' +
           '<p class="instr">' + (isIB() ? 'Answer all questions. A graphic display calculator is required. Unless otherwise stated, give answers exactly or correct to three significant figures.' : 'Answer all questions. Show all your working.') + '</p>' +
-          qs.map(function (q, i) { return renderQ(q, i + 1, !single()); }).join('') +
+          qs.map(function (q, i) { return q.render ? q.render(i + 1) : renderQ(q, i + 1, !single()); }).join('') +
           (xq ? '<div class="ext-block"><p class="ext-head"><span class="ext-badge">Extension</span> Finished early? Try this.</p>' + renderQ(xq, '★', true).replace('<section class="q"', '<section class="q ext"').replace('Total for Question ★', 'Total for the extension question') + '</div>' : '') +
           (mode === 'exit' ? '<div class="reflect-box"><p><b>How confident do you feel?</b> <span class="scale">1&nbsp;&nbsp;2&nbsp;&nbsp;3&nbsp;&nbsp;4&nbsp;&nbsp;5</span></p><p><b>One thing I am still unsure about:</b></p><div class="write-line"></div></div>' : '') +
         '</div>' +
@@ -273,7 +289,99 @@
       '</article>';
     wirePaper();
     tex($stage);
+    saveHist();
   }
+
+  /* ---------- Varied question types for Do Nows and Exit tickets ---------- */
+  var KINDS = {
+    mcq: 'Multiple choice', check: 'Check the answer', mistake: 'Spot the mistake', asn: 'Always, sometimes or never?',
+    tf: 'True or false?', explain: 'Explain the method', reverse: 'Work backwards'
+  };
+  var NAMES = ['Sam', 'Priya', 'Alex', 'Jordan', 'Mia', 'Tom', 'Zara', 'Leo', 'Ava', 'Kai'];
+  // Which question types to use: about half the set, never the first question, rotated so consecutive sets differ.
+  function planKinds(n) {
+    var out = []; for (var i = 0; i < n; i++) out.push('std');
+    if (n < 2) return out;
+    var k = mode === 'exit' ? Math.min(n - 1, Math.max(1, Math.round(n * 0.5))) : Math.max(1, Math.round(n * 0.5));
+    var order = ['concept', 'mcq', 'check', 'explain', 'mistake', 'reverse'].sort(function (a, b) { return (BS.hist['k:' + a] || 0) - (BS.hist['k:' + b] || 0) || Math.random() - 0.5; });
+    var slots = BS.shuffle(out.map(function (_, j) { return j; }).slice(1)).slice(0, k).sort(function (a, b) { return a - b; });
+    slots.forEach(function (sl, j) { out[sl] = order[j % order.length]; });
+    return out;
+  }
+  function stdItem(t, used) { return BS.make(t, state.diff, used, !!course(state.course).foundation); }
+  function shell(n, kind, t, marks, inner, ans) {
+    var ib = isIB();
+    return '<section class="q vq" data-topic="' + t + '">' +
+      '<div class="qnum">' + n + '</div>' +
+      '<div class="qbody">' +
+        '<p class="vq-kind">' + esc(KINDS[kind]) + '</p>' +
+        (ib ? '<p class="maxmark">[Maximum mark: ' + marks + ']</p>' : '') +
+        inner +
+        '<div class="ans"><span class="ans-k">Answer</span> ' + ans + '</div>' +
+        (ib ? '' : '<p class="total">(Total for Question ' + n + ' is ' + marks + ' mark' + (marks === 1 ? '' : 's') + ')</p>') +
+        (!single() ? '<p class="qtopic">' + esc(BS.topics[t].name) + '</p>' : '') +
+      '</div></section>';
+  }
+  function choiceFor(t, used, numericOnly) {
+    for (var i = 0; i < 12; i++) { var r = choiceFrom(stdItem(t, used)); if (r && (!numericOnly || r.numeric)) return r; }
+    return null;
+  }
+  function makeItem(kind, t, used) {
+    var it = null;
+    try { it = kind === 'std' ? null : MAKE[kind](t, used); } catch (e) { it = null; }
+    if (it) { BS.hist['k:' + kind] = ++BS.tick; return it; }
+    return stdItem(t, used);
+  }
+  var MAKE = {
+    concept: function (t) {
+      var list = BS.concepts && BS.concepts[t]; if (!list || !list.length) return null;
+      var idx = list.map(function (_, i) { return i; }).sort(function (a, b) { return (BS.hist['c:' + t + ':' + a] || 0) - (BS.hist['c:' + t + ':' + b] || 0) || Math.random() - 0.5; })[0];
+      BS.hist['c:' + t + ':' + idx] = ++BS.tick;
+      var c = list[idx], asn = 'ASN'.indexOf(c[0]) > -1, kind = asn ? 'asn' : 'tf';
+      var verdict = { A: 'Always true', S: 'Sometimes true', N: 'Never true', T: 'True', F: 'False' }[c[0]];
+      var inner = '<div class="stem"><p class="vq-statement">' + c[1] + '</p></div>' +
+        '<div class="part"><div class="ptext">' + (asn ? 'Is this statement always, sometimes or never true? Explain your answer, using an example or a counterexample.' : 'Is this statement true or false? Explain how you know.') + '</div><span class="marks">' + (isIB() ? '[2]' : '(2)') + '</span></div>';
+      return { topic: t, marks: 2, render: function (n) { return shell(n, kind, t, 2, inner, '<b>' + verdict + '.</b> ' + c[2]); } };
+    },
+    mcq: function (t, used) {
+      var r = choiceFor(t, used); if (!r) return null;
+      var opts = BS.shuffle([r.right].concat(r.wrong)), right = opts.indexOf(r.right);
+      var inner = partsUpTo(r.q, r.j).replace(/<span class="marks"><\/span>/g, '') +
+        '<p class="vq-ask">Choose the correct answer' + (r.q.parts.length > 1 ? ' to part (' + LET[r.j] + ')' : '') + '.</p>' +
+        '<ol class="pl-opts vq-opts">' + opts.map(function (o, i) { return '<li' + (i === right ? ' class="right"' : '') + '><b>' + 'ABCD'[i] + '</b> <span>' + o + '</span></li>'; }).join('') + '</ol>';
+      return { topic: t, marks: 1, render: function (n) { return shell(n, 'mcq', t, 1, inner, '<b>' + 'ABCD'[right] + '</b>: ' + r.q.parts[r.j].a); } };
+    },
+    check: function (t, used) {
+      var r = choiceFor(t, used, true); if (!r) return null;
+      var good = Math.random() < 0.4, claim = good ? r.right : r.wrong[0], who = BS.pick(NAMES);
+      var inner = partsUpTo(r.q, r.j).replace(/<span class="marks"><\/span>/g, '') +
+        '<div class="vq-claim"><b>' + who + '</b> says the answer' + (r.q.parts.length > 1 ? ' to (' + LET[r.j] + ')' : '') + ' is <span>' + claim + '</span>.</div>' +
+        '<div class="part"><div class="ptext">Is ' + who + ' correct? Show working to justify your decision.</div><span class="marks">' + (isIB() ? '[2]' : '(2)') + '</span></div>';
+      return { topic: t, marks: 2, render: function (n) { return shell(n, 'check', t, 2, inner, '<b>' + (good ? who + ' is correct.' : who + ' is not correct.') + '</b> ' + r.q.parts[r.j].a); } };
+    },
+    mistake: function (t, used) {
+      var r = choiceFor(t, used, true); if (!r) return null;
+      var who = BS.pick(NAMES), steps = r.q.parts.slice(0, r.j + 1);
+      var inner = partsUpTo(r.q, r.j).replace(/<span class="marks"><\/span>/g, '') +
+        '<div class="vq-claim"><b>' + who + '’s answer' + (steps.length > 1 ? 's' : '') + '</b><ul>' + steps.map(function (p, i) { return '<li>' + (steps.length > 1 ? '(' + LET[i] + ') ' : '') + (i === r.j ? r.wrong[0] : finalOf(p.a)) + '</li>'; }).join('') + '</ul></div>' +
+        '<div class="part"><div class="ptext">' + who + ' has made a mistake. Describe the mistake ' + who + ' might have made, and give the correct answer.</div><span class="marks">' + (isIB() ? '[2]' : '(2)') + '</span></div>';
+      return { topic: t, marks: 2, render: function (n) { return shell(n, 'mistake', t, 2, inner, (steps.length > 1 ? '(' + LET[r.j] + ') is wrong. ' : '') + 'Correct answer: ' + r.q.parts[r.j].a); } };
+    },
+    explain: function (t, used) {
+      var q = stdItem(t, used); if (q.marks < 2) return null;
+      var inner = (q.stem ? '<div class="stem">' + q.stem + '</div>' : '') + q.parts.map(function (p, i) { return '<div class="part">' + (q.parts.length > 1 ? '<span class="plabel">(' + LET[i] + ')</span>' : '') + '<div class="ptext">' + p.q + '</div></div>'; }).join('') +
+        '<div class="part"><div class="ptext"><b>Do not work it out.</b> Write the steps you would take' + (q.parts.length > 1 ? ' for each part' : '') + ', in order, and say which facts or formulae you would use.</div><span class="marks">' + (isIB() ? '[2]' : '(2)') + '</span></div>';
+      return { topic: t, marks: 2, render: function (n) { return shell(n, 'explain', t, 2, inner, 'Look for a clear method. Mark scheme for reference: ' + q.parts.map(function (p, i) { return (q.parts.length > 1 ? '(' + LET[i] + ') ' : '') + p.a; }).join('; ')); } };
+    },
+    reverse: function (t, used) {
+      var r = choiceFor(t, used, true); if (!r) return null;
+      if (/<(svg|figure|table)/i.test((r.q.stem || '') + r.q.parts[r.j].q)) return null;
+      var ex = (r.q.stem ? r.q.stem + ' ' : '') + r.q.parts[r.j].q;
+      var inner = '<div class="stem"><p>Here is the answer to a question on <b>' + esc(BS.topics[t].name.toLowerCase()) + '</b>:</p><div class="vq-claim vq-answer">' + r.right + '</div></div>' +
+        '<div class="part"><div class="ptext">Write a question that has this answer. Then write a second question, of a different type, with the same answer.</div><span class="marks">' + (isIB() ? '[2]' : '(2)') + '</span></div>';
+      return { topic: t, marks: 2, render: function (n) { return shell(n, 'reverse', t, 2, inner, 'Many answers are possible. For example: ' + ex); } };
+    }
+  };
 
   /* ---------- Practice paper (pupils) ---------- */
   var timer = null;
@@ -457,7 +565,7 @@
     var str = m[1].replace(/,/g, ''), v = Number(str); if (!isFinite(v)) return null;
     return { v: v, dp: (str.split('.')[1] || '').length, unit: m[2].trim() };
   }
-  function fmt(n, x) { var t = x.dp ? Number(n).toFixed(x.dp) : String(Math.round(n * 1000) / 1000); if (Math.abs(n) >= 1000 && !x.dp) t = Number(t).toLocaleString('en-GB'); return t + (x.unit ? ' ' + x.unit : ''); }
+  function fmt(n, x) { var t = x.dp ? Number(n).toFixed(x.dp) : String(Math.round(n * 1000) / 1000); if (Math.abs(n) >= 1000 && !x.dp) t = Number(t).toLocaleString('en-GB'); return t.replace(/^-/, '−') + (x.unit ? ' ' + x.unit : ''); }
   function wrongs(x, k) {
     var v = x.v, c = v === 0 ? [1, -1, 2, 0.5, 10] : [2 * v, v / 2, v + 1, v - 1, v * 10, v / 10, v + 2, v * 3].concat(x.unit ? [] : [-v]);
     var out = [], seen = {}; seen[fmt(v, x)] = 1;
@@ -475,9 +583,15 @@
   }
   function choiceQuestion(tries) {
     for (var i = 0; i < (tries || 40); i++) {
-      var t = pickTopics(1)[0], q = BS.make(t, state.diff, null, !!course(state.course).foundation);
+      var r = choiceFrom(BS.make(pickTopics(1)[0], state.diff, null, !!course(state.course).foundation));
+      if (r) return r;
+    }
+    return null;
+  }
+  function choiceFrom(q) {
+    {
       var idx = q.parts.map(function (p, j) { var a = plain(finalOf(p.a)); return a.length && a.length <= 70 && !/\.\s+[A-Z]/.test(a) ? j : -1; }).filter(function (j) { return j > -1; });
-      if (!idx.length) continue;
+      if (!idx.length) return null;
       var j = BS.pick(idx), x = numAns(finalOf(q.parts[j].a)), right = x ? fmt(x.v, x) : finalOf(q.parts[j].a), wr = [];
       if (x) wr = wrongs(x, 3).map(esc);
       else {
@@ -489,7 +603,7 @@
           if (!seen[key] && key.length <= 70) { seen[key] = 1; wr.push(a2); }
         }
       }
-      if (wr.length >= 3) return { q: q, j: j, right: x ? esc(right) : right, wrong: wr.slice(0, 3) };
+      if (wr.length >= 3) return { q: q, j: j, numeric: !!x, right: x ? esc(right) : right, wrong: wr.slice(0, 3) };
     }
     return null;
   }
