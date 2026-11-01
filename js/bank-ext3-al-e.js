@@ -1,7 +1,7 @@
 /* Byte Size Classroom — deeper extension questions (set 3, A level Year 1 part e): correlation and regression, probability, binomial distribution, hypothesis testing. */
 (function (g) {
   var BS = g.BS, X = BS.ext;
-  var ri = BS.ri, pick = BS.pick, nz = BS.nz, gcd = BS.gcd, frac = BS.frac, poly = BS.poly, num = BS.num, M = BS.m;
+  var ri = BS.ri, pick = BS.pick, nz = BS.nz, gcd = BS.gcd, frac = BS.frac, num = BS.num, M = BS.m;
   function Q(stem, parts) { return { stem: stem || '', parts: parts.map(function (p) { return { q: p[0], m: p[1], a: String(p[2]) }; }) }; }
   function sf3(x) { return Math.abs(x - Math.round(x)) < 1e-9 ? String(Math.round(x)) : BS.sf(x, 3); }
   function d4(x) { return x.toFixed(4); }
@@ -9,340 +9,346 @@
   function C(n, r) { if (r < 0 || r > n) return 0; var v = 1; for (var i = 1; i <= r; i++) v = v * (n - r + i) / i; return Math.round(v); }
   function pmf(n, p, k) { return C(n, k) * Math.pow(p, k) * Math.pow(1 - p, n - k); }
   function cdf(n, p, k) { var s = 0; for (var i = 0; i <= k; i++) s += pmf(n, p, i); return s; }
-  function B(n, p) { return M('\\text{B}(' + n + ', ' + p + ')'); }
+  function ge(n, p, k) { return 1 - cdf(n, p, k - 1); }
+  function upperCR(n, p, a) { for (var c = 0; c <= n + 1; c++) if (ge(n, p, c) <= a) return c; return n + 1; }
+  function lowerCR(n, p, a) { var c = -1; for (var k = 0; k <= n; k++) if (cdf(n, p, k) <= a) c = k; return c; }
 
   X('al-correlation', [
     function () {
-      var a = ri(10, 40), b = pick([0.5, 1.2, 2.5, -0.8, 3]), lo = ri(5, 15), hi = lo + ri(15, 30);
-      return Q('A regression line ' + M('y = ' + a + (b < 0 ? ' - ' + (-b) : ' + ' + b) + 'x') + ' was found from data with ' + M('x') + ' between ' + lo + ' and ' + hi + '.', [
-        ['Interpret the gradient in context, if ' + M('x') + ' is hours of practice and ' + M('y') + ' is a test score.', 1, 'Each extra hour is associated with a change of ' + b + ' marks'],
-        ['Predict ' + M('y') + ' for ' + M('x = ' + (lo + 5)) + ' and for ' + M('x = ' + (hi + 40)) + '. Comment on the reliability of each.', 3, sf3(a + b * (lo + 5)) + ' (reliable: interpolation); ' + sf3(a + b * (hi + 40)) + ' (unreliable: extrapolation)'],
-        ['Explain why the regression of ' + M('x') + ' on ' + M('y') + ' should not be used to predict ' + M('x') + ' from this line.', 1, 'The line minimises vertical errors in ' + M('y') + '; it is designed to predict ' + M('y')]
+      var r = pick([0.92, 0.85, -0.88, 0.12, -0.07]);
+      return Q('The PMCC between hours of sunshine and ice-cream sales over 15 days is ' + r + '.', [
+        ['Interpret this value in context.', 2, Math.abs(r) > 0.5 ? 'Strong ' + (r > 0 ? 'positive' : 'negative') + ' linear correlation: sunnier days tend to have ' + (r > 0 ? 'higher' : 'lower') + ' sales' : 'Very weak linear correlation: little linear relationship'],
+        ['Does this show that sunshine causes the change in sales? Explain.', 1, 'No: correlation does not imply causation (temperature may be the real factor)'],
+        ['Explain why a PMCC near 0 does not mean there is no relationship.', 1, 'There could be a strong non-linear relationship']
       ]);
     },
     function () {
-      var r = pick([0.92, 0.85, -0.78, -0.95, 0.15]);
-      return Q('The product moment correlation coefficient for a data set is ' + r + '.', [
-        ['Describe the correlation.', 1, (Math.abs(r) > 0.7 ? 'Strong ' : Math.abs(r) > 0.4 ? 'Moderate ' : 'Weak ') + (r > 0 ? 'positive' : 'negative')],
-        ['An outlier far from the trend is removed. How would you expect ' + M('|r|') + ' to change?', 1, 'It would increase (closer to a straight line)'],
-        ['The ' + M('x') + ' values were converted from cm to inches. What happens to ' + M('r') + '?', 1, 'Nothing: ' + M('r') + ' does not depend on units']
+      var a = ri(10, 40), b = ri(2, 6), lo = ri(5, 10), hi = lo + ri(10, 20);
+      return Q('The regression line of ' + M('y') + ' (score) on ' + M('x') + ' (hours revised) is ' + M('y = ' + a + ' + ' + b + 'x') + ', from data with ' + M(lo + ' \\le x \\le ' + hi) + '.', [
+        ['Interpret the gradient and the intercept.', 2, 'Each extra hour adds about ' + b + ' marks; ' + a + ' is the predicted score with no revision'],
+        ['Estimate the score for ' + (lo + 3) + ' hours and for ' + (hi + 15) + ' hours, commenting on reliability.', 2, (a + b * (lo + 3)) + ' (interpolation, reliable); ' + (a + b * (hi + 15)) + ' (extrapolation, unreliable)'],
+        ['Explain why the line should not be used to predict hours from score.', 1, 'It is the regression of ' + M('y') + ' on ' + M('x') + '; it minimises errors in ' + M('y') + ' only']
       ]);
     },
     function () {
-      return Q('Ice-cream sales and the number of sunburn cases in a town show strong positive correlation.', [
-        ['Does this mean ice cream causes sunburn? Explain.', 1, 'No: correlation does not imply causation'],
-        ['Suggest a third variable that explains both.', 1, 'Sunny, hot weather'],
-        ['Describe how you could test whether there is a link once this variable is controlled for.', 2, 'Compare sales and sunburn on days with similar temperature and sunshine']
+      var n = pick([10, 12, 15, 20]), cv = { 10: 0.5494, 12: 0.4973, 15: 0.4409, 20: 0.3783 }[n], r = pick([0.62, 0.41, 0.53, 0.35, 0.48]);
+      return Q('A sample of ' + n + ' pairs gives PMCC ' + r + '. Test at the 5% level whether there is positive correlation in the population (critical value ' + cv + ').', [
+        ['State the hypotheses.', 1, M('H_0: \\rho = 0') + ', ' + M('H_1: \\rho > 0')],
+        ['Carry out the test and conclude in context.', 2, r > cv ? r + ' > ' + cv + ': reject ' + M('H_0') + '; there is evidence of positive correlation' : r + ' < ' + cv + ': do not reject ' + M('H_0') + '; insufficient evidence of positive correlation'],
+        ['Explain why the critical value gets smaller as the sample size increases.', 1, 'With more data, a smaller correlation is less likely to happen by chance']
       ]);
     },
     function () {
-      var xb = ri(10, 30), yb = ri(40, 80), b = pick([1.5, 2, -0.5, 0.8]);
-      var a = yb - b * xb;
-      return Q('The regression line of ' + M('y') + ' on ' + M('x') + ' has gradient ' + b + '. The means are ' + M('\\bar{x} = ' + xb) + ' and ' + M('\\bar{y} = ' + yb) + '.', [
-        ['Explain why the line passes through ' + M('(\\bar{x}, \\bar{y})') + '.', 1, 'The least-squares line always passes through the mean point'],
-        ['Find the equation of the line.', 2, M('y = ' + sf3(a) + (b < 0 ? ' - ' + (-b) : ' + ' + b) + 'x')],
-        ['Predict ' + M('y') + ' when ' + M('x = ' + (xb + 4)) + '.', 1, sf3(yb + 4 * b)]
+      return Q('A scatter diagram shows a weak positive correlation, with one point far from the others in the top-right corner.', [
+        ['Explain the effect of this point on the PMCC.', 2, 'It may greatly increase the PMCC, making the correlation look stronger'],
+        ['How should you decide whether to remove it?', 1, 'Check whether it is an error; if genuine, keep it but report its effect'],
+        ['Explain why one point can have such a large effect.', 1, 'The PMCC uses products of deviations, so an extreme point contributes a large amount']
       ]);
     },
     function () {
-      var a = pick([0.3, 0.5, 1.2]), b = pick([0.02, 0.05, 0.1]);
-      return Q('A scientist plots ' + M('\\log_{10} y') + ' against ' + M('x') + ' and finds the line ' + M('\\log_{10} y = ' + a + ' + ' + b + 'x') + '.', [
-        ['Show that ' + M('y = kc^x') + ' and find ' + M('k') + ' and ' + M('c') + '.', 3, M('k = 10^{' + a + '} = ' + sf3(Math.pow(10, a)) + ',\\ c = 10^{' + b + '} = ' + sf3(Math.pow(10, b)))],
-        ['Interpret ' + M('c') + ' in context.', 1, M('y') + ' is multiplied by ' + sf3(Math.pow(10, b)) + ' for each unit increase in ' + M('x')],
-        ['Predict ' + M('y') + ' when ' + M('x = 10') + '.', 1, sf3(Math.pow(10, a + 10 * b))]
+      var a = ri(10, 50), b = pick([2, 5, 10]);
+      return Q('Temperatures ' + M('x') + ' (°C) are coded as ' + M('t = \\frac{x - ' + a + '}{' + b + '}') + '. The PMCC between ' + M('t') + ' and ' + M('y') + ' is 0.74.', [
+        ['Write down the PMCC between ' + M('x') + ' and ' + M('y') + '.', 1, '0.74'],
+        ['Explain why coding does not change the PMCC.', 2, 'Linear coding only shifts and rescales the axes; the pattern of points is unchanged'],
+        ['What would the PMCC be if ' + M('t = \\frac{' + a + ' - x}{' + b + '}') + '?', 1, '−0.74']
       ]);
     },
     function () {
-      return Q('Variables: the time spent studying and the score in an exam.', [
-        ['Which is the explanatory variable and which is the response?', 1, 'Time studying is explanatory; score is the response'],
-        ['On which axis should each be plotted?', 1, 'Explanatory on the horizontal axis'],
-        ['Why does it matter which variable is explanatory when finding a regression line?', 1, 'The line of ' + M('y') + ' on ' + M('x') + ' predicts the response from the explanatory variable']
+      var a = ri(200, 500), b = ri(5, 20);
+      return Q('The cost ' + M('C') + ' (£) of producing ' + M('n') + ' items is modelled by ' + M('C = ' + a + ' + ' + b + 'n') + ', from data with 20 to 200 items.', [
+        ['Interpret ' + a + ' and ' + b + ' in context.', 2, 'Fixed costs £' + a + '; each item costs £' + b],
+        ['Find the cost per item for 100 items and for 200 items.', 2, '£' + num((a + 100 * b) / 100) + ' and £' + num((a + 200 * b) / 200)],
+        ['Explain why the model may be unreliable for 10 000 items.', 1, 'Extrapolation: costs per item often change at scale']
       ]);
     },
     function () {
-      var n = ri(8, 15);
-      return Q('A scatter diagram of ' + n + ' points shows two clusters: one group of points with low ' + M('x') + ' and low ' + M('y') + ', and one with high ' + M('x') + ' and high ' + M('y') + ', with no correlation within either group.', [
-        ['Explain why the PMCC for all the data may be strongly positive.', 1, 'The gap between the clusters creates an overall trend'],
-        ['Explain why this could be misleading.', 1, 'Within each group there is no relationship'],
-        ['Suggest what should be done.', 1, 'Analyse the two groups separately and investigate what distinguishes them']
+      return Q('Choosing variables for regression.', [
+        ['Explain the difference between an explanatory and a response variable.', 2, 'The explanatory variable is set or controlled; the response depends on it'],
+        ['In a study of fertiliser amount and crop yield, which is which?', 1, 'Fertiliser is explanatory; yield is the response'],
+        ['Why should the regression line be of yield on fertiliser and not the other way round?', 1, 'We want to predict yield from fertiliser']
       ]);
     },
     function () {
-      var m = pick([0.6, 0.75, 0.9]);
-      return Q('For data on car age ' + M('x') + ' (years) and value ' + M('y') + ' (£1000s), the regression line is ' + M('y = 18 - 1.5x') + '.', [
-        ['Interpret the intercept.', 1, 'The predicted value of a new car is £18 000'],
-        ['Find the predicted value at 15 years and comment.', 2, '−4.5: impossible, so the linear model breaks down for old cars'],
-        ['Suggest a better model shape and why.', 1, 'An exponential decay model, as cars tend to lose a percentage of value each year']
+      return Q('Points lie exactly on the curve ' + M('y = (x - 5)^2') + ' for ' + M('x = 0, 1, \\ldots, 10') + '.', [
+        ['Estimate the PMCC without calculation, and explain.', 2, '0: the data are symmetric about ' + M('x = 5') + ', so there is no linear trend'],
+        ['What does this show about using the PMCC?', 1, 'It measures only linear association'],
+        ['Suggest how to check for a non-linear relationship.', 1, 'Plot a scatter diagram first']
       ]);
     },
     function () {
-      return Q('A researcher measures arm span and height for 30 adults and finds ' + M('r = 0.94') + '.', [
-        ['Interpret this value.', 1, 'Strong positive linear correlation'],
-        ['Would you expect the same correlation for children aged 5 to 15 combined with adults? Explain.', 2, 'Likely still strong: both grow together, but the relationship may not be linear across ages'],
-        ['Explain the difference between interpolation and extrapolation for predictions from this data.', 1, 'Interpolation is within the data range and more reliable']
+      return Q('A researcher wants to test whether there is any correlation (positive or negative) between two variables.', [
+        ['Should the test be one-tailed or two-tailed? Explain.', 1, 'Two-tailed: no direction is predicted'],
+        ['For a 5% two-tailed test, what significance level is used in each tail?', 1, '2.5%'],
+        ['Explain how the conclusion would change if a one-tailed test had been chosen after seeing the data.', 2, 'It would be invalid: the hypotheses must be decided before collecting data']
       ]);
     },
     function () {
-      return Q('Describe and interpret a scatter diagram.', [
-        ['What features should a full description of a scatter diagram include?', 2, 'Direction, strength, linearity and any outliers or clusters'],
-        ['Explain why ' + M('r = 0') + ' does not mean that there is no relationship.', 1, 'There may be a strong non-linear relationship'],
-        ['Sketch an example with ' + M('r \\approx 0') + ' but a clear pattern.', 1, 'A U-shaped (quadratic) pattern']
+      var Sxx = ri(40, 100), Syy = ri(40, 100), Sxy = ri(-30, 60);
+      var r = Sxy / Math.sqrt(Sxx * Syy);
+      return Q('For a data set, ' + M('S_{xx} = ' + Sxx) + ', ' + M('S_{yy} = ' + Syy) + ' and ' + M('S_{xy} = ' + Sxy) + '.', [
+        ['Find the PMCC using ' + M('r = \\frac{S_{xy}}{\\sqrt{S_{xx}S_{yy}}}') + '.', 2, sf3(r)],
+        ['Find the gradient of the regression line of ' + M('y') + ' on ' + M('x') + ', ' + M('b = \\frac{S_{xy}}{S_{xx}}') + '.', 1, sf3(Sxy / Sxx)],
+        ['Explain why ' + M('r') + ' and ' + M('b') + ' always have the same sign.', 1, 'Both have ' + M('S_{xy}') + ' in the numerator and positive denominators']
       ]);
     }
   ]);
 
   X('al-probability', [
     function () {
-      var a = ri(3, 6) / 10, b = ri(2, 5) / 10, ab = ri(1, Math.min(a, b) * 10 - 1) / 10;
-      return Q(M('P(A) = ' + a + ', P(B) = ' + b + ', P(A \\cap B) = ' + ab) + '.', [
-        ['Draw a Venn diagram and find ' + M('P(A \\cup B)') + '.', 2, sf3(a + b - ab)],
-        ['Find ' + M('P(A’ \\cap B)') + ' and ' + M('P(A \\mid B)') + '.', 2, sf3(b - ab) + ' and ' + sf3(ab / b)],
-        ['Are ' + M('A') + ' and ' + M('B') + ' independent? Show working.', 2, Math.abs(a * b - ab) < 1e-9 ? 'Yes: ' + M('P(A)P(B) = ' + sf3(a * b)) : 'No: ' + M('P(A)P(B) = ' + sf3(a * b) + ' \\ne ' + ab)]
+      var pa = ri(3, 6) / 10, pb = ri(2, 5) / 10, pab = pick([pa * pb, Math.round((pa * pb + 0.05) * 100) / 100]);
+      var ind = Math.abs(pab - pa * pb) < 1e-9;
+      return Q(M('P(A) = ' + pa) + ', ' + M('P(B) = ' + pb) + ', ' + M('P(A \\cap B) = ' + sf3(pab)) + '.', [
+        ['Draw a Venn diagram and find ' + M("P(A' \\cap B')") + '.', 3, sf3(1 - pa - pb + pab)],
+        ['Find ' + M('P(A \\mid B)') + '.', 2, sf3(pab / pb)],
+        ['Are ' + M('A') + ' and ' + M('B') + ' independent? Justify.', 2, ind ? 'Yes: ' + M('P(A)P(B) = ' + sf3(pa * pb)) : 'No: ' + M('P(A)P(B) = ' + sf3(pa * pb) + ' \\ne ' + sf3(pab))]
       ]);
     },
     function () {
-      var a = ri(2, 6) / 10, b = ri(2, 6) / 10, u = a + b - a * b;
-      return Q('Events ' + M('A') + ' and ' + M('B') + ' are independent with ' + M('P(A) = ' + a) + ' and ' + M('P(A \\cup B) = ' + sf3(u)) + '.', [
-        ['Show that ' + M(sf3(u) + ' = ' + a + ' + P(B) - ' + a + 'P(B)') + '.', 1, 'Use ' + M('P(A \\cap B) = P(A)P(B)')],
-        ['Find ' + M('P(B)') + '.', 2, b],
-        ['Find ' + M('P(A \\cap B’)') + '.', 1, sf3(a * (1 - b))]
+      var r = ri(3, 7), b = ri(3, 7), n = r + b;
+      return Q('A bag contains ' + r + ' red and ' + b + ' blue balls. Two are taken without replacement.', [
+        ['Find the probability that they are different colours.', 2, M(F(2 * r * b, n * (n - 1)))],
+        ['Given that they are different colours, find the probability the first was red.', 2, M('\\frac{1}{2}')],
+        ['Given that at least one is red, find the probability both are red.', 3, M(F(r * (r - 1), n * (n - 1) - b * (b - 1)))]
       ]);
     },
     function () {
-      return Q('Mutually exclusive and independent.', [
-        ['Explain the difference between mutually exclusive and independent events.', 2, 'Mutually exclusive: cannot both happen. Independent: one does not change the probability of the other'],
-        ['Prove that two events with non-zero probabilities cannot be both.', 2, 'Independent needs ' + M('P(A \\cap B) = P(A)P(B) > 0') + '; exclusive needs it to be 0'],
-        ['Give an example of each with a die.', 1, '“Even” and “odd” are exclusive; “even” and “at most 2” are independent (' + M('\\frac{1}{6} = \\frac{1}{2} \\times \\frac{1}{3}') + ')']
+      var pa = ri(1, 4) / 10, pb = ri(2, 5) / 10;
+      return Q(M('P(A) = ' + pa) + ' and ' + M('P(A \\cup B) = ' + sf3(pa + pb - pa * pb)) + '.', [
+        ['Find ' + M('P(B)') + ' if ' + M('A') + ' and ' + M('B') + ' are independent.', 3, M('P(B) = ' + pb)],
+        ['Find ' + M('P(B)') + ' if instead ' + M('A') + ' and ' + M('B') + ' are mutually exclusive.', 1, sf3(pb - pa * pb)],
+        ['Explain why two events with positive probabilities cannot be both.', 1, 'Mutually exclusive means ' + M('P(A \\cap B) = 0') + ', but independence needs it to be ' + M('P(A)P(B) > 0')]
       ]);
     },
     function () {
-      var r = ri(3, 6), b = ri(3, 6), n = r + b, k = 3;
-      var none = (b / n) * ((b - 1) / (n - 1)) * ((b - 2) / (n - 2));
-      return Q('A bag has ' + r + ' red and ' + b + ' blue balls. Three are drawn without replacement.', [
-        ['Find the probability that none are red.', 2, M(F(b * (b - 1) * (b - 2), n * (n - 1) * (n - 2)))],
-        ['Find the probability of at least one red.', 1, M(F(n * (n - 1) * (n - 2) - b * (b - 1) * (b - 2), n * (n - 1) * (n - 2)))],
-        ['Find the probability that exactly two are red.', 3, M(F(3 * r * (r - 1) * b, n * (n - 1) * (n - 2)))]
+      var k = ri(7, 11), c = 0; for (var i = 1; i <= 6; i++) for (var j = 1; j <= 6; j++) if (i + j >= k) c++;
+      var c2 = 0, c3 = 0; for (i = 1; i <= 6; i++) for (j = 1; j <= 6; j++) if (i + j >= k) { if (i === j) c2++; }
+      return Q('Two fair dice are rolled.', [
+        ['Find ' + M('P(\\text{total} \\ge ' + k + ')') + '.', 2, M(F(c, 36))],
+        ['Find the probability of a double given that the total is at least ' + k + '.', 2, M(F(c2, c))],
+        ['Are “double” and “total at least ' + k + '” independent?', 2, c2 / c === 1 / 6 ? 'Yes' : 'No: ' + M(F(c2, c) + ' \\ne \\frac{1}{6}')]
       ]);
     },
     function () {
-      var t = ri(50, 80), a = ri(10, 25), b = ri(10, 25), x = ri(3, 8);
-      var none = t - (a + b - x);
-      return Q('Of ' + t + ' students, ' + a + ' study Art, ' + b + ' study Biology, and ' + none + ' study neither.', [
-        ['Find the number studying both.', 2, x],
-        ['A student is picked at random. Find ' + M('P(\\text{Art} \\mid \\text{Biology})') + '.', 2, M(F(x, b))],
-        ['Are the events independent? Show working.', 2, (a * b === x * t ? 'Yes' : 'No') + ': ' + M(F(a, t) + ' \\times ' + F(b, t)) + ' vs ' + M(F(x, t))]
+      var p = pick([0.1, 0.2, 0.05, 0.3]), t = pick([0.9, 0.95, 0.99]);
+      var n = Math.ceil(Math.log(1 - t) / Math.log(1 - p));
+      return Q('Each attempt at a task succeeds with probability ' + p + ', independently.', [
+        ['Find the probability of at least one success in 5 attempts.', 2, d4(1 - Math.pow(1 - p, 5))],
+        ['Find the least number of attempts for the probability of at least one success to exceed ' + t + '.', 3, n],
+        ['Explain why “at least one” questions are usually done using the complement.', 1, 'There is only one outcome to calculate (no successes)']
       ]);
     },
     function () {
-      var s = []; for (var i = 1; i <= 6; i++) for (var j = 1; j <= 6; j++) s.push(i + j);
-      var t = ri(5, 9), cnt = s.filter(function (v) { return v === t; }).length, ge = s.filter(function (v) { return v >= t; }).length;
-      return Q('Two fair dice are thrown and the scores added.', [
-        ['Find ' + M('P(\\text{total} = ' + t + ')') + '.', 1, M(F(cnt, 36))],
-        ['Find ' + M('P(\\text{total} \\ge ' + t + ')') + '.', 2, M(F(ge, 36))],
-        ['Given that at least one die shows a 4, find the probability that the total is ' + t + '.', 2, (function () { var c = 0, n = 0; for (var i = 1; i <= 6; i++) for (var j = 1; j <= 6; j++) if (i === 4 || j === 4) { n++; if (i + j === t) c++; } return M(F(c, n)); })()]
+      var a = ri(10, 30), b = ri(10, 30), c = ri(10, 30), d = ri(10, 30), N = a + b + c + d;
+      return Q('A survey: ' + a + ' boys and ' + b + ' girls walk to school; ' + c + ' boys and ' + d + ' girls do not.', [
+        ['Find the probability a randomly chosen student walks, given they are a girl.', 2, M(F(b, b + d))],
+        ['Find the probability a walker is a boy.', 1, M(F(a, a + b))],
+        ['Are walking and being a boy independent? Show working.', 2, (a * N === (a + b) * (a + c)) ? 'Yes' : 'No: ' + M('P(\\text{walk} \\mid \\text{boy}) = ' + F(a, a + c)) + ' but ' + M('P(\\text{walk}) = ' + F(a + b, N))]
       ]);
     },
     function () {
-      var p = pick([0.2, 0.3, 0.4]);
-      return Q('A player keeps trying until she scores, with probability ' + p + ' of scoring on each attempt, independently.', [
-        ['Find the probability she first scores on her 4th attempt.', 2, d4(Math.pow(1 - p, 3) * p)],
-        ['Find the probability she needs more than 4 attempts.', 2, d4(Math.pow(1 - p, 4))],
-        ['Find the least number of attempts so that the probability of having scored is at least 0.9.', 2, Math.ceil(Math.log(0.1) / Math.log(1 - p))]
+      var r = ri(2, 4), b = ri(3, 6), n = r + b, k = ri(2, 3);
+      var p = 1; for (var i = 0; i < k - 1; i++) p *= (b - i) / (n - i); p *= r / (n - k + 1);
+      return Q('A bag has ' + r + ' red and ' + b + ' blue counters. Counters are drawn one at a time without replacement until a red is drawn.', [
+        ['Find the probability that the first red is drawn on the ' + (k === 2 ? 'second' : 'third') + ' draw.', 3, sf3(p)],
+        ['What is the greatest number of draws that could be needed?', 1, b + 1],
+        ['Explain how the probabilities would change with replacement.', 1, 'Each draw would have probability ' + M(F(r, n)) + ' of red, independently']
       ]);
     },
     function () {
-      var a = 0.1 * ri(1, 2), ab = 0.05, bc = 0.05, ac = 0.05, abc = 0.02;
-      return Q('Three events ' + M('A, B, C') + ' have ' + M('P(A \\cap B \\cap C) = 0.02') + ', each pairwise intersection is 0.05, and ' + M('P(A) = P(B) = P(C) = 0.3') + '.', [
-        ['Find the probability of exactly one of the events.', 3, sf3(3 * (0.3 - 2 * 0.05 + 0.02))],
-        ['Find ' + M('P(A \\cup B \\cup C)') + '.', 2, sf3(0.9 - 0.15 + 0.02)],
-        ['Find the probability of none of them.', 1, sf3(1 - 0.77)]
+      var a = ri(1, 4), b = ri(1, 4);
+      var k = 1 / (a + 2 * b + 3 * a + 4 * b);
+      return Q('A discrete random variable has ' + M('P(X = x) = ' + (a === 1 ? 'kx' : a + 'kx')) + ' for ' + M('x = 1, 3') + ' and ' + M(b === 1 ? 'kx' : b + 'kx') + ' for ' + M('x = 2, 4') + '.', [
+        ['Find ' + M('k') + '.', 2, M(F(1, 4 * a + 6 * b))],
+        ['Find ' + M('P(X > 2)') + '.', 2, M(F(3 * a + 4 * b, 4 * a + 6 * b))],
+        ['Find ' + M('P(X = 4 \\mid X > 2)') + '.', 2, M(F(4 * b, 3 * a + 4 * b))]
       ]);
     },
     function () {
-      var p = ri(1, 4) / 20, n = pick([200, 500, 1000]);
-      return Q('A machine produces faulty items with probability ' + p + ', independently.', [
-        ['Find the expected number of faulty items in ' + n + '.', 1, num(p * n)],
-        ['Two items are chosen. Find the probability that exactly one is faulty.', 2, sf3(2 * p * (1 - p))],
-        ['An inspector checks items until the first faulty one. Find the probability that more than 10 are checked.', 2, d4(Math.pow(1 - p, 10))]
+      var c = ri(1, 3), w = ri(4, 10);
+      var e = (w - c) / 6 - c * 5 / 6;
+      return Q('A game costs £' + c + ' to play. A fair die is rolled; a 6 wins £' + w + ' (including the stake back), otherwise nothing.', [
+        ['Find the probability distribution of the profit.', 2, M('P(' + (w - c) + ') = \\frac{1}{6}') + ', ' + M('P(-' + c + ') = \\frac{5}{6}')],
+        ['Find the expected profit.', 2, '£' + sf3((w - 6 * c) / 6)],
+        ['What prize makes the game fair?', 1, '£' + 6 * c]
       ]);
     },
     function () {
-      var p = ri(1, 3) / 10, s = ri(6, 9) / 10, f = ri(1, 3) / 10;
-      var pos = p * s + (1 - p) * f;
-      return Q('A test detects a condition with probability ' + s + ' when present and gives a false positive with probability ' + f + ' when absent. ' + (p * 100) + '% of people have the condition.', [
-        ['Find the probability of a positive result.', 2, sf3(pos)],
-        ['Given a positive result, find the probability the person has the condition.', 2, sf3(p * s / pos)],
-        ['Explain why this is lower than many people expect.', 1, 'Most people do not have the condition, so false positives are a large share of positives']
+      var p = ri(2, 5) / 10, q = ri(5, 9) / 10, r = ri(1, 4) / 10;
+      var t = p * q + (1 - p) * r;
+      return Q('A test for a fault is positive with probability ' + q + ' if the fault is present and ' + r + ' if not. The fault is present in ' + p * 100 + '% of items.', [
+        ['Find the probability of a positive result.', 2, sf3(t)],
+        ['Find the probability the fault is present given a positive result.', 2, sf3(p * q / t)],
+        ['Explain why this may be surprisingly low.', 1, 'Many items without the fault also test positive']
       ]);
     }
   ]);
 
   X('al-binomial-dist', [
     function () {
-      var n = pick([10, 12, 15, 20]), p = pick([0.2, 0.25, 0.3, 0.4]), k = Math.round(n * p);
-      return Q('Let ' + M('X \\sim \\text{B}(' + n + ', ' + p + ')') + '.', [
-        ['Find ' + M('P(X = ' + k + ')') + '.', 1, d4(pmf(n, p, k))],
-        ['Find ' + M('P(X \\le ' + k + ')') + ' and ' + M('P(X > ' + k + ')') + '.', 2, d4(cdf(n, p, k)) + ' and ' + d4(1 - cdf(n, p, k))],
-        ['Find ' + M('P(' + (k - 2) + ' < X \\le ' + (k + 2) + ')') + '.', 2, d4(cdf(n, p, k + 2) - cdf(n, p, k - 2))]
+      var n = ri(10, 20), p = pick([0.2, 0.25, 0.3, 0.4]), k = Math.round(n * p);
+      return Q(M('X \\sim B(' + n + ', ' + p + ')') + '.', [
+        ['Find ' + M('P(X = ' + k + ')') + '.', 2, d4(pmf(n, p, k))],
+        ['Find ' + M('P(X \\le ' + (k - 1) + ')') + ' and ' + M('P(X \\ge ' + (k + 2) + ')') + '.', 3, d4(cdf(n, p, k - 1)) + ', ' + d4(ge(n, p, k + 2))],
+        ['Find ' + M('P(' + (k - 1) + ' < X < ' + (k + 3) + ')') + '.', 2, d4(cdf(n, p, k + 2) - cdf(n, p, k - 1))]
       ]);
     },
     function () {
-      return Q('A student models the number of red cars passing a school in an hour with a binomial distribution.', [
-        ['State the conditions needed for a binomial model.', 2, 'Fixed number of trials, two outcomes, constant probability, independent trials'],
-        ['Explain why the model may be unsuitable.', 2, 'The number of cars is not fixed; cars may travel in groups (not independent)'],
-        ['Suggest a situation involving cars where a binomial model would be reasonable.', 1, 'The number of red cars among the next 50 cars']
+      return Q('A student picks 10 sweets one at a time from a bag of 20, of which 6 are red, and counts the reds.', [
+        ['State the conditions needed for a binomial model.', 2, 'Fixed number of trials; two outcomes; constant probability; independent trials'],
+        ['Explain why ' + M('B(10, 0.3)') + ' is not a good model here.', 1, 'Without replacement the probability changes and trials are not independent'],
+        ['How could the situation be changed so that the binomial model is valid?', 1, 'Replace each sweet before the next pick']
       ]);
     },
     function () {
-      var p = pick([0.05, 0.1, 0.15, 0.2]), t = pick([0.9, 0.95, 0.99]);
+      var p = pick([0.1, 0.05, 0.2]), t = pick([0.9, 0.95]);
       var n = Math.ceil(Math.log(1 - t) / Math.log(1 - p));
-      return Q('Each component fails with probability ' + p + ', independently.', [
-        ['Write ' + M('P(\\text{at least one failure in } n)') + ' in terms of ' + M('n') + '.', 1, M('1 - ' + (1 - p).toFixed(2) + '^n')],
-        ['Find the smallest ' + M('n') + ' for which this exceeds ' + t + '.', 3, n],
-        ['Explain why the answer is not simply ' + M(t + ' \\div ' + p) + '.', 1, 'Probabilities of overlapping events cannot just be added']
+      return Q('Each component is faulty with probability ' + p + '. ' + M('X') + ' is the number faulty in a batch of ' + M('n') + '.', [
+        ['Show that ' + M('P(X \\ge 1) = 1 - ' + (1 - p).toFixed(2) + '^n') + '.', 1, M('P(X = 0) = ' + (1 - p).toFixed(2) + '^n')],
+        ['Find the smallest ' + M('n') + ' for which ' + M('P(X \\ge 1) > ' + t) + '.', 3, n],
+        ['Interpret this result in context.', 1, 'A batch of ' + n + ' gives over ' + t * 100 + '% chance of including a faulty component']
       ]);
     },
     function () {
-      var n = pick([20, 25, 40, 50]), p = pick([0.2, 0.4, 0.6]);
-      return Q(M('X \\sim \\text{B}(n, p)') + ' with mean ' + num(n * p) + ' and variance ' + sf3(n * p * (1 - p)) + '.', [
-        ['Find ' + M('p') + ' and ' + M('n') + '.', 3, M('1 - p = ' + sf3(1 - p)) + ', ' + M('p = ' + p + ',\\ n = ' + n)],
-        ['Find ' + M('P(X = ' + Math.round(n * p) + ')') + '.', 1, d4(pmf(n, p, Math.round(n * p)))],
-        ['Explain why the variance is always less than the mean for a binomial distribution.', 1, M('np(1 - p) < np') + ' since ' + M('1 - p < 1')]
+      var n = pick([5, 8, 10]), p = pick([0.1, 0.2, 0.3]), q0 = Math.pow(1 - p, n);
+      return Q(M('X \\sim B(' + n + ', p)') + ' and ' + M('P(X = 0) = ' + d4(q0)) + '.', [
+        ['Find ' + M('p') + '.', 2, p],
+        ['Find ' + M('P(X = 1)') + '.', 2, d4(pmf(n, p, 1))],
+        ['Find the mean and the most likely value of ' + M('X') + '.', 2, sf3(n * p) + '; ' + (function () { var b = 0; for (var k = 0; k <= n; k++) if (pmf(n, p, k) > pmf(n, p, b)) b = k; return b; })()]
       ]);
     },
     function () {
-      var n = ri(8, 15), p = pick([0.2, 0.3, 0.4]);
-      var mode = Math.floor((n + 1) * p);
-      return Q('Let ' + M('X \\sim \\text{B}(' + n + ', ' + p + ')') + '.', [
-        ['Show that ' + M('\\frac{P(X = r + 1)}{P(X = r)} = \\frac{(' + n + ' - r)}{(r + 1)} \\times \\frac{' + p + '}{' + (1 - p).toFixed(1) + '}') + '.', 3, 'Cancel factorials in the binomial coefficients'],
-        ['Hence find the most likely value of ' + M('X') + '.', 2, mode],
-        ['Check by calculating the probabilities either side.', 1, d4(pmf(n, p, mode - 1)) + ', ' + d4(pmf(n, p, mode)) + ', ' + d4(pmf(n, p, mode + 1))]
+      var n = ri(3, 9);
+      return Q(M('X \\sim B(' + n + ', p)') + ' and ' + M('P(X = 1) = P(X = 2)') + '.', [
+        ['Write an equation in ' + M('p') + '.', 2, M(n + 'p(1 - p)^{' + (n - 1) + '} = ' + C(n, 2) + 'p^2(1 - p)^{' + (n - 2) + '}')],
+        ['Solve to find ' + M('p') + '.', 3, M('p = ' + F(2, n + 1))],
+        ['Find the mean of ' + M('X') + '.', 1, M(F(2 * n, n + 1))]
       ]);
     },
     function () {
-      var p = pick([0.3, 0.4]), q = cdf(10, p, 4);
-      var pd = 1 - q;
-      return Q('Each day, the number of late buses is ' + M('X \\sim \\text{B}(10, ' + p + ')') + '. A day is “bad” if more than 4 buses are late.', [
-        ['Find the probability that a day is bad.', 2, d4(pd)],
-        ['Find the probability of at least 2 bad days in a 5-day week.', 3, d4(1 - cdf(5, pd, 1))],
-        ['State an assumption you made.', 1, 'Days are independent']
+      var p = pick([0.6, 0.7, 0.8]);
+      var day = 1 - cdf(5, p, 2), wk = 1 - cdf(4, day, 1);
+      return Q('A train is on time with probability ' + p + ' on each journey. A commuter makes 5 journeys a day.', [
+        ['Find the probability that at least 3 of the 5 journeys on a day are on time.', 2, d4(day)],
+        ['Find the probability that this happens on at least 2 of 4 days.', 3, d4(wk)],
+        ['State an assumption you made and comment on it.', 1, 'Journeys are independent — delays may affect several trains on the same day']
       ]);
     },
     function () {
-      var n = pick([10, 12, 14]);
-      return Q('Let ' + M('X \\sim \\text{B}(' + n + ', 0.5)') + '.', [
-        ['Explain why ' + M('P(X = r) = P(X = ' + n + ' - r)') + '.', 1, 'The distribution is symmetric when ' + M('p = 0.5')],
-        ['Hence find ' + M('P(X \\le ' + (n / 2 - 1) + ')') + ' using ' + M('P(X = ' + n / 2 + ') = ' + d4(pmf(n, 0.5, n / 2))) + '.', 3, M('\\frac{1 - ' + d4(pmf(n, 0.5, n / 2)) + '}{2} = ' + d4((1 - pmf(n, 0.5, n / 2)) / 2))]
+      var n = pick([8, 10, 12]);
+      return Q(M('X \\sim B(' + n + ', 0.5)') + '.', [
+        ['Explain why ' + M('P(X = r) = P(X = ' + n + ' - r)') + '.', 1, M('\\binom{' + n + '}{r} = \\binom{' + n + '}{' + n + ' - r}') + ' and ' + M('0.5^r 0.5^{' + n + ' - r} = 0.5^{' + n + '}')],
+        ['Use symmetry to find ' + M('P(X \\le ' + (n / 2 - 1) + ')') + ' given ' + M('P(X = ' + n / 2 + ') = ' + d4(pmf(n, 0.5, n / 2))) + '.', 2, d4((1 - pmf(n, 0.5, n / 2)) / 2)],
+        ['Sketch the distribution.', 1, 'Symmetric about ' + n / 2]
       ]);
     },
     function () {
-      var p = pick([0.1, 0.2, 0.05]), n = ri(10, 30);
-      return Q('The probability that a seed fails is ' + p + '. A packet has ' + M('n') + ' seeds.', [
-        ['Write ' + M('P(\\text{no failures})') + ' in terms of ' + M('n') + '.', 1, M(sf3(1 - p) + '^n')],
-        ['Find the largest ' + M('n') + ' for which ' + M('P(\\text{no failures}) > 0.1') + '.', 3, Math.floor(Math.log(0.1) / Math.log(1 - p) - 1e-12)],
-        ['For ' + M('n = ' + n) + ', find ' + M('P(\\text{at most 1 failure})') + '.', 2, d4(cdf(n, p, 1))]
+      var N = pick([200, 1000]), r = N / 5, n = 5;
+      var wo = C(r, 2) * C(N - r, 3) / C(N, 5);
+      return Q('A population of ' + N + ' contains ' + r + ' defective items. A sample of 5 is taken without replacement.', [
+        ['Use ' + M('B(5, 0.2)') + ' to estimate the probability of exactly 2 defectives.', 2, d4(pmf(5, 0.2, 2))],
+        ['Explain why the binomial model is a good approximation here.', 1, 'The population is large, so removing a few items barely changes the probability'],
+        ['When would it be a poor approximation?', 1, 'When the sample is a large fraction of the population']
       ]);
     },
     function () {
-      return Q('Compare ' + M('X \\sim \\text{B}(10, 0.3)') + ' and ' + M('Y \\sim \\text{B}(20, 0.15)') + '.', [
-        ['Show they have the same mean.', 1, 'Both 3'],
-        ['Find both variances and explain the difference.', 2, '2.1 and 2.55; ' + M('Y') + ' has more trials, each less likely, so outcomes are more spread'],
-        ['Find ' + M('P(X = 0)') + ' and ' + M('P(Y = 0)') + '.', 2, d4(pmf(10, 0.3, 0)) + ' and ' + d4(pmf(20, 0.15, 0))]
+      var n = ri(15, 25), p = pick([0.3, 0.35, 0.4]), a = Math.round(n * p) - 2, b = Math.round(n * p) + 2;
+      return Q(M('X \\sim B(' + n + ', ' + p + ')') + '.', [
+        ['Find ' + M('P(' + a + ' \\le X \\le ' + b + ')') + ', writing it in terms of cumulative probabilities.', 3, M('P(X \\le ' + b + ') - P(X \\le ' + (a - 1) + ') = ' + d4(cdf(n, p, b) - cdf(n, p, a - 1)))],
+        ['Find the largest ' + M('k') + ' with ' + M('P(X \\le k) < 0.1') + '.', 2, (function () { var k = -1; for (var i = 0; i <= n; i++) if (cdf(n, p, i) < 0.1) k = i; return k; })()]
       ]);
     },
     function () {
-      var n = pick([5, 6, 8]), p = pick([0.3, 0.5, 0.7]);
-      return Q('A multiple-choice test has ' + n + ' questions. A student answers each correctly with probability ' + p + '.', [
-        ['Find the probability of passing (at least ' + Math.ceil(n / 2) + ' correct).', 2, d4(1 - cdf(n, p, Math.ceil(n / 2) - 1))],
-        ['How many questions would she expect to get right?', 1, num(n * p)],
-        ['Find the probability she gets exactly the expected number (if whole).', 1, (n * p) % 1 ? 'Not a whole number, so this is 0 for that value' : d4(pmf(n, p, n * p))]
+      var n = pick([20, 30]), p = pick([0.1, 0.15]);
+      return Q('In a large population, ' + p * 100 + '% are left-handed. A class of ' + n + ' is chosen at random.', [
+        ['Find the expected number of left-handed students.', 1, sf3(n * p)],
+        ['Find the probability of more than twice the expected number.', 2, d4(1 - cdf(n, p, Math.floor(2 * n * p)))],
+        ['A class has ' + (Math.floor(2 * n * p) + 2) + ' left-handers. Does this suggest it was not chosen at random? Explain.', 2, 'The probability of ' + (Math.floor(2 * n * p) + 2) + ' or more is ' + d4(ge(n, p, Math.floor(2 * n * p) + 2)) + ', which is ' + (ge(n, p, Math.floor(2 * n * p) + 2) < 0.05 ? 'small, so it is suspicious' : 'not very small, so it could happen by chance')]
       ]);
     }
   ]);
 
   X('al-hypothesis', [
     function () {
-      var n = 20, p = pick([0.2, 0.25, 0.3]), x = Math.round(n * p) + ri(3, 5);
-      var pv = 1 - cdf(n, p, x - 1);
-      return Q('A coin-like process has ' + M('P(\\text{success}) = ' + p) + '. After a change, ' + x + ' successes are seen in ' + n + ' trials. Test at the 5% level whether the probability has increased.', [
-        ['State the hypotheses.', 1, M('H_0: p = ' + p + ',\\ H_1: p > ' + p)],
-        ['Find ' + M('P(X \\ge ' + x + ')') + ' under ' + M('H_0') + '.', 2, d4(pv)],
-        ['State your conclusion in context.', 2, pv < 0.05 ? 'Reject ' + M('H_0') + ': evidence the probability has increased' : 'Do not reject ' + M('H_0') + ': insufficient evidence of an increase']
+      var n = 20, p = pick([0.2, 0.25, 0.3]), x = Math.round(n * p) + ri(2, 5);
+      var pv = ge(n, p, x);
+      return Q('A company claims ' + p * 100 + '% of customers buy a second item. A manager thinks it is more. In a sample of ' + n + ', ' + x + ' bought a second item.', [
+        ['State suitable hypotheses.', 1, M('H_0: p = ' + p) + ', ' + M('H_1: p > ' + p)],
+        ['Find the p-value ' + M('P(X \\ge ' + x + ')') + '.', 2, d4(pv)],
+        ['Conclude at the 5% level in context.', 2, pv < 0.05 ? 'Reject ' + M('H_0') + ': evidence that more than ' + p * 100 + '% buy a second item' : 'Do not reject ' + M('H_0') + ': insufficient evidence that more than ' + p * 100 + '% buy a second item']
       ]);
     },
     function () {
-      var n = pick([20, 25, 30]), p = pick([0.3, 0.4, 0.5]);
-      var c = -1; while (cdf(n, p, c + 1) <= 0.05) c++;
-      return Q('For ' + M('X \\sim \\text{B}(' + n + ', ' + p + ')') + ', a test of ' + M('H_0: p = ' + p) + ' against ' + M('H_1: p < ' + p) + ' is carried out at the 5% level.', [
+      var n = pick([20, 25]), p = pick([0.2, 0.25, 0.3]), a = 0.05;
+      var c = upperCR(n, p, a);
+      return Q('A test of ' + M('H_0: p = ' + p) + ' against ' + M('H_1: p > ' + p) + ' uses ' + M('X \\sim B(' + n + ', ' + p + ')') + ' at the 5% level.', [
+        ['Find the critical region.', 3, M('X \\ge ' + c)],
+        ['Find the actual significance level.', 1, d4(ge(n, p, c))],
+        ['Explain why the actual significance level is not exactly 5%.', 1, 'The distribution is discrete, so tail probabilities jump']
+      ]);
+    },
+    function () {
+      var n = 20, p = pick([0.3, 0.4, 0.5]);
+      var lo = lowerCR(n, p, 0.025), hi = upperCR(n, p, 0.025);
+      return Q('A two-tailed test of ' + M('H_0: p = ' + p) + ' at the 5% level uses a sample of ' + n + '.', [
+        ['State the alternative hypothesis.', 1, M('H_1: p \\ne ' + p)],
+        ['Find the critical region, aiming for no more than 2.5% in each tail.', 4, M('X \\le ' + lo) + ' or ' + M('X \\ge ' + hi)],
+        ['Find the actual significance level.', 1, d4(cdf(n, p, lo) + ge(n, p, hi))]
+      ]);
+    },
+    function () {
+      var n = pick([15, 20]), p = pick([0.3, 0.4]), c = lowerCR(n, p, 0.05);
+      return Q('A lower-tail test of ' + M('H_0: p = ' + p) + ' against ' + M('H_1: p < ' + p) + ' at 5% uses ' + n + ' trials.', [
         ['Find the critical region.', 3, M('X \\le ' + c)],
-        ['Find the actual significance level.', 1, d4(cdf(n, p, c))],
-        ['Explain why the actual level is not exactly 5%.', 1, 'The distribution is discrete']
+        ['An observed value of ' + (c + 1) + ' is obtained. State the conclusion.', 1, 'Not in the critical region: do not reject ' + M('H_0')],
+        ['Explain what the actual significance level represents.', 1, 'The probability of rejecting ' + M('H_0') + ' when it is true: ' + d4(cdf(n, p, c))]
       ]);
     },
     function () {
-      var n = 20, p = 0.5;
-      var lo = -1; while (cdf(n, p, lo + 1) <= 0.025) lo++;
-      var hi = n + 1; while (1 - cdf(n, p, hi - 2) <= 0.025) hi--;
-      return Q('A coin is tested for bias by throwing it 20 times. ' + M('H_0: p = 0.5') + ', ' + M('H_1: p \\ne 0.5') + ', 5% level.', [
-        ['Find the critical region, using 2.5% in each tail.', 4, M('X \\le ' + lo) + ' or ' + M('X \\ge ' + hi)],
-        ['Find the actual significance level.', 1, d4(cdf(n, p, lo) + 1 - cdf(n, p, hi - 1))],
-        ['Explain why this is a two-tailed test.', 1, 'We are looking for bias in either direction']
+      return Q('Writing conclusions.', [
+        ['Explain why we say “there is insufficient evidence to reject ' + M('H_0') + '” rather than “' + M('H_0') + ' is true”.', 2, 'The test only measures evidence against ' + M('H_0') + '; failing to find it does not prove ' + M('H_0')],
+        ['Explain why conclusions should be stated in context.', 1, 'The reader needs to know what the result means for the situation'],
+        ['A test is significant at 5%. Is it necessarily significant at 1%? Explain.', 1, 'No: the evidence may not be strong enough for the stricter level']
       ]);
     },
     function () {
-      return Q('A student concludes: “The test shows the coin is fair.”', [
-        ['Explain what is wrong with this statement if ' + M('H_0') + ' was not rejected.', 2, 'Not rejecting ' + M('H_0') + ' means there is not enough evidence against it, not that it is proven'],
-        ['Write a correct conclusion.', 1, 'There is insufficient evidence at the 5% level that the coin is biased'],
-        ['How could the test be made more sensitive?', 1, 'Use a larger number of throws']
+      return Q('Choosing the tail.', [
+        ['A coin is suspected of being biased towards heads. One-tailed or two-tailed?', 1, 'One-tailed: ' + M('H_1: p > 0.5')],
+        ['A die is suspected of being biased (no direction given) when rolling sixes. One-tailed or two-tailed?', 1, 'Two-tailed: ' + M('H_1: p \\ne \\frac{1}{6}')],
+        ['Explain why a two-tailed test needs more extreme evidence in each tail.', 2, 'The significance level is split between the two tails']
       ]);
     },
     function () {
-      return Q('Choosing hypotheses.', [
-        ['A firm claims 90% of its parcels arrive on time. A customer suspects it is less. Write the hypotheses.', 1, M('H_0: p = 0.9,\\ H_1: p < 0.9')],
-        ['A researcher wants to know if a drug changes the recovery rate from 40%. Write the hypotheses.', 1, M('H_0: p = 0.4,\\ H_1: p \\ne 0.4')],
-        ['Explain why the hypotheses must be set before collecting data.', 1, 'Choosing after seeing the data biases the test']
+      var p = 0.5, n1 = 10, n2 = 50;
+      return Q('A coin is tested for bias towards heads at 5%, with ' + M('H_0: p = 0.5') + '.', [
+        ['With 10 throws, find the critical region.', 2, M('X \\ge ' + upperCR(n1, p, 0.05))],
+        ['With 50 throws, the critical region is ' + M('X \\ge ' + upperCR(n2, p, 0.05)) + '. Compare the proportions of heads needed.', 2, (upperCR(n1, p, 0.05) / n1 * 100) + '% vs ' + sf3(upperCR(n2, p, 0.05) / n2 * 100) + '%'],
+        ['Explain why larger samples can detect smaller biases.', 1, 'The proportion varies less in larger samples']
       ]);
     },
     function () {
-      var p = 0.3;
-      var crit = function (n) { var c = n + 1; while (1 - cdf(n, p, c - 2) <= 0.05) c--; return c; };
-      var c1 = crit(10), c2 = crit(40);
-      return Q('Tests of ' + M('H_0: p = 0.3') + ' against ' + M('H_1: p > 0.3') + ' at 5% are done with samples of 10 and of 40.', [
-        ['Find the critical region for each.', 4, M('X \\ge ' + c1) + ' and ' + M('X \\ge ' + c2)],
-        ['Express each critical value as a proportion of the sample size and comment.', 2, sf3(c1 / 10) + ' and ' + sf3(c2 / 40) + '; larger samples detect smaller increases']
+      var n = 12, p = 1 / 6, x = ri(5, 6);
+      var pv = ge(n, p, x);
+      return Q('A die is rolled 12 times and shows a six ' + x + ' times. Test at 5% whether the die is biased towards sixes.', [
+        ['State the hypotheses and the distribution under ' + M('H_0') + '.', 2, M('H_0: p = \\frac{1}{6}') + ', ' + M('H_1: p > \\frac{1}{6}') + '; ' + M('X \\sim B(12, \\frac{1}{6})')],
+        ['Find ' + M('P(X \\ge ' + x + ')') + '.', 2, d4(pv)],
+        ['Conclude.', 1, pv < 0.05 ? 'Reject ' + M('H_0') + ': evidence of bias towards sixes' : 'Do not reject ' + M('H_0')]
       ]);
     },
     function () {
-      var n = 15, p = pick([0.2, 0.3]), x = ri(0, 1);
-      var pv = cdf(n, p, x);
-      return Q('Historically, ' + p * 100 + '% of customers complain. In a sample of ' + n + ', ' + x + ' complain. Test at 5% whether the proportion has fallen.', [
-        ['State hypotheses.', 1, M('H_0: p = ' + p + ',\\ H_1: p < ' + p)],
+      var n = 20, p = 0.25, c = upperCR(n, p, 0.1);
+      return Q('A test uses ' + M('X \\sim B(20, 0.25)') + ' with ' + M('H_1: p > 0.25') + ' at the 10% level.', [
+        ['Find the critical region.', 2, M('X \\ge ' + c)],
+        ['Find the probability of wrongly rejecting ' + M('H_0') + '.', 1, d4(ge(n, p, c))],
+        ['If in fact ' + M('p = 0.4') + ', find the probability that the test correctly rejects ' + M('H_0') + '.', 2, d4(ge(n, 0.4, c))]
+      ]);
+    },
+    function () {
+      var p0 = pick([0.1, 0.15]), n = 40, x = ri(1, 2);
+      var pv = cdf(n, p0, x);
+      return Q('A machine produces ' + p0 * 100 + '% defective items. After a service, a sample of ' + n + ' has ' + x + ' defectives. Test at 5% whether the proportion has decreased.', [
+        ['State the hypotheses.', 1, M('H_0: p = ' + p0) + ', ' + M('H_1: p < ' + p0)],
         ['Find the p-value.', 2, d4(pv)],
-        ['Conclude in context.', 1, pv < 0.05 ? 'Reject ' + M('H_0') + ': evidence the complaint rate has fallen' : 'Insufficient evidence that the rate has fallen']
-      ]);
-    },
-    function () {
-      var n = 25, p = 0.2;
-      var c = n + 1; while (1 - cdf(n, p, c - 2) <= 0.1) c--;
-      return Q('Test ' + M('H_0: p = 0.2') + ' against ' + M('H_1: p > 0.2') + ' with ' + M('n = 25') + ' at the 10% level.', [
-        ['Find the smallest number of successes that would lead to rejecting ' + M('H_0') + '.', 3, c],
-        ['Find the actual significance level.', 1, d4(1 - cdf(n, p, c - 1))],
-        ['State the probability of rejecting ' + M('H_0') + ' when it is true.', 1, 'The actual significance level, ' + d4(1 - cdf(n, p, c - 1))]
-      ]);
-    },
-    function () {
-      return Q('Interpreting p-values.', [
-        ['A test gives p-value 0.032. What can be concluded at the 5% and at the 1% levels?', 2, 'Reject at 5%; do not reject at 1%'],
-        ['Explain what the p-value measures.', 1, 'The probability, assuming ' + M('H_0') + ', of a result at least as extreme as the one observed'],
-        ['Why is a lower significance level more cautious?', 1, 'It needs stronger evidence before rejecting ' + M('H_0')]
-      ]);
-    },
-    function () {
-      var p = pick([0.1, 0.15]), n = 40, x = ri(1, 2);
-      var pv = cdf(n, p, x);
-      return Q('A machine produced ' + p * 100 + '% defective items. After servicing, ' + x + ' of ' + n + ' items are defective.', [
-        ['Test at 5% whether the defect rate has decreased.', 4, M('P(X \\le ' + x + ') = ' + d4(pv)) + '; ' + (pv < 0.05 ? 'reject ' + M('H_0') + ': evidence of a decrease' : 'do not reject ' + M('H_0'))],
-        ['Comment on the assumption of independence.', 1, 'Defects may come in batches, so items may not be independent']
+        ['Conclude in context.', 2, pv < 0.05 ? 'Reject ' + M('H_0') + ': evidence the service reduced the defect rate' : 'Do not reject ' + M('H_0') + ': insufficient evidence of a reduction']
       ]);
     }
   ]);

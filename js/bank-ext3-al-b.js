@@ -8,364 +8,369 @@
   function S(v) { return v < 0 ? ' - ' + (-v) : ' + ' + v; }
   function S0(v) { return v ? S(v) : ''; }
   function xm(v) { return v ? '(x' + S(-v) + ')' : 'x'; }
-  function ym(v) { return v ? '(y' + S(-v) + ')' : 'y'; }
   function c1(c, v) { return c === 1 ? v : c === -1 ? '-' + v : c + v; }
   function P(x, y) { return '(' + x + ', ' + y + ')'; }
-  function C(n, r) { if (r < 0 || r > n) return 0; var v = 1; for (var i = 1; i <= r; i++) v = v * (n - r + i) / i; return Math.round(v); }
+  function line(m, c) { return 'y = ' + (m === 0 ? String(c || 0) : c1(m, 'x') + S0(c)); }
+  function circ(a, b, r2) { return (a ? '(x' + S(-a) + ')^2' : 'x^2') + ' + ' + (b ? '(y' + S(-b) + ')^2' : 'y^2') + ' = ' + r2; }
+  function sq(n) { var r = Math.round(Math.sqrt(n)); return r * r === n; }
   function rt(n) { var o = 1, i = n; for (var k = 2; k * k <= i; k++) while (i % (k * k) === 0) { o *= k; i /= k * k; } return i === 1 ? String(o) : (o === 1 ? '' : o) + '\\sqrt{' + i + '}'; }
-  function line(m, c) { return 'y = ' + c1(m, 'x') + S0(c); }
-  function circ(a, b, r2) { return (a ? xm(a) + '^2' : 'x^2') + ' + ' + (b ? ym(b) + '^2' : 'y^2') + ' = ' + r2; }
-  function shoe(pts) { var s = 0; for (var i = 0; i < pts.length; i++) { var p = pts[i], q = pts[(i + 1) % pts.length]; s += p[0] * q[1] - q[0] * p[1]; } return Math.abs(s) / 2; }
+  function C(n, r) { if (r < 0 || r > n) return 0; var v = 1; for (var i = 1; i <= r; i++) v = v * (n - r + i) / i; return Math.round(v); }
+  function lin(a, b, c) { /* ax + by + c = 0 */ var s = c1(a, 'x'); s += b < 0 ? ' - ' + c1(-b, 'y') : ' + ' + c1(b, 'y'); return s + S0(c) + ' = 0'; }
 
   X('al-lines', [
     function () {
-      var m1 = nz(-3, 3), m2; do { m2 = nz(-3, 3); } while (m2 === m1);
-      var x0 = nz(-3, 3), y0 = nz(-3, 3), c1v = y0 - m1 * x0, c2v = y0 - m2 * x0;
-      var A = [-c1v / m1, 0], B = [-c2v / m2, 0];
-      return Q('The lines ' + M(line(m1, c1v)) + ' and ' + M(line(m2, c2v)) + ' meet at ' + M('P') + '.', [
-        ['Find ' + M('P') + '.', 2, M(P(x0, y0))],
-        ['Find where each line crosses the ' + M('x') + '-axis.', 2, M(P(sf3(A[0]), 0)) + ' and ' + M(P(sf3(B[0]), 0))],
-        ['Find the area of the triangle formed by the two lines and the ' + M('x') + '-axis.', 2, sf3(shoe([[x0, y0], A, B]))]
+      var x1 = ri(-4, 0), y1 = ri(1, 6), x2 = ri(1, 6), y2 = ri(-4, 0);
+      var a = y2 - y1, b = x1 - x2, c = -(a * x1 + b * y1), gg = Math.abs(gcd(gcd(a, b), c)) || 1;
+      a /= gg; b /= gg; c /= gg; if (a < 0) { a = -a; b = -b; c = -c; }
+      var xi = c ? -c / a : 0, yi = c ? -c / b : 0;
+      return Q('A line passes through ' + M(P(x1, y1)) + ' and ' + M(P(x2, y2)) + '.', [
+        ['Find its equation in the form ' + M('ax + by + c = 0') + ' with integers.', 3, M(lin(a, b, c))],
+        ['Find where it crosses the axes.', 2, M(P(F(-c, a), 0)) + ' and ' + M(P(0, F(-c, b)))],
+        ['Find the area of the triangle it forms with the axes.', 1, M(F(c * c, 2 * Math.abs(a * b)))]
       ]);
     },
     function () {
-      var a = [ri(-3, 1), ri(-3, 1)], u = [ri(1, 4), ri(-2, 2)], v = [-u[1], u[0]];
-      var B = [a[0] + u[0], a[1] + u[1]], D = [a[0] + v[0], a[1] + v[1]], Cc = [a[0] + u[0] + v[0], a[1] + u[1] + v[1]];
-      return Q('Three vertices of a square ' + M('ABCD') + ' are ' + M('A' + P(a[0], a[1])) + ', ' + M('B' + P(B[0], B[1])) + ' and ' + M('D' + P(D[0], D[1])) + '.', [
-        ['Show that ' + M('AB') + ' and ' + M('AD') + ' are perpendicular and equal in length.', 3, 'Both have length ' + M('\\sqrt{' + (u[0] * u[0] + u[1] * u[1]) + '}') + '; gradients multiply to ' + M('-1') + (u[1] === 0 ? ' (one is horizontal, one vertical)' : '')],
-        ['Find ' + M('C') + '.', 2, M(P(Cc[0], Cc[1]))],
-        ['Find the equation of the diagonal ' + M('BD') + '.', 2, (D[0] === B[0] ? M('x = ' + B[0]) : M('y' + S0(-B[1]) + ' = ' + F(D[1] - B[1], D[0] - B[0]) + '(x' + S0(-B[0]) + ')').replace('= 1(', '= (').replace('= -1(', '= -('))]
+      var A = [0, 0], B = [2 * ri(2, 5), 0], Cc = [2 * ri(0, 3), 2 * ri(2, 5)];
+      var ux = B[0] / 2, cx = Cc[0], cy = Cc[1];
+      var y0 = (cx * cx + cy * cy - 2 * ux * cx) / (2 * cy);
+      return Q('Triangle ' + M('OAB') + ' has vertices ' + M('O(0, 0)') + ', ' + M('A' + P(B[0], 0)) + ' and ' + M('B' + P(cx, cy)) + '.', [
+        ['Find the perpendicular bisector of ' + M('OA') + '.', 1, M('x = ' + ux)],
+        ['Find the perpendicular bisector of ' + M('OB') + '.', 3, M(cx === 0 ? 'y = ' + cy / 2 : 'y' + S(-cy / 2) + ' = ' + (F(-cx, cy) === '1' ? '' : F(-cx, cy) === '-1' ? '-' : F(-cx, cy)) + '(x' + S(-cx / 2) + ')')],
+        ['Hence find the centre of the circle through ' + M('O, A, B') + '.', 2, M(P(ux, F(cx * cx + cy * cy - 2 * ux * cx, 2 * cy)))]
       ]);
     },
     function () {
-      var a = ri(20, 50), b = ri(3, 8), c = ri(5, 20), d = b + ri(2, 5);
-      var n = (a - c) / (d - b);
-      return Q('Company A charges £' + a + ' plus £' + b + ' per hour. Company B charges £' + c + ' plus £' + d + ' per hour.', [
-        ['Write each cost as a linear function of the number of hours ' + M('h') + '.', 1, M('A = ' + a + ' + ' + b + 'h') + ', ' + M('B = ' + c + ' + ' + d + 'h')],
-        ['Find when the costs are equal.', 2, M('h = ' + sf3(n))],
-        ['Interpret the gradient and intercept of each line, and advise a customer.', 2, 'Gradient: cost per hour; intercept: fixed charge. B is cheaper for fewer than ' + sf3(n) + ' hours, A for more']
+      var m = nz(-3, 3), c1v = ri(-6, 0), c2v = c1v + ri(3, 10);
+      return Q('The lines ' + M(line(m, c1v)) + ' and ' + M(line(m, c2v)) + ' are drawn.', [
+        ['Explain why they are parallel.', 1, 'Same gradient ' + m],
+        ['Find the point where the perpendicular through ' + M(P(0, c1v)) + ' meets the second line.', 3, M(P(F(-m * (c2v - c1v), 1 + m * m), F(c2v + c1v * m * m, 1 + m * m)))],
+        ['Find the exact distance between the lines.', 2, M('\\frac{' + (c2v - c1v) + '}{\\sqrt{' + (1 + m * m) + '}}')]
       ]);
     },
     function () {
-      var p = ri(1, 4), q = p + ri(1, 3), r = (q - p) * ri(1, 3);
-      var k = p * r / (q - p);
-      return Q('The lines ' + M('kx + ' + c1(p, 'y') + ' = 1') + ' and ' + M(c1(q, 'x') + ' - (k + ' + r + ')y = 1') + ' are perpendicular.', [
-        ['Write down the gradient of each line.', 2, M('-' + (p === 1 ? 'k' : '\\frac{k}{' + p + '}')) + ' and ' + M('\\frac{' + q + '}{k + ' + r + '}')],
-        ['Find ' + M('k') + '.', 3, M('k = ' + num(k))],
-        ['Find the point where they meet.', 2, (function () { var a1 = k, b1 = p, a2 = q, b2 = -(k + r), det = a1 * b2 - a2 * b1; return M(P(sf3((b2 - b1) / det), sf3((a1 - a2) / det))); })()]
+      var a = ri(-4, -1), b = ri(2, 6), cx = ri(-2, 3), cy = ri(3, 7);
+      return Q('Triangle has vertices ' + M('A' + P(a, 0)) + ', ' + M('B' + P(b, 0)) + ' and ' + M('C' + P(cx, cy)) + '.', [
+        ['Find the equation of the altitude from ' + M('A') + ' to ' + M('BC') + '.', 3, M('y = ' + (F(b - cx, cy) === '1' ? '' : F(b - cx, cy) === '-1' ? '-' : F(b - cx, cy)) + '(x' + S(-a) + ')')],
+        ['The altitude from ' + M('C') + ' is ' + M('x = ' + cx) + '. Find where the two altitudes meet.', 2, M(P(cx, F((b - cx) * (cx - a), cy)))],
+        ['Show that this point also lies on the altitude from ' + M('B') + '.', 2, 'Gradient of ' + M('AC') + ' is ' + M(F(cy, cx - a)) + '; check the line through ' + M('B') + ' with gradient ' + M(F(a - cx, cy))]
       ]);
     },
     function () {
-      var ax = ri(-4, 0), ay = ri(1, 5), bx = ri(2, 6), by = ri(-5, -1);
-      var x = (bx * bx + by * by - ax * ax - ay * ay) / (2 * (bx - ax));
-      return Q('Points ' + M('A' + P(ax, ay)) + ' and ' + M('B' + P(bx, by)) + ' are given.', [
-        ['Find the point on the ' + M('x') + '-axis that is equidistant from ' + M('A') + ' and ' + M('B') + '.', 3, M(P(sf3(x), 0))],
-        ['Explain how this point is related to the perpendicular bisector of ' + M('AB') + '.', 1, 'It is where the perpendicular bisector crosses the ' + M('x') + '-axis'],
-        ['Find the distance from this point to ' + M('A') + '.', 2, M(sf3(Math.hypot(x - ax, ay)))]
+      var p = ri(10, 30), q = ri(2, 6), r = ri(p + 10, p + 40), s = ri(1, q - 1);
+      var n = (r - p) / (q - s);
+      return Q('Plumber A charges £' + p + ' plus £' + q + ' per minute. Plumber B charges £' + r + ' plus £' + s + ' per minute.', [
+        ['Write each cost as a linear model ' + M('C = a + bt') + ' and interpret ' + M('a') + ' and ' + M('b') + '.', 2, M('C_A = ' + p + ' + ' + q + 't') + ', ' + M('C_B = ' + r + ' + ' + s + 't') + '; call-out fee and rate per minute'],
+        ['For how long a job is B cheaper?', 2, 'More than ' + sf3(n) + ' minutes'],
+        ['Suggest one way in which the models may be unrealistic.', 1, 'Charges are often per hour or part hour, not continuous']
       ]);
     },
     function () {
-      var m = pick([1, -1, 2, -2, 3]), x0 = ri(-4, 4), y0 = ri(-4, 4);
-      var c = y0 - m * x0 + nz(-6, 6);
-      var t = (y0 - m * x0 - c) / (1 + m * m), fx = x0 + m * t, fy = y0 - t;
-      return Q('Find the reflection of ' + M('P' + P(x0, y0)) + ' in the line ' + M(line(m, c)) + '.', [
-        ['Find the line through ' + M('P') + ' perpendicular to the mirror line.', 2, M('y' + S0(-y0) + ' = ' + (m === 1 ? '-' : m === -1 ? '' : F(-1, m)) + (x0 ? '(x' + S(-x0) + ')' : 'x'))],
-        ['Find where it meets the mirror line.', 2, M(P(sf3(fx), sf3(fy)))],
-        ['Hence find the image of ' + M('P') + '.', 2, M(P(sf3(2 * fx - x0), sf3(2 * fy - y0)))]
+      var m = nz(-3, 3), c = nz(-6, 6);
+      var fx = -m * c / (1 + m * m), fy = c / (1 + m * m);
+      return Q('Find the point on ' + M(line(m, c)) + ' closest to the origin.', [
+        ['Write the equation of the perpendicular through the origin.', 1, M('y = ' + F(-1, m) + 'x').replace('= 1x', '= x').replace('= -1x', '= -x')],
+        ['Find the point.', 2, M(P(F(-m * c, 1 + m * m), F(c, 1 + m * m)))],
+        ['Find the shortest distance, and show it equals ' + M('\\frac{|c|}{\\sqrt{1 + m^2}}') + '.', 2, M('\\frac{' + Math.abs(c) + '}{\\sqrt{' + (1 + m * m) + '}} = ' + sf3(Math.abs(c) / Math.sqrt(1 + m * m)))]
       ]);
     },
     function () {
-      var pts = [[ri(-5, -1), ri(-4, 0)], [ri(2, 6), ri(-5, -1)], [ri(3, 7), ri(2, 6)], [ri(-4, 0), ri(3, 7)]];
-      return Q('A quadrilateral has vertices ' + pts.map(function (p) { return M(P(p[0], p[1])); }).join(', ') + ' in order.', [
-        ['Find its area.', 4, num(shoe(pts))],
-        ['Show that it is not a parallelogram.', 2, (function () { var g1 = [pts[1][0] - pts[0][0], pts[1][1] - pts[0][1]], g2 = [pts[2][0] - pts[3][0], pts[2][1] - pts[3][1]]; return g1[0] * g2[1] === g1[1] * g2[0] && (pts[2][0] - pts[1][0]) * (pts[3][1] - pts[0][1]) === (pts[2][1] - pts[1][1]) * (pts[3][0] - pts[0][0]) ? 'It is a parallelogram (both pairs of sides parallel)' : 'At least one pair of opposite sides has different gradients'; })()]
+      var x0 = nz(-4, 4), y0 = nz(-4, 4), m1 = nz(-3, 3), m2; do { m2 = nz(-3, 3); } while (m2 === m1);
+      var m3; do { m3 = nz(-3, 3); } while (m3 === m1 || m3 === m2);
+      return Q('Show that the lines ' + M(line(m1, y0 - m1 * x0)) + ', ' + M(line(m2, y0 - m2 * x0)) + ' and ' + M(line(m3, y0 - m3 * x0)) + ' all pass through one point.', [
+        ['Find where the first two meet.', 3, M(P(x0, y0))],
+        ['Verify the third passes through it.', 1, M(m3 * x0 + (y0 - m3 * x0) + ' = ' + y0)],
+        ['Explain why any line ' + M('y - ' + (y0 < 0 ? '(' + y0 + ')' : y0) + ' = m(x - ' + (x0 < 0 ? '(' + x0 + ')' : x0) + ')') + ' passes through it.', 1, 'Substituting the point makes both sides zero']
       ]);
     },
     function () {
-      var x0 = nz(-3, 3), y0 = nz(-3, 3), m1 = nz(-2, 2), m2 = m1 + nz(-2, 2) || 3;
-      var px = x0 + ri(1, 3), py = y0 + nz(-4, 4);
-      return Q('Lines ' + M(line(m1, y0 - m1 * x0)) + ' and ' + M(line(m2, y0 - m2 * x0)) + ' meet at ' + M('A') + '.', [
-        ['Find ' + M('A') + '.', 2, M(P(x0, y0))],
-        ['Find the equation of the line through ' + M('A') + ' and ' + M(P(px, py)) + '.', 2, M('y' + S0(-y0) + ' = ' + F(py - y0, px - x0) + (x0 ? '(x' + S(-x0) + ')' : 'x'))],
-        ['Find the acute angle between the first two lines.', 2, M(sf3(Math.abs(Math.atan(m1) - Math.atan(m2)) * 180 / Math.PI > 90 ? 180 - Math.abs(Math.atan(m1) - Math.atan(m2)) * 180 / Math.PI : Math.abs(Math.atan(m1) - Math.atan(m2)) * 180 / Math.PI) + '°')]
+      var px = ri(-4, 4), py = ri(-4, 4), m = pick([2, -2, 3, -3]), c = ri(-3, 3);
+      if (py === m * px + c) py++;
+      var fx = (px + m * py - m * c) / (1 + m * m), fy = m * fx + c;
+      return Q('Find the reflection of ' + M('P' + P(px, py)) + ' in the line ' + M(line(m, c)) + '.', [
+        ['Find the foot of the perpendicular from ' + M('P') + ' to the line.', 3, M(P(F(px + m * py - m * c, 1 + m * m), F(m * (px + m * py - m * c) + c * (1 + m * m), 1 + m * m)))],
+        ['Hence find the image of ' + M('P') + '.', 2, M(P(F(2 * (px + m * py - m * c) - px * (1 + m * m), 1 + m * m), F(2 * (m * (px + m * py - m * c) + c * (1 + m * m)) - py * (1 + m * m), 1 + m * m)))],
+        ['Explain why the foot of the perpendicular is the midpoint of ' + M('P') + ' and its image.', 1, 'A reflection keeps distances to the mirror line equal on both sides']
       ]);
     },
     function () {
-      var a = ri(2, 8), b = ri(2, 8);
-      return Q('A line passes through ' + M(P(a, b)) + ' and crosses the positive axes at ' + M('(p, 0)') + ' and ' + M('(0, q)') + '.', [
-        ['Show that ' + M('\\frac{' + a + '}{p} + \\frac{' + b + '}{q} = 1') + '.', 2, 'The line is ' + M('\\frac{x}{p} + \\frac{y}{q} = 1')],
-        ['If the intercepts are equal, find the equation of the line.', 2, M('x + y = ' + (a + b))],
-        ['Find the area of the triangle formed with the axes in that case.', 1, num((a + b) * (a + b) / 2)]
+      var a = nz(-4, 4), b = nz(-4, 4), c = nz(-5, 5);
+      return Q('Consider the lines ' + M('kx + ' + 2 + 'y = ' + c) + ' and ' + M(c1(a, 'x') + (b < 0 ? ' - ' + c1(-b, 'y') : ' + ' + c1(b, 'y')) + ' = 1') + '.', [
+        ['Find ' + M('k') + ' if the lines are parallel.', 2, M('k = ' + F(2 * a, b))],
+        ['Find ' + M('k') + ' if the lines are perpendicular.', 2, M('k = ' + F(-2 * b, a))],
+        ['Explain why there is no value of ' + M('k') + ' making them the same line, unless ' + M('c') + ' is special.', 1, 'The constants would also have to be in the same ratio']
       ]);
     },
     function () {
-      var u = ri(1, 4), w = ri(1, 4);
-      return Q('The gradient of a line is ' + M('\\tan\\theta') + ', where ' + M('\\theta') + ' is the angle it makes with the positive ' + M('x') + '-axis.', [
-        ['Find the angle made by ' + M(c1(u, 'y') + ' = ' + c1(w, 'x') + ' + 1') + '.', 2, M(sf3(Math.atan(w / u) * 180 / Math.PI) + '°')],
-        ['Show that perpendicular lines have gradients with product ' + M('-1') + ' by using ' + M('\\tan(\\theta + 90°)') + '.', 3, M('\\tan(\\theta + 90°) = -\\frac{1}{\\tan\\theta}')]
+      var x0 = ri(-3, 3), y0 = ri(-3, 3), u = [ri(1, 4), ri(1, 4)], v = [-u[1], u[0]];
+      var A = [x0, y0], B = [x0 + u[0], y0 + u[1]], Cc = [x0 + u[0] + v[0], y0 + u[1] + v[1]], D = [x0 + v[0], y0 + v[1]];
+      return Q('A quadrilateral has vertices ' + M('A' + P(A[0], A[1]) + ', B' + P(B[0], B[1]) + ', C' + P(Cc[0], Cc[1]) + ', D' + P(D[0], D[1])) + '.', [
+        ['Show that it is a square, using gradients and lengths.', 4, 'Adjacent sides have gradients ' + M(F(u[1], u[0])) + ' and ' + M(F(v[1], v[0])) + ' (product −1), and all sides have length ' + M('\\sqrt{' + (u[0] * u[0] + u[1] * u[1]) + '}')],
+        ['Find its area.', 1, u[0] * u[0] + u[1] * u[1]],
+        ['Find the centre of the square.', 1, M(P(F(A[0] + Cc[0], 2), F(A[1] + Cc[1], 2)))]
       ]);
     }
   ]);
 
   X('al-circles', [
     function () {
-      var g2 = nz(-4, 4), f2 = nz(-4, 4), L = g2 * g2 + f2 * f2;
-      return Q('The equation ' + M('x^2 + y^2' + S(2 * g2) + 'x' + S(2 * f2) + 'y + k = 0') + ' represents a circle.', [
-        ['Find the centre, and the radius in terms of ' + M('k') + '.', 3, 'Centre ' + M(P(-g2, -f2)) + ', radius ' + M('\\sqrt{' + L + ' - k}')],
-        ['Find the range of values of ' + M('k') + '.', 1, M('k < ' + L)],
-        ['Find ' + M('k') + ' if the circle touches the ' + M('x') + '-axis.', 2, M('k = ' + (L - f2 * f2))]
+      var a = ri(-4, 4), b = ri(-4, 4), u = pick([[3, 4], [4, 3], [5, 12], [6, 8], [1, 2], [2, 1]]);
+      var A = [a - u[0], b - u[1]], B = [a + u[0], b + u[1]], r2 = u[0] * u[0] + u[1] * u[1];
+      return Q('The points ' + M('A' + P(A[0], A[1])) + ' and ' + M('B' + P(B[0], B[1])) + ' are the ends of a diameter of a circle.', [
+        ['Find the equation of the circle.', 3, M(circ(a, b, r2))],
+        ['Show that ' + M(P(a + u[1], b - u[0])) + ' lies on the circle.', 1, 'Distance squared from centre is ' + r2],
+        ['Find the angle ' + M('APB') + ' at that point, without calculation. Explain.', 1, '90°: angle in a semicircle']
       ]);
     },
     function () {
-      var a = [ri(-5, -1), ri(-3, 3)], b = [ri(2, 6), ri(-3, 3)];
-      var cx = (a[0] + b[0]) / 2, cy = (a[1] + b[1]) / 2, r2 = ((b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1])) / 4;
-      return Q(M('A' + P(a[0], a[1])) + ' and ' + M('B' + P(b[0], b[1])) + ' are the ends of a diameter of a circle.', [
-        ['Find the equation of the circle.', 3, M(circ(cx, cy, num(r2)))],
-        ['Find the ' + M('y') + '-coordinates of the points where the circle crosses the ' + M('y') + '-axis.', 2, (function () { var d = r2 - cx * cx; return d < 0 ? 'It does not cross' : M(sf3(cy) + ' \\pm ' + sf3(Math.sqrt(d))); })()],
-        ['Explain why angle ' + M('APB') + ' is a right angle for any other point ' + M('P') + ' on the circle.', 1, 'Angle in a semicircle']
+      var a = ri(-3, 3), b = ri(-3, 3), u = pick([[3, 4], [4, -3], [-5, 12], [6, 8], [-8, 6], [1, 2]]);
+      var px = a + u[0], py = b + u[1], r2 = u[0] * u[0] + u[1] * u[1];
+      var m = F(-u[0], u[1]);
+      return Q('The point ' + M('P' + P(px, py)) + ' lies on ' + M(circ(a, b, r2)) + '.', [
+        ['Find the gradient of the radius to ' + M('P') + '.', 1, M(F(u[1], u[0]))],
+        ['Find the equation of the tangent at ' + M('P') + '.', 3, M('y' + S0(-py) + ' = ' + (m === '1' ? '' : m === '-1' ? '-' : m) + xm(px))],
+        ['Find where the tangent crosses the ' + M('x') + '-axis.', 2, M(P(F(px * u[0] + py * u[1], u[0]), 0))]
       ]);
     },
     function () {
-      var a = ri(-3, 3), b = ri(-3, 3), r = ri(2, 5), d = r + ri(2, 5);
-      var px = a + d, py = b;
-      return Q('From ' + M('P' + P(px, py)) + ', tangents are drawn to the circle ' + M(circ(a, b, r * r)) + '.', [
-        ['Find the length of each tangent.', 2, M('\\sqrt{' + (d * d - r * r) + '}' + (rt(d * d - r * r) !== '\\sqrt{' + (d * d - r * r) + '}' ? ' = ' + rt(d * d - r * r) : ''))],
-        ['Find the angle between the two tangents.', 2, M(sf3(2 * Math.asin(r / d) * 180 / Math.PI) + '°')],
-        ['Find the area of the kite formed by the centre, the two points of contact and ' + M('P') + '.', 2, M(sf3(r * Math.sqrt(d * d - r * r)))]
+      var r = pick([5, 10, 13, 25]), u = { 5: [3, 4], 10: [6, 8], 13: [5, 12], 25: [7, 24] }[r], k = pick([u[0], u[1]]);
+      var h = Math.sqrt(r * r - k * k);
+      return Q('The line ' + M('y = ' + k) + ' meets ' + M('x^2 + y^2 = ' + r * r) + ' at ' + M('A') + ' and ' + M('B') + '.', [
+        ['Find ' + M('A') + ' and ' + M('B') + '.', 2, M(P(-h, k)) + ' and ' + M(P(h, k))],
+        ['Find the length ' + M('AB') + ' and the angle ' + M('AOB') + '.', 3, 2 * h + '; ' + M(sf3(2 * Math.atan(h / k) * 180 / Math.PI) + '°')],
+        ['Find the area of the minor segment cut off by the line.', 3, M(sf3(0.5 * r * r * (2 * Math.atan(h / k) - Math.sin(2 * Math.atan(h / k)))))]
       ]);
     },
     function () {
-      var c = pick([[2, 1, 1, 5], [4, 2, 2, 10], [1, 8, 5, 13], [3, 6, 3, 15], [1, 2, 1, 5], [2, 4, 2, 10]]);
-      return Q('A circle touches both positive axes and passes through ' + M(P(c[0], c[1])) + '.', [
-        ['Explain why its equation is ' + M('(x - r)^2 + (y - r)^2 = r^2') + '.', 1, 'Touching both axes, the centre is ' + M('r') + ' from each'],
-        ['Find the two possible values of ' + M('r') + '.', 3, M('r^2 - ' + 2 * (c[0] + c[1]) + 'r + ' + (c[0] * c[0] + c[1] * c[1]) + ' = 0') + ', ' + M('r = ' + c[2] + '\\text{ or } ' + c[3])],
-        ['Find the distance between the two centres.', 1, M(rt(2 * (c[3] - c[2]) * (c[3] - c[2])))]
+      var r = ri(2, 6);
+      return Q('Find the values of ' + M('k') + ' for which ' + M('y = x + k') + ' meets ' + M('x^2 + y^2 = ' + r * r) + '.', [
+        ['Substitute and form a quadratic in ' + M('x') + '.', 2, M('2x^2 + 2kx + k^2 - ' + r * r + ' = 0')],
+        ['Find the condition on ' + M('k') + '.', 3, M('8 \\times ' + r * r + ' - 4k^2 \\ge 0') + ', ' + M('-' + rt(2 * r * r) + ' \\le k \\le ' + rt(2 * r * r))],
+        ['Check the boundary values geometrically.', 1, 'The distance from the origin to the line is ' + M('\\frac{|k|}{\\sqrt{2}}') + ', which equals ' + r]
       ]);
     },
     function () {
-      var r = pick([5, 10, 13]), pts = { 5: [[3, 4], [-4, 3], [4, -3], [-3, -4], [5, 0], [0, 5]], 10: [[6, 8], [-8, 6], [8, -6], [-6, -8]], 13: [[5, 12], [-12, 5], [12, -5], [-5, -12]] }[r];
-      var p1 = pick(pts), p2; do { p2 = pick(pts); } while (p2 === p1 || (p1[0] === p2[0]) || (p1[0] + p2[0] === 0 && p1[1] + p2[1] === 0));
-      var mx = (p1[0] + p2[0]) / 2, my = (p1[1] + p2[1]) / 2, chord = Math.hypot(p1[0] - p2[0], p1[1] - p2[1]);
-      return Q('The chord ' + M('AB') + ' of ' + M('x^2 + y^2 = ' + r * r) + ' joins ' + M('A' + P(p1[0], p1[1])) + ' and ' + M('B' + P(p2[0], p2[1])) + '.', [
-        ['Find the midpoint ' + M('M') + ' of ' + M('AB') + ' and show that ' + M('OM') + ' is perpendicular to ' + M('AB') + '.', 3, M('M' + P(num(mx), num(my))) + '; gradients multiply to ' + M('-1')],
-        ['Find the distance from the centre to the chord.', 2, M(sf3(Math.hypot(mx, my)))],
-        ['Find the area of triangle ' + M('OAB') + '.', 2, num(Math.abs(p1[0] * p2[1] - p2[0] * p1[1]) / 2) + ' (check: ' + M('\\frac{1}{2} \\times ' + sf3(chord) + ' \\times ' + sf3(Math.hypot(mx, my))) + ')']
-      ]);
-    },
-    function () {
-      var a = ri(2, 6), b = ri(2, 6);
-      return Q('Triangle ' + M('OAB') + ' has ' + M('O(0, 0)') + ', ' + M('A' + P(2 * a, 0)) + ', ' + M('B' + P(0, 2 * b)) + '.', [
-        ['Explain why ' + M('AB') + ' is a diameter of the circle through ' + M('O, A, B') + '.', 1, 'Angle ' + M('AOB = 90°') + ', so ' + M('AB') + ' subtends a right angle'],
+      var a = ri(1, 5), b = ri(1, 5);
+      return Q('A circle passes through ' + M('O(0, 0)') + ', ' + M('A' + P(2 * a, 0)) + ' and ' + M('B' + P(0, 2 * b)) + '.', [
+        ['Explain why ' + M('AB') + ' is a diameter.', 2, 'Angle ' + M('AOB = 90°') + ', so ' + M('AB') + ' subtends a right angle at the circumference'],
         ['Find the equation of the circle.', 2, M(circ(a, b, a * a + b * b))],
-        ['Find the equation of the tangent at ' + M('O') + '.', 2, M('y = ' + F(-a, b) + 'x').replace('= 1x', '= x').replace('= -1x', '= -x')]
+        ['Find the equation of the tangent at ' + M('O') + '.', 2, M(lin(a, b, 0))]
       ]);
     },
     function () {
-      var r1 = 5, a = pick([2, 4, 6, 8]);
-      var x = (a * a) / (2 * a), y2 = 25 - x * x;
-      return Q('Circles ' + M('x^2 + y^2 = 25') + ' and ' + M(circ(a, 0, 25)) + ' intersect.', [
-        ['Subtract the equations to find a straight line through both intersection points.', 2, M('x = ' + num(x))],
-        ['Find the intersection points.', 2, M(P(num(x), '\\pm ' + rt(y2)))],
-        ['Find the length of the common chord.', 1, M('2' + (rt(y2) === '1' ? '' : rt(y2)))]
+      var a1 = ri(-3, 3), b1 = ri(-3, 3), r1 = ri(2, 5), t = pick([[3, 4, 5], [6, 8, 10], [5, 12, 13], [0, 7, 7]]), r2 = ri(2, 6);
+      var d = t[2];
+      var rel = d > r1 + r2 ? 'do not meet' : d === r1 + r2 ? 'touch externally' : d > Math.abs(r1 - r2) ? 'meet at two points' : d === Math.abs(r1 - r2) ? 'touch internally' : 'one is inside the other';
+      return Q('Circle ' + M('C_1') + ': ' + M(circ(a1, b1, r1 * r1)) + '. Circle ' + M('C_2') + ': ' + M(circ(a1 + t[0], b1 + t[1], r2 * r2)) + '.', [
+        ['Find the distance between the centres.', 2, d],
+        ['Decide whether the circles meet.', 2, 'They ' + rel],
+        ['Find the greatest distance between a point on ' + M('C_1') + ' and a point on ' + M('C_2') + '.', 2, d + r1 + r2]
       ]);
     },
     function () {
-      var a = ri(-3, 3), b = ri(-3, 3), v = pick([[3, 4], [4, 3], [-3, 4], [4, -3], [6, 8], [8, -6]]), r2 = v[0] * v[0] + v[1] * v[1];
-      var px = a + v[0], py = b + v[1];
-      return Q('The point ' + M('P' + P(px, py)) + ' lies on the circle ' + M(circ(a, b, r2)) + '.', [
-        ['Find the gradient of the radius to ' + M('P') + ' and hence the gradient of the tangent.', 2, M(F(v[1], v[0])) + ' and ' + M(F(-v[0], v[1]))],
-        ['Find the equation of the tangent at ' + M('P') + ' in the form ' + M('ax + by = c') + '.', 2, M(c1(v[0], 'x') + (v[1] < 0 ? ' - ' + c1(-v[1], 'y') : ' + ' + c1(v[1], 'y')) + ' = ' + (v[0] * px + v[1] * py))],
-        ['Find where it crosses the ' + M('x') + '-axis.', 1, M(P(F(v[0] * px + v[1] * py, v[0]), 0))]
+      var p = ri(2, 6), q = ri(1, 8);
+      var bs = [(p * p + q * q) / (2 * q)];
+      return Q('A circle touches the ' + M('x') + '-axis at ' + M(P(p, 0)) + ' and passes through ' + M(P(0, q)) + '.', [
+        ['Explain why the centre is ' + M(P(p, 'r')) + ', where ' + M('r') + ' is the radius.', 1, 'The radius to the point of contact is perpendicular to the axis'],
+        ['Find ' + M('r') + '.', 3, M(p + '^2 + (' + q + ' - r)^2 = r^2') + ', ' + M('r = ' + F(p * p + q * q, 2 * q))],
+        ['Write down the equation of the circle.', 1, M('(x - ' + p + ')^2 + \\left(y - ' + F(p * p + q * q, 2 * q) + '\\right)^2 = \\left(' + F(p * p + q * q, 2 * q) + '\\right)^2')]
       ]);
     },
     function () {
-      var a = ri(-3, 3), b = ri(-3, 3), r = ri(2, 5);
-      var lo = b - a - r * Math.SQRT2, hi = b - a + r * Math.SQRT2;
-      return Q('For which values of ' + M('c') + ' does ' + M('y = x + c') + ' meet ' + M(circ(a, b, r * r)) + '?', [
-        ['Use the perpendicular distance from the centre to the line.', 3, M('\\frac{|' + a + ' - ' + (b < 0 ? '(' + b + ')' : b) + ' + c|}{\\sqrt{2}} \\le ' + r)],
-        ['Solve to find the range of ' + M('c') + '.', 2, M(sf3(lo) + ' \\le c \\le ' + sf3(hi)) + ' (exactly ' + M((b - a) + ' \\pm ' + r + '\\sqrt{2}') + ')'],
-        ['Confirm one end point using the discriminant.', 2, 'At the end points the quadratic in ' + M('x') + ' has equal roots']
+      var a = ri(-3, 3), b = ri(-3, 3), r = ri(2, 5), dx = ri(4, 8), dy = ri(4, 8);
+      var d2 = dx * dx + dy * dy, t2 = d2 - r * r;
+      return Q('Tangents are drawn from ' + M('P' + P(a + dx, b + dy)) + ' to ' + M(circ(a, b, r * r)) + ', touching at ' + M('A') + ' and ' + M('B') + '.', [
+        ['Find the length of each tangent.', 2, M(rt(t2))],
+        ['Find the area of the kite ' + M('CAPB') + ', where ' + M('C') + ' is the centre.', 2, M(sf3(r * Math.sqrt(t2)))],
+        ['Find the angle ' + M('APB') + '.', 2, M(sf3(2 * Math.atan(r / Math.sqrt(t2)) * 180 / Math.PI) + '°')]
       ]);
     },
     function () {
-      var r = ri(4, 10), t = pick([60, 90, 120]);
-      return Q('A chord of a circle of radius ' + r + ' subtends ' + t + '° at the centre.', [
-        ['Find the area of the triangle formed by the chord and the centre.', 2, M(sf3(0.5 * r * r * Math.sin(t * Math.PI / 180)))],
-        ['Find the length of the chord exactly.', 2, t === 60 ? r : t === 90 ? M(r + '\\sqrt{2}') : M(r + '\\sqrt{3}')],
-        ['Find the distance from the centre to the chord exactly.', 1, t === 60 ? M(F(r, 2) + '\\sqrt{3}') : t === 90 ? M(F(r, 2) + '\\sqrt{2}') : M(F(r, 2))]
+      var g0 = nz(-4, 4), f0 = nz(-4, 4), s = g0 * g0 + f0 * f0;
+      return Q('The equation ' + M('x^2 + y^2' + S(2 * g0) + 'x' + S(2 * f0) + 'y + k = 0') + ' represents a circle.', [
+        ['Find the centre, and the radius in terms of ' + M('k') + '.', 3, M(P(-g0, -f0)) + ', ' + M('r = \\sqrt{' + s + ' - k}')],
+        ['Find the range of values of ' + M('k') + '.', 1, M('k < ' + s)],
+        ['Find ' + M('k') + ' if the circle passes through the origin, and ' + M('k') + ' if it touches the ' + M('y') + '-axis.', 3, M('k = 0') + '; ' + M('k = ' + f0 * f0)]
+      ]);
+    },
+    function () {
+      var a = ri(-4, 4), b = ri(-4, 4), r = pick([5, 10]), u = r === 5 ? [3, 4] : [6, 8], k = ri(2, 3);
+      var px = a + k * u[0], py = b + k * u[1], d = k * r;
+      return Q('A circle has equation ' + M(circ(a, b, r * r)) + ' and ' + M('P' + P(px, py)) + ' is outside it.', [
+        ['Find the shortest and longest distances from ' + M('P') + ' to the circle.', 2, (d - r) + ' and ' + (d + r)],
+        ['Find the point on the circle nearest to ' + M('P') + '.', 3, M(P(a + u[0], b + u[1]))],
+        ['Explain why the nearest point lies on the line through ' + M('P') + ' and the centre.', 1, 'Any other path is longer, by the triangle inequality']
       ]);
     }
   ]);
 
   X('al-algebraic', [
     function () {
-      var r = [nz(-3, 3), nz(-4, 4), nz(-4, 4)], k = ri(2, 5);
-      var p = [1, -(r[0] + r[1] + r[2]), r[0] * r[1] + r[1] * r[2] + r[0] * r[2], -r[0] * r[1] * r[2]];
-      var q0 = 1, q1 = p[1] + k, q2 = p[2] + k * q1, rem = p[3] + k * q2;
-      return Q('Divide ' + M(poly(p)) + ' by ' + M('(x - ' + k + ')') + '.', [
-        ['Find the quotient and remainder.', 3, 'Quotient ' + M(poly([q0, q1, q2])) + ', remainder ' + rem],
-        ['Check the remainder using the remainder theorem.', 1, M('p(' + k + ') = ' + rem)],
-        ['Factorise the cubic fully.', 2, M(xm(r[0]) + xm(r[1]) + xm(r[2]))]
+      var r1 = nz(-3, 3), r2; do { r2 = nz(-3, 3); } while (r2 === r1); var r3 = nz(-4, 4);
+      var a = -(r1 + r2 + r3), b = r1 * r2 + r2 * r3 + r1 * r3, c = -r1 * r2 * r3;
+      return Q(M('p(x) = 2x^3 + ax^2 + bx' + S0(2 * c)) + '. ' + M(xm(r1)) + ' and ' + M(xm(r2)) + ' are factors.' + (r1 === r2 ? '' : ''), [
+        ['Find ' + M('a') + ' and ' + M('b') + '.', 3, r1 === r2 ? 'A repeated factor needs extra information — here ' + M('a = ' + 2 * a + ',\\ b = ' + 2 * b) : M('a = ' + 2 * a + ',\\ b = ' + 2 * b)],
+        ['Factorise ' + M('p(x)') + ' fully.', 2, M('2' + xm(r1) + xm(r2) + xm(r3))],
+        ['Find the remainder when ' + M('p(x)') + ' is divided by ' + M('(x - 5)') + '.', 1, 2 * (5 - r1) * (5 - r2) * (5 - r3)]
       ]);
     },
     function () {
-      var r1 = nz(-3, 3), r2, s = pick([1, -1, 3, -3]); do { r2 = nz(-3, 3); } while (r2 === r1);
-      var p = [2, -(2 * r1 + 2 * r2 + s), 2 * r1 * r2 + s * (r1 + r2), -s * r1 * r2];
-      return Q(M('p(x) = 2x^3 + ax^2 + bx' + S(p[3])) + '. ' + M(xm(r1)) + ' and ' + M(xm(r2)) + ' are factors.', [
-        ['Find ' + M('a') + ' and ' + M('b') + '.', 3, M('a = ' + p[1] + ',\\ b = ' + p[2])],
-        ['Find the third factor.', 2, M('(2x' + S(-s) + ')')],
-        ['Solve ' + M('p(x) = 0') + '.', 1, M('x = ' + r1 + ',\\ ' + r2 + ',\\ ' + F(s, 2))]
-      ]);
-    },
-    function () {
-      return Q('Proof by deduction.', [
-        ['Prove that the sum of the squares of three consecutive integers is always 2 more than a multiple of 3.', 3, M('(n - 1)^2 + n^2 + (n + 1)^2 = 3n^2 + 2')],
-        ['Hence prove that it can never be a perfect square.', 2, 'Squares are 0 or 1 more than a multiple of 3 (since ' + M('(3k \\pm 1)^2 = 3(3k^2 \\pm 2k) + 1') + ')']
+      var a = nz(-4, 4), b = nz(-4, 4), k = nz(-3, 3), R0 = ri(-5, 5);
+      var p = [1, a - k, b - a * k, R0 - b * k];
+      return Q('Divide ' + M(poly(p)) + ' by ' + M(xm(k)) + '.', [
+        ['Find the quotient and remainder.', 3, 'Quotient ' + M(poly([1, a, b])) + ', remainder ' + R0],
+        ['Check the remainder using the remainder theorem.', 1, M('p(' + k + ') = ' + R0)],
+        ['Write ' + M('\\frac{' + poly(p) + '}{' + poly([1, -k]) + '}') + ' in the form ' + M('Ax^2 + Bx + C + \\frac{D}{x' + S(-k) + '}') + '.', 1, M(poly([1, a, b]) + (R0 ? ' + \\frac{' + R0 + '}{' + poly([1, -k]) + '}' : ''))]
       ]);
     },
     function () {
       return Q('Proof by exhaustion.', [
-        ['Prove that every square number leaves remainder 0 or 1 when divided by 4.', 3, 'Even: ' + M('(2k)^2 = 4k^2') + '; odd: ' + M('(2k + 1)^2 = 4(k^2 + k) + 1')],
-        ['Hence prove that no number of the form ' + M('4k + 3') + ' is the sum of two squares.', 2, 'Sums of two squares leave remainder 0, 1 or 2'],
-        ['Give an example showing that ' + M('4k + 1') + ' numbers can be.', 1, 'e.g. ' + M('13 = 4 + 9')]
+        ['By considering ' + M('n = 3k, 3k + 1, 3k + 2') + ', prove that ' + M('n^2') + ' leaves remainder 0 or 1 when divided by 3.', 3, M('9k^2,\\ 9k^2 + 6k + 1,\\ 9k^2 + 12k + 4 = 3(3k^2 + 4k + 1) + 1')],
+        ['Hence prove that ' + M('n^2 + 2') + ' is a multiple of 3 exactly when ' + M('n') + ' is not a multiple of 3.', 2, 'If ' + M('n') + ' is not a multiple of 3, ' + M('n^2') + ' leaves 1, so ' + M('n^2 + 2') + ' leaves 0; otherwise it leaves 2'],
+        ['By considering even and odd ' + M('n') + ', prove that the sum of two squares never leaves remainder 3 when divided by 4.', 2, M('(2k)^2 = 4k^2') + ', ' + M('(2k + 1)^2 = 4(k^2 + k) + 1') + ': squares leave 0 or 1, so sums leave 0, 1 or 2']
       ]);
     },
     function () {
-      return Q('A student claims that ' + M('2^n + 1') + ' is prime for every positive integer ' + M('n') + '.', [
-        ['Test ' + M('n = 1, 2') + '.', 1, '3, 5: both prime'],
-        ['Disprove the claim.', 1, M('n = 3') + ': 9'],
-        ['Prove that if ' + M('n') + ' is odd and ' + M('n > 1') + ', then ' + M('2^n + 1') + ' is divisible by 3.', 3, M('2 \\equiv -1 \\pmod 3') + ', so ' + M('2^n + 1 \\equiv -1 + 1 = 0') + '; or use ' + M('2^n + 1 = (2 + 1)(2^{n - 1} - \\cdots + 1)')]
+      return Q('Disproof by counterexample.', [
+        ['Disprove: “' + M('2^n + 1') + ' is prime for every positive integer ' + M('n') + '.”', 1, M('n = 3') + ': 9'],
+        ['Disprove: “if ' + M('a^2 > b^2') + ' then ' + M('a > b') + '.”', 1, M('a = -3, b = 1')],
+        ['Prove that ' + M('2^n + 1') + ' is never prime when ' + M('n') + ' is odd and ' + M('n > 1') + '.', 3, 'It is divisible by 3: ' + M('2 \\equiv -1') + ', so ' + M('2^n + 1 \\equiv 0 \\pmod 3') + '; and it is bigger than 3']
       ]);
     },
     function () {
-      var a = nz(-3, 3), b = nz(-3, 3), c = nz(-3, 3);
-      if (b === c) c = c === 3 ? -3 : c + 1;
-      if (c === 0) c = 2;
-      if (b === c) b = -c;
-      return Q('Simplify ' + M('\\frac{' + poly([1, -(a + b + c), a * b + b * c + a * c, -a * b * c]) + '}{' + poly([1, -(b + c), b * c]) + '}') + '.', [
-        ['Factorise the denominator.', 1, M(xm(b) + xm(c))],
-        ['Use the factor theorem to factorise the numerator.', 3, M(xm(a) + xm(b) + xm(c))],
-        ['Simplify the fraction, stating any restrictions on ' + M('x') + '.', 1, M(poly([1, -a])) + ', ' + M('x \\ne ' + b + ',\\ ' + c)]
+      var h = nz(-5, 5), k = ri(1, 9);
+      return Q('Consider ' + M(poly([1, -2 * h, h * h + k])) + '.', [
+        ['Prove that it is positive for all real ' + M('x') + '.', 2, M(xm(h) + '^2 + ' + k + ' \\ge ' + k)],
+        ['Prove that ' + M('\\frac{1}{' + poly([1, -2 * h, h * h + k]) + '}') + ' is at most ' + M(F(1, k)) + '.', 2, 'The denominator is at least ' + k],
+        ['For what value of ' + M('x') + ' is the maximum reached?', 1, M('x = ' + h)]
       ]);
     },
     function () {
-      return Q('Consider ' + M('f(n) = n^3 - 6n^2 + 11n - 6') + '.', [
-        ['Show that ' + M('f(n) = (n - 1)(n - 2)(n - 3)') + '.', 2, M('f(1) = 0') + ', then divide'],
-        ['Hence prove that ' + M('f(n)') + ' is a multiple of 6 for every integer ' + M('n') + '.', 2, 'Product of three consecutive integers contains a multiple of 2 and of 3'],
-        ['Is it always a multiple of 24? Prove or disprove.', 1, 'No: ' + M('n = 4') + ' gives 6']
+      var a = ri(2, 6), b; do { b = nz(-5, 5); } while (b === a || b === -a);
+      return Q('Simplify ' + M('\\frac{x^3 - ' + a * a + 'x}{' + poly([1, b - a, -a * b]) + '}') + '.', [
+        ['Factorise the numerator and denominator.', 3, M('\\frac{x(x - ' + a + ')(x + ' + a + ')}{(x - ' + a + ')' + xm(-b) + '}')],
+        ['Simplify, stating any excluded values.', 2, M('\\frac{x(x + ' + a + ')}{' + poly([1, b]) + '}') + ', ' + M('x \\ne ' + a + ', ' + (-b))]
       ]);
     },
     function () {
-      var a = ri(1, 4), b = ri(2, 6);
-      return Q('Prove that ' + M('n^2 + ' + (a + b) + 'n + ' + a * b) + ' is never prime for positive integers ' + M('n') + '.', [
-        ['Factorise.', 1, M('(n + ' + a + ')(n + ' + b + ')')],
-        ['Complete the proof.', 2, 'Both factors are at least 2 for ' + M('n \\ge 1') + ', so it has a non-trivial factorisation'],
-        ['What happens when ' + M('n = 0') + '?', 1, a === 1 ? 'It is ' + b + (b === 2 || b === 3 || b === 5 ? ', which is prime' : ', which is not prime') : 'It is ' + a * b + ', not prime']
+      return Q('Prove that the product of any three consecutive integers is divisible by 6.', [
+        ['Explain why one of them is even.', 1, 'Every second integer is even'],
+        ['Explain why one of them is a multiple of 3.', 1, 'Every third integer is a multiple of 3'],
+        ['Hence prove that ' + M('n^3 + 3n^2 + 2n') + ' is divisible by 6 for all integers ' + M('n') + '.', 2, M('n(n + 1)(n + 2)')],
+        ['Is the product of four consecutive integers always divisible by 24? Explain.', 2, 'Yes: it contains a multiple of 4, another even number and a multiple of 3']
       ]);
     },
     function () {
-      var p = [2, nz(-5, 5), nz(-5, 5), nz(-5, 5)];
-      var rem = p[0] / 8 + p[1] / 4 + p[2] / 2 + p[3];
-      return Q('Find the remainder when ' + M(poly(p)) + ' is divided by ' + M('(2x - 1)') + '.', [
-        ['Explain which value to substitute.', 1, M('x = \\frac{1}{2}') + ', where ' + M('2x - 1 = 0')],
-        ['Find the remainder.', 2, M(F(Math.round(rem * 8), 8))],
-        ['Find the value of the constant term that would make ' + M('(2x - 1)') + ' a factor.', 2, M(F(Math.round((rem - p[3]) * -8), 8))]
+      var a = pick([1, 2, 3]);
+      var k = 2 * a * a * a;
+      return Q('The equation ' + M('x^3 - ' + 3 * a * a + 'x + k = 0') + ' has a repeated root.', [
+        ['Explain why a repeated root is also a stationary point.', 1, 'The curve touches the axis there, so the gradient is zero'],
+        ['Find the stationary points of ' + M('y = x^3 - ' + 3 * a * a + 'x') + '.', 2, M(P(-a, k)) + ' and ' + M(P(a, -k))],
+        ['Hence find the possible values of ' + M('k') + ' and the repeated root in each case.', 3, M('k = ' + k) + ' (repeated root ' + a + ') or ' + M('k = -' + k) + ' (repeated root ' + (-a) + ')']
       ]);
     },
     function () {
-      var a = nz(-5, 5), b = ri(1, 9);
-      return Q('Prove that ' + M(poly([1, -2 * a, a * a + b])) + ' is positive for every real ' + M('x') + '.', [
-        ['Complete the square.', 2, M(xm(a) + '^2 + ' + b)],
-        ['Complete the proof.', 1, 'A square is at least 0, so the expression is at least ' + b],
-        ['Find the maximum value of ' + M('\\frac{1}{' + poly([1, -2 * a, a * a + b]) + '}') + ', and explain why it has no minimum.', 2, 'Maximum ' + M(F(1, b)) + ' at ' + M('x = ' + a) + ', and no minimum (it tends to 0)']
+      var r = [nz(-3, 3), nz(-3, 3), nz(-3, 3)];
+      var p = [1, -(r[0] + r[1] + r[2]), r[0] * r[1] + r[1] * r[2] + r[0] * r[2], -r[0] * r[1] * r[2]];
+      return Q('Solve ' + M(poly(p) + ' = 0') + '.', [
+        ['List the possible integer roots and explain why.', 2, 'Factors of ' + Math.abs(p[3]) + ': an integer root must divide the constant term'],
+        ['Find one root and factorise fully.', 3, M(xm(r[0]) + xm(r[1]) + xm(r[2]))],
+        ['Check: the roots should add to ' + (-p[1]) + '. Explain why.', 1, 'The ' + M('x^2') + ' coefficient is minus the sum of the roots']
+      ]);
+    },
+    function () {
+      return Q('Proof by contrapositive.', [
+        ['State the contrapositive of “if ' + M('n^2') + ' is even, then ' + M('n') + ' is even”.', 1, 'If ' + M('n') + ' is odd, then ' + M('n^2') + ' is odd'],
+        ['Prove the contrapositive.', 2, M('(2k + 1)^2 = 2(2k^2 + 2k) + 1')],
+        ['Explain why this proves the original statement.', 1, 'A statement and its contrapositive are logically equivalent'],
+        ['Is the converse “if ' + M('n') + ' is even then ' + M('n^2') + ' is even” also true?', 1, 'Yes: ' + M('(2k)^2 = 2(2k^2)')]
       ]);
     }
   ]);
 
   X('al-binomial', [
     function () {
-      var n = ri(4, 10), k = pick([2, 3, -2, -3]);
+      var n = ri(4, 9), k = nz(-3, 3);
       return Q('In the expansion of ' + M('(1 + kx)^n') + ', the coefficient of ' + M('x') + ' is ' + n * k + ' and the coefficient of ' + M('x^2') + ' is ' + C(n, 2) * k * k + '.', [
-        ['Form two equations.', 2, M('nk = ' + n * k) + ', ' + M('\\frac{n(n - 1)}{2}k^2 = ' + C(n, 2) * k * k)],
+        ['Form two equations in ' + M('n') + ' and ' + M('k') + '.', 2, M('nk = ' + n * k) + ', ' + M('\\frac{n(n - 1)}{2}k^2 = ' + C(n, 2) * k * k)],
         ['Solve them.', 3, M('n = ' + n + ',\\ k = ' + k)],
         ['Find the coefficient of ' + M('x^3') + '.', 1, C(n, 3) * k * k * k]
       ]);
     },
     function () {
-      var n = ri(5, 9);
-      var approx = Math.pow(2, n) - n * Math.pow(2, n - 1) * 0.02 + C(n, 2) * Math.pow(2, n - 2) * 0.0004;
-      return Q('Use the expansion of ' + M('(2 - x)^{' + n + '}') + '.', [
-        ['Find the first three terms in ascending powers of ' + M('x') + '.', 3, M(Math.pow(2, n) + ' - ' + n * Math.pow(2, n - 1) + 'x + ' + C(n, 2) * Math.pow(2, n - 2) + 'x^2')],
-        ['Use them to estimate ' + M('1.98^{' + n + '}') + '.', 2, approx.toFixed(4)],
-        ['Explain why the estimate is good, and whether it is an over- or underestimate.', 2, 'The next term has ' + M('x^3 = 0.000008') + ' and is negative, so it is a slight overestimate']
+      var n = ri(5, 8), a = ri(2, 3), b = pick([1, 2]), r = ri(2, 4);
+      var co = C(n, r) * Math.pow(a, n - r) * Math.pow(-1, r);
+      return Q('Find the coefficient of ' + M('x^' + r) + ' in ' + M('\\left(' + a + ' - \\frac{x}{' + 3 * b + '}\\right)^' + n) + '.', [
+        ['Write the general term.', 2, M('\\binom{' + n + '}{r}' + a + '^{' + n + ' - r}\\left(-\\frac{x}{' + 3 * b + '}\\right)^r')],
+        ['Find the coefficient.', 3, M(F(co, Math.pow(3 * b, r)))],
+        ['Explain how the sign of each term is decided.', 1, 'By ' + M('(-1)^r') + ': even powers positive, odd negative']
       ]);
     },
     function () {
-      var n = pick([3, 6, 9]), a = pick([1, 2, -1, -2]), r = 2 * n / 3;
-      return Q('Find the term independent of ' + M('x') + ' in ' + M('\\left(x^2 ' + (a < 0 ? '-' : '+') + ' \\frac{' + Math.abs(a) + '}{x}\\right)^{' + n + '}') + '.', [
-        ['Show that the general term involves ' + M('x^{' + 2 * n + ' - 3r}') + '.', 2, M('\\binom{' + n + '}{r}(x^2)^{' + n + ' - r}\\left(\\frac{' + a + '}{x}\\right)^r')],
-        ['Find the term independent of ' + M('x') + '.', 2, M('r = ' + r) + ': ' + C(n, r) * Math.pow(a, r)],
-        ['Explain why ' + M('\\left(x^2 + \\frac{1}{x}\\right)^{' + (n + 1) + '}') + ' has no such term.', 1, M(2 * (n + 1) + ' - 3r = 0') + ' has no whole-number solution']
+      var n = pick([8, 10, 12]), d = pick([1, 2]);
+      var x = d / 100, ap = 1 - n * 2 * x + C(n, 2) * 4 * x * x;
+      return Q('Use the expansion of ' + M('(1 - 2x)^{' + n + '}') + ' to estimate ' + M((1 - 2 * x).toFixed(2) + '^{' + n + '}') + '.', [
+        ['Find the first three terms.', 2, M('1 - ' + 2 * n + 'x + ' + 4 * C(n, 2) + 'x^2')],
+        ['State the value of ' + M('x') + ' and find the estimate.', 2, M('x = ' + x) + ', estimate ' + ap.toFixed(4)],
+        ['Find the percentage error, and explain why it would be larger for ' + M('x = 0.1') + '.', 2, sf3(100 * Math.abs(ap - Math.pow(1 - 2 * x, n)) / Math.pow(1 - 2 * x, n)) + '%; the ignored terms are no longer tiny']
       ]);
     },
     function () {
-      var n = ri(3, 8);
-      return Q('Consider ' + M('(1 + x)^{' + n + '}(1 - x)^{' + n + '}') + '.', [
-        ['Write it as a single power.', 1, M('(1 - x^2)^{' + n + '}')],
-        ['Find the coefficients of ' + M('x^2') + ', ' + M('x^3') + ' and ' + M('x^4') + '.', 3, (-n) + ', 0, ' + C(n, 2)],
-        ['Explain why all odd powers have zero coefficient.', 1, 'Only even powers of ' + M('x') + ' appear in ' + M('(1 - x^2)^{' + n + '}')]
+      var n = ri(4, 8), q = nz(-3, 3);
+      var c2 = C(n, 2) + q * n;
+      return Q('Find the coefficient of ' + M('x^2') + ' in ' + M('(1 + x)^' + n + '(1' + S(q).replace(/ 1$/, ' ') + 'x)') + '.', [
+        ['Expand ' + M('(1 + x)^' + n) + ' up to ' + M('x^2') + '.', 1, M('1 + ' + n + 'x + ' + C(n, 2) + 'x^2')],
+        ['Find the coefficient.', 2, c2],
+        ['Find the value of ' + M('q') + ' that would make the coefficient of ' + M('x^2') + ' in ' + M('(1 + x)^' + n + '(1 + qx)') + ' zero.', 2, M('q = ' + F(-C(n, 2), n))]
       ]);
     },
     function () {
-      var n = ri(4, 6), a = pick([2, 3]), b = pick([-1, 1, 2]);
-      var e = function (k) { return C(n, k) * Math.pow(a, k); };
-      var c3 = e(3) + 2 * b * e(2) + b * b * e(1);
-      return Q('Find the coefficient of ' + M('x^3') + ' in ' + M('(1 + ' + a + 'x)^{' + n + '}(1' + S(b) + 'x)^2').replace(' 1x', ' x') + '.', [
-        ['Expand ' + M('(1' + S(b) + 'x)^2').replace(' 1x', ' x') + '.', 1, M('1' + S(2 * b) + 'x + ' + c1(b * b, 'x^2')).replace(' 1x', ' x')],
-        ['Find the first four terms of ' + M('(1 + ' + a + 'x)^{' + n + '}') + '.', 2, M('1 + ' + e(1) + 'x + ' + e(2) + 'x^2 + ' + e(3) + 'x^3')],
-        ['Hence find the coefficient of ' + M('x^3') + '.', 2, c3]
+      var n = pick([6, 9]), a = pick([1, 2]);
+      var r = n / 3 * 2, t = C(n, r) * Math.pow(-2 * a, r);
+      return Q('Find the term independent of ' + M('x') + ' in ' + M('\\left(x^2 - \\frac{' + 2 * a + '}{x}\\right)^' + n) + '.', [
+        ['Write the general term and find the power of ' + M('x') + '.', 2, M('x^{' + 2 * n + ' - 3r}')],
+        ['Find the value of ' + M('r') + ' and the term.', 3, M('r = ' + r) + ', term ' + t],
+        ['Explain why ' + M('\\left(x^2 - \\frac{' + 2 * a + '}{x}\\right)^' + (n + 1)) + ' has no term independent of ' + M('x') + '.', 1, M(2 * (n + 1) + ' - 3r = 0') + ' has no integer solution']
       ]);
     },
     function () {
-      var k = ri(1, 4), n = 3 * k + 2;
-      return Q('In ' + M('(1 + x)^n') + ', the coefficients of ' + M('x^2') + ' and ' + M('x^3') + ' are in the ratio ' + M('1 : ' + k) + '.', [
-        ['Show that ' + M('\\frac{\\binom{n}{3}}{\\binom{n}{2}} = \\frac{n - 2}{3}') + '.', 2, 'Cancel the factorials'],
-        ['Find ' + M('n') + '.', 2, n],
-        ['Find the coefficient of ' + M('x^4') + '.', 1, C(n, 4)]
+      var n = ri(5, 10), r = ri(1, n - 2);
+      return Q('Pascal’s identity.', [
+        ['Verify that ' + M('\\binom{' + n + '}{' + r + '} + \\binom{' + n + '}{' + (r + 1) + '} = \\binom{' + (n + 1) + '}{' + (r + 1) + '}') + '.', 2, C(n, r) + ' + ' + C(n, r + 1) + ' = ' + C(n + 1, r + 1)],
+        ['Explain this using Pascal’s triangle.', 1, 'Each entry is the sum of the two above it'],
+        ['Explain it by counting: choose ' + (r + 1) + ' people from ' + (n + 1) + ', considering whether one particular person is chosen.', 2, 'If chosen, pick ' + r + ' more from ' + n + '; if not, pick ' + (r + 1) + ' from ' + n]
       ]);
     },
     function () {
-      var b = pick([2, 3]);
-      var e = [1, 4, 6, 4, 1], rat = 1 + 6 * b + b * b, irr = 4 + 4 * b;
-      return Q('Use the binomial expansion to find ' + M('(1 + \\sqrt{' + b + '})^4') + ' exactly.', [
-        ['Expand.', 3, M(rat + ' + ' + irr + '\\sqrt{' + b + '}')],
-        ['Hence find ' + M('(1 - \\sqrt{' + b + '})^4') + ' without further expansion.', 1, M(rat + ' - ' + irr + '\\sqrt{' + b + '}')],
-        ['Explain why ' + M('(1 + \\sqrt{' + b + '})^4 + (1 - \\sqrt{' + b + '})^4') + ' is an integer and find it.', 1, 2 * rat]
+      var r = ri(1, 5), n = 3 * r + 2;
+      return Q('In ' + M('(1 + x)^n') + ', the coefficients of ' + M('x^' + r) + ' and ' + M('x^{' + (r + 1) + '}') + ' are in the ratio ' + M('1 : 2') + '.', [
+        ['Show that ' + M('\\frac{\\binom{n}{r + 1}}{\\binom{n}{r}} = \\frac{n - r}{r + 1}') + '.', 2, 'Cancel factorials'],
+        ['Find ' + M('n') + '.', 2, M('\\frac{n - ' + r + '}{' + (r + 1) + '} = 2') + ', ' + M('n = ' + n)],
+        ['Check with the actual coefficients.', 1, C(n, r) + ' and ' + C(n, r + 1)]
       ]);
     },
     function () {
-      var n = ri(5, 10);
-      return Q('Binomial coefficients.', [
-        ['By choosing a value of ' + M('x') + ' in ' + M('(1 + x)^{' + n + '}') + ', show that ' + M('\\sum_{r = 0}^{' + n + '}\\binom{' + n + '}{r} = 2^{' + n + '}') + '.', 2, M('x = 1')],
-        ['Explain this result by counting subsets of a set of ' + n + ' objects.', 2, 'Each subset size ' + M('r') + ' gives ' + M('\\binom{' + n + '}{r}') + ' subsets; in total each object is in or out: ' + M('2^{' + n + '}')],
-        ['Find ' + M('\\sum_{r = 0}^{' + n + '}\\binom{' + n + '}{r}2^r') + '.', 1, M('3^{' + n + '} = ' + Math.pow(3, n))]
+      var b = pick([2, 3]), n = pick([4, 5]);
+      var A = 0, B = 0; for (var r = 0; r <= n; r++) { var t = C(n, r) * Math.pow(b, Math.floor(r / 2)); if (r % 2) B += t; else A += t; }
+      return Q('Expand ' + M('(1 + \\sqrt{' + b + '})^' + n) + '.', [
+        ['Give the answer in the form ' + M('a + b\\sqrt{' + b + '}') + '.', 3, M(A + ' + ' + B + '\\sqrt{' + b + '}')],
+        ['Write down ' + M('(1 - \\sqrt{' + b + '})^' + n) + ' and explain.', 1, M(A + ' - ' + B + '\\sqrt{' + b + '}') + ': odd powers change sign'],
+        ['Hence show ' + M('(1 + \\sqrt{' + b + '})^' + n + '(1 - \\sqrt{' + b + '})^' + n) + ' is an integer, and find it.', 2, M(A + '^2 - ' + b + ' \\times ' + B + '^2 = ' + (A * A - b * B * B)) + ' = ' + M('(1 - ' + b + ')^' + n)]
       ]);
     },
     function () {
-      var a = pick([2, 3]), n = ri(4, 8), A = a * a * C(n, 2);
-      return Q('The coefficient of ' + M('x^2') + ' in ' + M('(1 + ' + a + 'x)^n') + ' is ' + A + '.', [
-        ['Show that ' + M('n(n - 1) = ' + 2 * A / (a * a)) + '.', 2, M(F(a * a, 2) + 'n(n - 1) = ' + A)],
-        ['Find ' + M('n') + ', explaining why there is only one answer.', 2, M('n = ' + n) + '; the other root ' + (1 - n) + ' is negative'],
+      var n = ri(5, 8), a = pick([2, 3]);
+      return Q(M('(1 + ax)^n = 1 + ' + n * a + 'x + ' + C(n, 2) * a * a + 'x^2 + \\cdots') + '.', [
+        ['Form two equations.', 2, M('na = ' + n * a) + ', ' + M('\\frac{n(n - 1)}{2}a^2 = ' + C(n, 2) * a * a)],
+        ['Divide to eliminate ' + M('n') + ' and find ' + M('a') + ', then ' + M('n') + '.', 3, M('(n - 1)a = ' + (n - 1) * a) + ', so ' + M('a = ' + a + ',\\ n = ' + n)],
         ['Find the coefficient of ' + M('x^3') + '.', 1, C(n, 3) * a * a * a]
       ]);
     },
     function () {
-      var x = pick([0.01, 0.02, 0.03]);
-      var approx = 1 - 10 * x + 45 * x * x, act = Math.pow(1 - x, 10);
-      return Q('Estimate ' + M('(' + (1 - x).toFixed(2) + ')^{10}') + '.', [
-        ['Write the first three terms of ' + M('(1 - x)^{10}') + '.', 1, M('1 - 10x + 45x^2')],
-        ['Use them with a suitable value of ' + M('x') + '.', 2, approx.toFixed(4) + ' (with ' + M('x = ' + x) + ')'],
-        ['Find the percentage error compared with the true value.', 2, sf3(100 * (approx - act) / act) + '%']
+      var n = ri(6, 10);
+      return Q('Consider ' + M('(2 + x)^' + n) + '.', [
+        ['Find the first three terms.', 2, M(Math.pow(2, n) + ' + ' + n * Math.pow(2, n - 1) + 'x + ' + C(n, 2) * Math.pow(2, n - 2) + 'x^2')],
+        ['Use them to estimate ' + M('2.01^' + n) + '.', 2, (Math.pow(2, n) + n * Math.pow(2, n - 1) * 0.01 + C(n, 2) * Math.pow(2, n - 2) * 0.0001).toFixed(4)],
+        ['Explain why ' + M('(2 + x)^' + n) + ' can be written as ' + M('2^' + n + '\\left(1 + \\frac{x}{2}\\right)^' + n) + ', and why this helps for approximations.', 2, 'Take out the factor 2; the bracket then starts at 1 and the small term is ' + M('\\frac{x}{2}')]
       ]);
     }
   ]);

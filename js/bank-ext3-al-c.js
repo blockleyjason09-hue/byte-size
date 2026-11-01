@@ -10,365 +10,361 @@
   function xm(v) { return v ? '(x' + S(-v) + ')' : 'x'; }
   function c1(c, v) { return c === 1 ? v : c === -1 ? '-' + v : c + v; }
   function P(x, y) { return '(' + x + ', ' + y + ')'; }
-  function vij(a, b) { return (a ? c1(a, '\\mathbf{i}') : '') + (b ? (a ? (b < 0 ? ' - ' + c1(-b, '\\mathbf{j}') : ' + ' + c1(b, '\\mathbf{j}')) : c1(b, '\\mathbf{j}')) : (a ? '' : '\\mathbf{0}')); }
+  function cv(a, b) { return '\\begin{pmatrix}' + a + '\\\\' + b + '\\end{pmatrix}'; }
+  function ij(a, b) { var s = a ? c1(a, '\\mathbf{i}') : ''; if (b) s += (s ? (b < 0 ? ' - ' + c1(-b, '\\mathbf{j}') : ' + ' + c1(b, '\\mathbf{j}')) : c1(b, '\\mathbf{j}')); return s || '\\mathbf{0}'; }
+  function sq(n) { var r = Math.round(Math.sqrt(n)); return r * r === n; }
   function rt(n) { var o = 1, i = n; for (var k = 2; k * k <= i; k++) while (i % (k * k) === 0) { o *= k; i /= k * k; } return i === 1 ? String(o) : (o === 1 ? '' : o) + '\\sqrt{' + i + '}'; }
-  var R = Math.PI / 180, D = 180 / Math.PI;
-  function deg(x) { return sf3(x) + '°'; }
+  var D = Math.PI / 180;
+  function norm(a) { a = ((a % 360) + 360) % 360; return a; }
+  function list(a) { return a.map(function (v) { return sf3(v) + '°'; }).join(', '); }
 
   X('al-trig', [
     function () {
-      return Q('Solve ' + M('2\\cos^2 x = 1 + \\sin x') + ' for ' + M('0° \\le x \\le 360°') + '.', [
-        ['Use ' + M('\\cos^2 x = 1 - \\sin^2 x') + ' to form a quadratic in ' + M('\\sin x') + '.', 2, M('2\\sin^2 x + \\sin x - 1 = 0')],
-        ['Solve it.', 3, M('\\sin x = \\frac{1}{2}') + ' or ' + M('-1') + ': ' + M('x = 30°, 150°, 270°')],
-        ['Explain why it is better to replace ' + M('\\cos^2 x') + ' than ' + M('\\sin x') + '.', 1, 'Replacing ' + M('\\sin x') + ' would need a square root of ' + M('1 - \\cos^2 x') + ', introducing ' + M('\\pm')]
+      var k = pick([0.5, 0.3, 0.7, -0.4]), a = pick([10, 20, 30, 40]);
+      var b = Math.asin(k) / D, base = [b, 180 - b], sols = [];
+      for (var n = -2; n <= 3; n++) base.forEach(function (t) { var x = (t + 360 * n - a) / 2; if (x >= 0 && x <= 360 + 1e-9) sols.push(x); });
+      sols = sols.filter(function (v, i, A) { return A.findIndex(function (w) { return Math.abs(w - v) < 1e-6; }) === i; }).sort(function (p, q) { return p - q; });
+      return Q('Solve ' + M('\\sin(2x + ' + a + '°) = ' + k) + ' for ' + M('0° \\le x \\le 360°') + '.', [
+        ['State the interval for ' + M('2x + ' + a + '°') + '.', 1, M(a + '° \\le 2x + ' + a + '° \\le ' + (720 + a) + '°')],
+        ['Find all solutions.', 4, list(sols)],
+        ['Explain why there are ' + sols.length + ' solutions rather than 2.', 1, 'The interval for ' + M('2x + ' + a + '°') + ' covers two full cycles']
       ]);
     },
     function () {
-      var a = pick([10, 20, 30, 40]);
-      var sols = []; for (var k = -2; k <= 4; k++) { [30, 150].forEach(function (b) { var x = (b + 360 * k - a) / 2; if (x >= 0 && x <= 360) sols.push(x); }); }
-      sols.sort(function (p, q) { return p - q; });
-      return Q('Solve ' + M('\\sin(2x + ' + a + '°) = \\frac{1}{2}') + ' for ' + M('0° \\le x \\le 360°') + '.', [
-        ['Find the range of values of ' + M('2x + ' + a + '°') + '.', 1, M(a + '° \\le 2x + ' + a + '° \\le ' + (720 + a) + '°')],
-        ['Find all the solutions.', 4, sols.map(function (v) { return num(v) + '°'; }).join(', ')],
-        ['Explain why there are ' + sols.length + ' solutions rather than 2.', 1, 'The doubled angle goes round twice']
+      var k = pick([3, 1]);
+      return Q('Prove that ' + M('\\frac{1 - \\cos^2 x}{1 - \\sin^2 x} \\equiv \\tan^2 x') + ', and use it.', [
+        ['Prove the identity.', 2, M('\\frac{\\sin^2 x}{\\cos^2 x}')],
+        ['Hence solve ' + M('\\frac{1 - \\cos^2 x}{1 - \\sin^2 x} = ' + k) + ' for ' + M('0° \\le x \\le 360°') + '.', 3, k === 3 ? '60°, 120°, 240°, 300°' : '45°, 135°, 225°, 315°'],
+        ['For which values of ' + M('x') + ' is the identity not valid?', 1, 'Where ' + M('\\cos x = 0') + ': 90°, 270°']
       ]);
     },
     function () {
-      return Q('Prove the identity ' + M('\\frac{\\sin x}{1 - \\cos x} - \\frac{\\sin x}{1 + \\cos x} \\equiv \\frac{2}{\\tan x}') + '.', [
-        ['Combine the fractions.', 2, M('\\frac{2\\sin x\\cos x}{1 - \\cos^2 x}')],
-        ['Complete the proof.', 2, M('= \\frac{2\\sin x\\cos x}{\\sin^2 x} = \\frac{2\\cos x}{\\sin x}')],
-        ['Hence solve ' + M('\\frac{\\sin x}{1 - \\cos x} - \\frac{\\sin x}{1 + \\cos x} = 2') + ' for ' + M('0° < x < 360°') + '.', 2, M('\\tan x = 1') + ': 45°, 225°']
+      return Q('Solve ' + M('2\\cos^2 x + 3\\sin x - 3 = 0') + ' for ' + M('0° \\le x \\le 360°') + '.', [
+        ['Use an identity to write it as a quadratic in ' + M('\\sin x') + '.', 2, M('2\\sin^2 x - 3\\sin x + 1 = 0')],
+        ['Solve.', 3, '30°, 90°, 150°'],
+        ['Explain why there are three solutions and not four.', 1, M('\\sin x = 1') + ' has only one solution in the range']
       ]);
     },
     function () {
       var a = ri(6, 10), b = ri(a + 1, a + 4), A = ri(25, 35);
-      var s = b * Math.sin(A * R) / a, B1 = Math.asin(s) * D, B2 = 180 - B1;
-      var c1v = a * Math.sin((180 - A - B1) * R) / Math.sin(A * R), c2v = a * Math.sin((180 - A - B2) * R) / Math.sin(A * R);
-      return Q('In triangle ' + M('ABC') + ', ' + M('BC = ' + a) + ' cm, ' + M('AC = ' + b) + ' cm and angle ' + M('BAC = ' + A + '°') + '.', [
-        ['Show that there are two possible triangles.', 3, 'Angle ' + M('B') + ' = ' + deg(B1) + ' or ' + deg(B2) + ' (both give a positive third angle)'],
-        ['Find the difference between the two possible areas.', 3, M(sf3(Math.abs(0.5 * b * c1v - 0.5 * b * c2v) * Math.sin(A * R))) + ' cm²'],
-        ['For which lengths of ' + M('BC') + ' would there be exactly one triangle?', 2, M('BC = ' + sf3(b * Math.sin(A * R))) + ' (right angle) or ' + M('BC \\ge ' + b)]
+      var s = b * Math.sin(A * D) / a, B1 = Math.asin(s) / D, B2 = 180 - B1;
+      var c1v = a * Math.sin((180 - A - B1) * D) / Math.sin(A * D), c2v = a * Math.sin((180 - A - B2) * D) / Math.sin(A * D);
+      return Q('In triangle ' + M('ABC') + ', ' + M('BC = ' + a) + ' cm, ' + M('AC = ' + b) + ' cm and angle ' + M('A = ' + A + '°') + '.', [
+        ['Find the two possible values of angle ' + M('B') + '.', 3, M(sf3(B1) + '°') + ' and ' + M(sf3(B2) + '°')],
+        ['Find the two possible lengths of ' + M('AB') + '.', 3, M(sf3(c1v)) + ' cm and ' + M(sf3(c2v)) + ' cm'],
+        ['Find the condition on ' + M('BC') + ' for there to be two triangles.', 2, M(sf3(b * Math.sin(A * D)) + ' < BC < ' + b)]
       ]);
     },
     function () {
-      var a = ri(2, 5), b = pick([2, 3, 4]), c = ri(-2, 3);
-      return Q('Consider ' + M('y = ' + a + '\\sin(' + b + 'x)' + S0(c)) + ' for ' + M('0° \\le x \\le 360°') + '.', [
-        ['State the maximum and minimum values and the period.', 2, (a + c) + ', ' + (c - a) + ', ' + 360 / b + '°'],
-        ['How many solutions does ' + M('y = ' + c) + ' have in this range?', 2, 2 * b + 1],
-        ['Find the first positive ' + M('x') + ' at which ' + M('y') + ' is at its maximum.', 1, num(90 / b) + '°']
+      var a = ri(2, 5), b = ri(-3, 3), c = ri(-6, 6);
+      var n = Math.abs(c - b) < a ? 2 : Math.abs(c - b) === a ? 1 : 0;
+      return Q('Consider ' + M('y = ' + a + '\\sin x' + S0(b)) + ' for ' + M('0° \\le x < 360°') + '.', [
+        ['State the maximum and minimum values.', 1, (a + b) + ' and ' + (b - a)],
+        ['How many solutions does ' + M(a + '\\sin x' + S0(b) + ' = ' + c) + ' have?', 2, n],
+        ['Find the range of values of ' + M('k') + ' for which ' + M(a + '\\sin x' + S0(b) + ' = k') + ' has exactly two solutions.', 2, M((b - a) + ' < k < ' + (a + b))]
       ]);
     },
     function () {
-      var p = ri(1, 5), q = ri(1, 5);
-      var b = Math.atan(q / p) * D;
-      return Q('Solve ' + M(c1(p, '\\sin x') + ' = ' + c1(q, '\\cos x')) + ' for ' + M('0° \\le x \\le 360°') + '.', [
-        ['Write as an equation in ' + M('\\tan x') + ', justifying the division.', 2, M('\\tan x = ' + F(q, p)) + '; ' + M('\\cos x = 0') + ' is not a solution as then ' + M('\\sin x = \\pm 1')],
-        ['Solve.', 2, deg(b) + ', ' + deg(b + 180)],
-        ['Find the exact value of ' + M('\\sin x') + ' at the smaller solution.', 2, M('\\frac{' + q + '}{\\sqrt{' + (p * p + q * q) + '}}')]
+      return Q('Trigonometric identities.', [
+        ['Prove ' + M('(\\sin x + \\cos x)^2 + (\\sin x - \\cos x)^2 \\equiv 2') + '.', 2, 'The cross terms cancel; ' + M('2(\\sin^2 x + \\cos^2 x)')],
+        ['Prove ' + M('\\tan x + \\frac{1}{\\tan x} \\equiv \\frac{1}{\\sin x\\cos x}') + '.', 3, 'Common denominator ' + M('\\sin x\\cos x') + '; numerator ' + M('\\sin^2 x + \\cos^2 x')],
+        ['Hence solve ' + M('\\tan x + \\frac{1}{\\tan x} = 4') + ' for ' + M('0° < x < 180°') + '.', 3, M('\\tan^2 x - 4\\tan x + 1 = 0') + ', ' + M('\\tan x = 2 \\pm \\sqrt{3}') + ': 15°, 75°']
       ]);
     },
     function () {
-      var d1 = ri(5, 15), d2 = ri(5, 15), b1 = ri(20, 80), b2 = b1 + ri(70, 140);
-      var x = d1 * Math.sin(b1 * R) + d2 * Math.sin(b2 * R), y = d1 * Math.cos(b1 * R) + d2 * Math.cos(b2 * R);
-      var ang = 180 - (b2 - b1);
-      return Q('A ship sails ' + d1 + ' km on a bearing of ' + b1 + '°, then ' + d2 + ' km on a bearing of ' + b2 + '°.', [
-        ['Find the angle between the two legs at the turning point.', 2, ang + '°'],
-        ['Find the distance from the start.', 3, M(sf3(Math.hypot(x, y))) + ' km'],
-        ['Find the bearing of the finish from the start.', 2, deg(((Math.atan2(x, y) * D) + 360) % 360)]
+      var a = pick([20, 30, 40, 50]);
+      return Q('Solve ' + M('\\tan(x - ' + a + '°) = \\sqrt{3}') + ' for ' + M('-180° \\le x \\le 180°') + '.', [
+        ['State the interval for ' + M('x - ' + a + '°') + '.', 1, M((-180 - a) + '° \\le x - ' + a + '° \\le ' + (180 - a) + '°')],
+        ['Find all solutions.', 3, list([60 + a, -120 + a].filter(function (v) { return v >= -180 && v <= 180; }).sort(function (p, q) { return p - q; }))],
+        ['Explain why solutions of a tan equation are 180° apart.', 1, 'The tangent function has period 180°']
       ]);
     },
     function () {
-      var k = pick([0.2, 0.4, 0.6, 0.8, -0.3, -0.7]), b = Math.acos(k) * D;
-      var s1 = 30 + b, s2 = 30 + 360 - b;
-      var sols = [s1, s2, s2 - 360].filter(function (v) { return v >= 0 && v <= 360; }).sort(function (p, q) { return p - q; });
-      return Q('Solve ' + M('\\cos(x - 30°) = ' + k) + ' for ' + M('0° \\le x \\le 360°') + '.', [
-        ['State the range for ' + M('x - 30°') + '.', 1, M('-30° \\le x - 30° \\le 330°')],
-        ['Find all solutions.', 3, sols.map(deg).join(', ')],
-        ['Describe the transformation from ' + M('y = \\cos x') + ' to ' + M('y = \\cos(x - 30°)') + '.', 1, 'Translation 30° to the right']
+      var b = ri(5, 10), c = ri(5, 10), Ar = ri(10, Math.floor(b * c / 2) - 2);
+      var s = 2 * Ar / (b * c), A1 = Math.asin(s) / D, A2 = 180 - A1;
+      var a1 = Math.sqrt(b * b + c * c - 2 * b * c * Math.cos(A1 * D)), a2 = Math.sqrt(b * b + c * c - 2 * b * c * Math.cos(A2 * D));
+      return Q('A triangle has two sides ' + b + ' cm and ' + c + ' cm, and area ' + Ar + ' cm².', [
+        ['Find the two possible values of the angle between the given sides.', 3, M(sf3(A1) + '°') + ' and ' + M(sf3(A2) + '°')],
+        ['Find the two possible lengths of the third side.', 3, M(sf3(a1)) + ' cm and ' + M(sf3(a2)) + ' cm'],
+        ['What is the largest possible area?', 1, num(b * c / 2) + ' cm² (at 90°)']
       ]);
     },
     function () {
-      return Q('Identities.', [
-        ['Prove that ' + M('(\\sin x + \\cos x)^2 + (\\sin x - \\cos x)^2 \\equiv 2') + '.', 2, 'The cross terms cancel; ' + M('2(\\sin^2 x + \\cos^2 x) = 2')],
-        ['Prove that ' + M('\\tan x + \\frac{1}{\\tan x} \\equiv \\frac{1}{\\sin x\\cos x}') + '.', 3, M('\\frac{\\sin^2 x + \\cos^2 x}{\\sin x\\cos x}')],
-        ['Hence show ' + M('\\tan x + \\frac{1}{\\tan x}') + ' is never between ' + M('-2') + ' and 2.', 2, M('|\\sin x\\cos x| \\le \\frac{1}{2}') + ' (from the first identity, ' + M('(\\sin x - \\cos x)^2 \\ge 0') + ')']
+      return Q('Solve ' + M('3\\tan x = 2\\cos x') + ' for ' + M('0° \\le x \\le 360°') + '.', [
+        ['Show that ' + M('2\\sin^2 x + 3\\sin x - 2 = 0') + '.', 3, 'Multiply by ' + M('\\cos x') + ' and use ' + M('\\cos^2 x = 1 - \\sin^2 x')],
+        ['Solve, explaining why one factor gives no solutions.', 3, '30°, 150°; ' + M('\\sin x = -2') + ' is impossible'],
+        ['Explain why multiplying by ' + M('\\cos x') + ' is safe here.', 1, M('\\cos x = 0') + ' would leave ' + M('\\tan x') + ' without a value, so those values were never solutions']
       ]);
     },
     function () {
-      var a = ri(3, 8), b = ri(3, 8), c = ri(Math.abs(a - b) + 2, a + b - 2);
-      var A = Math.acos((b * b + c * c - a * a) / (2 * b * c)) * D;
-      var area = 0.5 * b * c * Math.sin(A * R);
-      return Q('A triangle has sides ' + a + ', ' + b + ' and ' + c + ' cm.', [
-        ['Find the angle opposite the side of length ' + a + ' cm.', 2, deg(A)],
-        ['Find the area.', 2, M(sf3(area)) + ' cm²'],
-        ['Find the radius of the circle through the three vertices, using ' + M('\\frac{a}{\\sin A} = 2R') + '.', 2, M(sf3(a / (2 * Math.sin(A * R)))) + ' cm']
+      var a = pick([60, 90, 120]);
+      var x1 = a / 2, x2 = a / 2 + 180;
+      return Q('The graphs ' + M('y = \\cos x') + ' and ' + M('y = \\cos(x - ' + a + '°)') + ' are drawn for ' + M('0° \\le x \\le 360°') + '.', [
+        ['Describe the transformation from the first to the second.', 1, 'Translation by ' + a + '° in the positive ' + M('x') + ' direction'],
+        ['Find where the graphs cross, explaining your method.', 4, list([x1, x2]) + ': by symmetry, halfway between matching points, and 180° later'],
+        ['Find the ' + M('y') + '-coordinates of these points.', 1, sf3(Math.cos(x1 * D)) + ' and ' + sf3(Math.cos(x2 * D))]
       ]);
     }
   ]);
 
   X('al-vectors', [
     function () {
-      var a = [ri(-3, 3), ri(-3, 3)], b = [ri(-3, 5), ri(-3, 5)], c = [ri(-3, 5), ri(-3, 5)];
-      var d = [a[0] + c[0] - b[0], a[1] + c[1] - b[1]];
-      return Q(M('ABCD') + ' is a parallelogram with ' + M('A' + P(a[0], a[1])) + ', ' + M('B' + P(b[0], b[1])) + ', ' + M('C' + P(c[0], c[1])) + '.', [
-        ['Find ' + M('\\vec{AB}') + ' and hence the position of ' + M('D') + '.', 3, M('\\vec{AB} = ' + vij(b[0] - a[0], b[1] - a[1])) + ', ' + M('D' + P(d[0], d[1]))],
-        ['Find the lengths of the diagonals.', 2, M(sf3(Math.hypot(c[0] - a[0], c[1] - a[1]))) + ' and ' + M(sf3(Math.hypot(d[0] - b[0], d[1] - b[1])))],
-        ['If the diagonals were equal, what shape would it be?', 1, 'A rectangle']
+      var t = pick([[3, 4], [5, 12], [8, 6], [-3, 4], [6, -8], [-5, -12]]), a = t[0], b = t[1], m = Math.sqrt(a * a + b * b), L = m * pick([2, 3]);
+      return Q('The vector ' + M('\\mathbf{v} = ' + ij(a, b)) + '.', [
+        ['Find ' + M('|\\mathbf{v}|') + ' and the unit vector in the direction of ' + M('\\mathbf{v}') + '.', 2, m + '; ' + M(F(a, m) + '\\mathbf{i}' + (b < 0 ? ' - ' + F(-b, m) : ' + ' + F(b, m)) + '\\mathbf{j}')],
+        ['Find the angle ' + M('\\mathbf{v}') + ' makes with ' + M('\\mathbf{i}') + '.', 2, M(sf3(norm(Math.atan2(b, a) / D)) + '°') + ' measured anticlockwise'],
+        ['Find a vector of magnitude ' + L + ' in the direction opposite to ' + M('\\mathbf{v}') + '.', 1, M(ij(-L * a / m, -L * b / m))]
       ]);
     },
     function () {
-      var v = pick([[3, 4], [5, 12], [8, 15], [-3, 4], [6, -8], [-5, -12]]), m = Math.hypot(v[0], v[1]);
-      return Q('Let ' + M('\\mathbf{v} = ' + vij(v[0], v[1])) + '.', [
-        ['Find ' + M('|\\mathbf{v}|') + ' and a unit vector in the direction of ' + M('\\mathbf{v}') + '.', 2, m + '; ' + M('\\frac{1}{' + m + '}(' + vij(v[0], v[1]) + ')')],
-        ['Find the angle ' + M('\\mathbf{v}') + ' makes with ' + M('\\mathbf{i}') + '.', 2, deg(Math.atan2(v[1], v[0]) * D)],
-        ['Find a vector of magnitude 26 in the opposite direction.', 1, M(F(-26 * v[0], m) + '\\mathbf{i} ' + (v[1] > 0 ? '-' : '+') + ' ' + F(26 * Math.abs(v[1]), m) + '\\mathbf{j}')]
+      var A = [nz(-4, 4), nz(-4, 4)], d = [3 * nz(-2, 2), 3 * nz(-2, 2)], m = ri(1, 2);
+      var Pp = [A[0] + d[0] * m / 3, A[1] + d[1] * m / 3];
+      return Q('Points ' + M('A') + ' and ' + M('B') + ' have position vectors ' + M(ij(A[0], A[1])) + ' and ' + M(ij(A[0] + d[0], A[1] + d[1])) + '.', [
+        ['Find ' + M('\\vec{AB}') + ' and ' + M('|\\vec{AB}|') + '.', 2, M(ij(d[0], d[1])) + ', ' + M(rt(d[0] * d[0] + d[1] * d[1]))],
+        ['Find the position vector of ' + M('P') + ' on ' + M('AB') + ' with ' + M('AP : PB = ' + m + ' : ' + (3 - m)) + '.', 2, M(ij(Pp[0], Pp[1]))],
+        ['Find the position vector of ' + M('Q') + ' with ' + M('\\vec{AQ} = -\\frac{1}{3}\\vec{AB}') + ' and describe where ' + M('Q') + ' lies.', 2, M(ij(A[0] - d[0] / 3, A[1] - d[1] / 3)) + ': on the line ' + M('AB') + ' extended beyond ' + M('A')]
       ]);
     },
     function () {
-      var k = ri(2, 4);
-      return Q(M('\\vec{OA} = \\mathbf{a}') + ' and ' + M('\\vec{OB} = \\mathbf{b}') + '. ' + M('C') + ' is such that ' + M('\\vec{OC} = ' + k + '\\mathbf{b} - ' + (k - 1) + '\\mathbf{a}').replace(' 1\\mathbf{a}', ' \\mathbf{a}') + '.', [
-        ['Find ' + M('\\vec{AB}') + ' and ' + M('\\vec{AC}') + '.', 2, M('\\mathbf{b} - \\mathbf{a}') + ', ' + M(k + '(\\mathbf{b} - \\mathbf{a})')],
-        ['Prove that ' + M('A, B, C') + ' are collinear and find ' + M('AB : BC') + '.', 3, M('\\vec{AC} = ' + k + '\\vec{AB}') + '; ' + M('1 : ' + (k - 1))]
+      var A = [ri(-3, 0), ri(-3, 0)], B = [ri(1, 4), ri(-2, 1)], Cc = [ri(0, 4), ri(2, 5)];
+      return Q('Three vertices of a parallelogram are ' + M('A' + P(A[0], A[1])) + ', ' + M('B' + P(B[0], B[1])) + ' and ' + M('C' + P(Cc[0], Cc[1])) + '.', [
+        ['If the parallelogram is ' + M('ABCD') + ', find ' + M('D') + ' using ' + M('\\vec{AD} = \\vec{BC}') + '.', 2, M(P(A[0] + Cc[0] - B[0], A[1] + Cc[1] - B[1]))],
+        ['Find the other two possible positions for the fourth vertex.', 3, M(P(A[0] + B[0] - Cc[0], A[1] + B[1] - Cc[1])) + ' and ' + M(P(B[0] + Cc[0] - A[0], B[1] + Cc[1] - A[1]))],
+        ['Explain why there are three possibilities.', 1, 'Any one of the three given points could be opposite the missing vertex']
       ]);
     },
     function () {
-      var x0 = ri(-8, -2), y0 = ri(-6, 6), u = ri(1, 3), w = ri(-2, 2);
-      var t = -x0 / u;
-      return Q('A boat starts at ' + M(vij(x0, y0)) + ' km and moves with velocity ' + M(vij(u, w)) + ' km/h, relative to a port at the origin.', [
-        ['Write its position after ' + M('t') + ' hours.', 1, M('(' + x0 + ' + ' + c1(u, 't') + ')\\mathbf{i} + (' + y0 + (w ? S(w).replace(/ 1$/, ' ') + 't' : '') + ')\\mathbf{j}')],
-        ['When is it due north or due south of the port, and how far away is it then?', 3, M('t = ' + sf3(t)) + ' h, ' + sf3(Math.abs(y0 + w * t)) + ' km'],
-        ['Find its speed.', 1, M(sf3(Math.hypot(u, w))) + ' km/h']
+      var f1 = [ri(1, 6), ri(-4, 4)], f2 = [ri(-5, 2), ri(1, 6)];
+      var r = [f1[0] + f2[0], f1[1] + f2[1]]; if (!r[0] && !r[1]) { f2[1]++; r[1]++; }
+      return Q('Forces ' + M('\\mathbf{F}_1 = (' + ij(f1[0], f1[1]) + ')') + ' N and ' + M('\\mathbf{F}_2 = (' + ij(f2[0], f2[1]) + ')') + ' N act on a particle.', [
+        ['Find the resultant and its magnitude.', 2, M(ij(r[0], r[1])) + ' N, ' + M(sf3(Math.hypot(r[0], r[1]))) + ' N'],
+        ['Find the third force needed for equilibrium.', 1, M('(' + ij(-r[0], -r[1]) + ')') + ' N'],
+        ['Find the angle between the resultant and ' + M('\\mathbf{j}') + '.', 2, M(sf3(Math.acos(r[1] / Math.hypot(r[0], r[1])) / D) + '°')]
       ]);
     },
     function () {
-      var a, b, c; do { a = [ri(-3, 1), ri(-3, 1)]; b = [ri(2, 6), ri(-3, 3)]; c = [ri(-2, 4), ri(3, 7)]; } while ((b[0] - a[0]) * (c[1] - a[1]) === (b[1] - a[1]) * (c[0] - a[0]));
-      var AB = Math.hypot(b[0] - a[0], b[1] - a[1]), AC = Math.hypot(c[0] - a[0], c[1] - a[1]), BC = Math.hypot(c[0] - b[0], c[1] - b[1]);
-      var A = Math.acos((AB * AB + AC * AC - BC * BC) / (2 * AB * AC)) * D;
-      return Q('Triangle ' + M('ABC') + ' has ' + M('A' + P(a[0], a[1]) + ', B' + P(b[0], b[1]) + ', C' + P(c[0], c[1])) + '.', [
-        ['Find ' + M('|\\vec{AB}|, |\\vec{AC}|, |\\vec{BC}|') + '.', 3, [AB, AC, BC].map(sf3).join(', ')],
-        ['Find angle ' + M('BAC') + '.', 2, deg(A)],
-        ['Find the area.', 1, sf3(0.5 * AB * AC * Math.sin(A * R))]
+      var a = [ri(1, 5), ri(-3, 3)], b; do { b = [ri(-3, 3), ri(1, 5)]; } while (a[0] * b[1] === a[1] * b[0]);
+      var la = Math.hypot(a[0], a[1]), lb = Math.hypot(b[0], b[1]), dx = a[0] - b[0], dy = a[1] - b[1];
+      var th = Math.acos(Math.max(-1, Math.min(1, (la * la + lb * lb - dx * dx - dy * dy) / (2 * la * lb)))) / D;
+      return Q(M('\\vec{OA} = ' + ij(a[0], a[1])) + ' and ' + M('\\vec{OB} = ' + ij(b[0], b[1])) + '.', [
+        ['Find ' + M('|\\vec{OA}|') + ', ' + M('|\\vec{OB}|') + ' and ' + M('|\\vec{AB}|') + '.', 3, M(rt(a[0] * a[0] + a[1] * a[1]) + ', ' + rt(b[0] * b[0] + b[1] * b[1]) + ', ' + rt(dx * dx + dy * dy))],
+        ['Use the cosine rule to find angle ' + M('AOB') + '.', 2, M(sf3(th) + '°')],
+        ['Find the area of triangle ' + M('OAB') + '.', 2, num(Math.abs(a[0] * b[1] - a[1] * b[0]) / 2)]
       ]);
     },
     function () {
-      var t = pick([[3, 4, 5], [5, 12, 13], [6, 8, 10], [8, 15, 17]]);
-      return Q('The vector ' + M(t[0] + '\\mathbf{i} + p\\mathbf{j}') + ' has magnitude ' + t[2] + '.', [
-        ['Find the possible values of ' + M('p') + '.', 2, M('p = \\pm ' + t[1])],
-        ['For the positive value, find the angle with ' + M('\\mathbf{j}') + '.', 2, deg(Math.atan(t[0] / t[1]) * D)],
-        ['Find ' + M('q') + ' if ' + M(t[0] + '\\mathbf{i} + ' + t[1] + '\\mathbf{j}') + ' is parallel to ' + M('q\\mathbf{i} + 2\\mathbf{j}') + '.', 2, M('q = ' + F(2 * t[0], t[1]))]
+      var a = nz(-3, 3), b = nz(-3, 3), k = ri(2, 4);
+      return Q(M('\\vec{OA} = \\mathbf{a}') + ', ' + M('\\vec{OB} = \\mathbf{b}') + ' and ' + M('\\vec{OC} = ' + (1 - k) + '\\mathbf{a} + ' + k + '\\mathbf{b}') + '.', [
+        ['Find ' + M('\\vec{AC}') + ' in terms of ' + M('\\mathbf{a}') + ' and ' + M('\\mathbf{b}') + '.', 2, M(k + '(\\mathbf{b} - \\mathbf{a})')],
+        ['Prove that ' + M('A, B, C') + ' are collinear and find ' + M('AB : BC') + '.', 3, M('\\vec{AC} = ' + k + '\\vec{AB}') + '; ' + M('1 : ' + (k - 1))],
+        ['Explain why any point ' + M('(1 - t)\\mathbf{a} + t\\mathbf{b}') + ' lies on the line ' + M('AB') + '.', 1, 'It equals ' + M('\\mathbf{a} + t(\\mathbf{b} - \\mathbf{a})')]
       ]);
     },
     function () {
-      var l = nz(-3, 3), m = nz(-3, 3), a = [ri(1, 3), nz(-2, 2)], b = [nz(-2, 2), ri(1, 3)];
-      if (a[0] * b[1] === a[1] * b[0]) b[1]++;
-      var c = [l * a[0] + m * b[0], l * a[1] + m * b[1]];
-      return Q(M('\\mathbf{a} = ' + vij(a[0], a[1])) + ', ' + M('\\mathbf{b} = ' + vij(b[0], b[1])) + ', ' + M('\\mathbf{c} = ' + vij(c[0], c[1])) + '.', [
-        ['Find ' + M('\\lambda') + ' and ' + M('\\mu') + ' such that ' + M('\\lambda\\mathbf{a} + \\mu\\mathbf{b} = \\mathbf{c}') + '.', 3, M('\\lambda = ' + l + ',\\ \\mu = ' + m)],
-        ['Explain why this is always possible when ' + M('\\mathbf{a}') + ' and ' + M('\\mathbf{b}') + ' are not parallel.', 1, 'The two equations have a unique solution; non-parallel vectors span the plane']
+      var p0 = [ri(-10, -2), ri(-8, 0)], v = [ri(1, 4), ri(1, 4)];
+      var tN = -p0[0] / v[0];
+      return Q('A boat starts at ' + M(ij(p0[0], p0[1])) + ' km relative to a harbour ' + M('O') + ' and moves with velocity ' + M(ij(v[0], v[1])) + ' km/h.', [
+        ['Write its position vector after ' + M('t') + ' hours.', 1, M('(' + p0[0] + ' + ' + c1(v[0], 't') + ')\\mathbf{i} + (' + p0[1] + ' + ' + c1(v[1], 't') + ')\\mathbf{j}').replace(/\(0 \+ /g, '(')],
+        ['Find when it is due north of the harbour and how far away it is then.', 3, M('t = ' + sf3(tN)) + ' h, ' + M(sf3(Math.abs(p0[1] + v[1] * tN))) + ' km'],
+        ['Find its speed.', 1, M(sf3(Math.hypot(v[0], v[1]))) + ' km/h']
       ]);
     },
     function () {
-      var p = [ri(0, 4), ri(0, 4)], u = [ri(1, 3), ri(-1, 2)], q = [ri(8, 14), ri(-2, 6)], w = [ri(-2, 0), ri(0, 3)];
-      var d0 = [q[0] - p[0], q[1] - p[1]], dv = [w[0] - u[0], w[1] - u[1]];
-      var tm = -(d0[0] * dv[0] + d0[1] * dv[1]) / (dv[0] * dv[0] + dv[1] * dv[1]);
-      if (!(tm > 0)) tm = 0;
-      var dm = Math.hypot(d0[0] + tm * dv[0], d0[1] + tm * dv[1]);
-      return Q('Ship ' + M('P') + ' is at ' + M(vij(p[0], p[1]) || '\\mathbf{0}') + ' with velocity ' + M(vij(u[0], u[1])) + ' and ship ' + M('Q') + ' is at ' + M(vij(q[0], q[1])) + ' with velocity ' + M(vij(w[0], w[1])) + ' (km, km/h).', [
-        ['Find ' + M('\\vec{PQ}') + ' after ' + M('t') + ' hours.', 2, M('(' + d0[0] + (dv[0] ? S(dv[0]).replace(/ 1$/, ' ') + 't' : '') + ')\\mathbf{i} + (' + d0[1] + (dv[1] ? S(dv[1]).replace(/ 1$/, ' ') + 't' : '') + ')\\mathbf{j}')],
-        ['Find the time when they are closest, by minimising the square of the distance.', 3, M('t = ' + sf3(tm))],
-        ['Find the closest distance.', 1, M(sf3(dm)) + ' km']
+      var a = [nz(-3, 3), nz(-3, 3)], b = [nz(-3, 3), nz(-3, 3)], c = [nz(-3, 3), nz(-3, 3)];
+      var det = b[0] * c[1] - b[1] * c[0];
+      if (det === 0) { b = [1, 2]; c = [2, 1]; det = -3; }
+      var lam = (a[1] * c[0] - a[0] * c[1]) / det;
+      return Q(M('\\mathbf{a} = ' + ij(a[0], a[1])) + ', ' + M('\\mathbf{b} = ' + ij(b[0], b[1])) + ', ' + M('\\mathbf{c} = ' + ij(c[0], c[1])) + '.', [
+        ['Find ' + M('\\lambda') + ' such that ' + M('\\mathbf{a} + \\lambda\\mathbf{b}') + ' is parallel to ' + M('\\mathbf{c}') + '.', 4, M('\\lambda = ' + F(a[1] * c[0] - a[0] * c[1], det))],
+        ['Explain the condition you used for two vectors to be parallel.', 1, 'One is a scalar multiple of the other, so the ratios of components are equal']
       ]);
     },
     function () {
-      var A = [ri(-4, 0), ri(-4, 0)], B = [ri(2, 6), ri(-3, 1)], Cc = [ri(-2, 4), ri(3, 7)];
-      var G = [(A[0] + B[0] + Cc[0]) / 3, (A[1] + B[1] + Cc[1]) / 3];
-      return Q('Triangle ' + M('ABC') + ' has ' + M('A' + P(A[0], A[1]) + ', B' + P(B[0], B[1]) + ', C' + P(Cc[0], Cc[1])) + '. ' + M('M') + ' is the midpoint of ' + M('BC') + '.', [
-        ['Find the position vector of the point ' + M('G') + ' that divides ' + M('AM') + ' in the ratio ' + M('2 : 1') + '.', 3, M(P(F(A[0] + B[0] + Cc[0], 3), F(A[1] + B[1] + Cc[1], 3)))],
-        ['Show that ' + M('\\vec{OG} = \\frac{1}{3}(\\mathbf{a} + \\mathbf{b} + \\mathbf{c})') + ' in general.', 2, M('\\mathbf{a} + \\frac{2}{3}\\left(\\frac{\\mathbf{b} + \\mathbf{c}}{2} - \\mathbf{a}\\right)')],
-        ['Explain why ' + M('G') + ' lies on all three medians.', 1, 'The formula is symmetric in ' + M('\\mathbf{a}, \\mathbf{b}, \\mathbf{c}')]
+      var a = ri(3, 9), b = ri(3, 9), th = ri(30, 150);
+      return Q('Two vectors have magnitudes ' + a + ' and ' + b + ' and the angle between them is ' + th + '°.', [
+        ['Find the magnitude of their sum.', 3, M(sf3(Math.sqrt(a * a + b * b + 2 * a * b * Math.cos(th * D))))],
+        ['Find the magnitude of their difference.', 2, M(sf3(Math.sqrt(a * a + b * b - 2 * a * b * Math.cos(th * D))))],
+        ['For what angle are the two magnitudes equal? Explain.', 1, '90°: the parallelogram is a rectangle, so its diagonals are equal']
       ]);
     },
     function () {
-      var a = ri(1, 5), b = nz(-5, 5), p = ri(1, 3), q = nz(-3, 3);
-      return Q('Find ' + M('k') + ' such that ' + M('(' + vij(a, b) + ') + k(' + vij(p, q) + ')') + ' is parallel to ' + M('\\mathbf{i}') + '.', [
-        ['Write the combined vector.', 1, M('(' + a + ' + ' + c1(p, 'k') + ')\\mathbf{i} + (' + b + S(q).replace(/ 1$/, ' ') + 'k)\\mathbf{j}')],
-        ['Find ' + M('k') + '.', 2, M('k = ' + F(-b, q))],
-        ['Find ' + M('k') + ' so that it is parallel to ' + M('\\mathbf{i} + \\mathbf{j}') + ' instead.', 2, (p === q ? 'Impossible: the coefficients differ by a constant ' + (a - b) : M('k = ' + F(b - a, p - q)))]
+      var u = pick([[3, 4, 5], [5, 12, 13], [8, 15, 17]]), m = u[2] * ri(2, 4);
+      return Q('A particle moves in the direction of ' + M(ij(u[0], u[1])) + ' with speed ' + m + ' m/s.', [
+        ['Find its velocity vector.', 2, M(ij(u[0] * m / u[2], u[1] * m / u[2]))],
+        ['Find its displacement after 5 seconds.', 1, M(ij(5 * u[0] * m / u[2], 5 * u[1] * m / u[2]))],
+        ['A second particle has velocity ' + M(ij(u[1], -u[0])) + '. Show that the paths are perpendicular.', 2, 'Gradients ' + M(F(u[1], u[0])) + ' and ' + M(F(-u[0], u[1])) + ' multiply to −1']
       ]);
     }
   ]);
 
   X('al-differentiation', [
     function () {
-      return Q('Differentiate ' + M('f(x) = x^3') + ' from first principles.', [
-        ['Expand ' + M('(x + h)^3') + '.', 1, M('x^3 + 3x^2h + 3xh^2 + h^3')],
-        ['Write the gradient of the chord from ' + M('x') + ' to ' + M('x + h') + ' and simplify.', 2, M('3x^2 + 3xh + h^2')],
-        ['Find the limit as ' + M('h \\to 0') + ', and explain why ' + M('h') + ' cannot simply be set to 0 at the start.', 2, M('3x^2') + '; the chord gradient is ' + M('\\frac{0}{0}') + ' when ' + M('h = 0')]
+      return Q('Differentiation from first principles.', [
+        ['Show that the gradient of the chord from ' + M('(x, x^3)') + ' to ' + M('(x + h, (x + h)^3)') + ' is ' + M('3x^2 + 3xh + h^2') + '.', 3, 'Expand ' + M('(x + h)^3 - x^3') + ' and divide by ' + M('h')],
+        ['Hence find ' + M('\\frac{dy}{dx}') + ' for ' + M('y = x^3') + '.', 1, M('3x^2') + ' as ' + M('h \\to 0')],
+        ['Explain why the limit is needed rather than putting ' + M('h = 0') + ' at the start.', 1, 'With ' + M('h = 0') + ' the chord is a single point and the gradient is ' + M('\\frac{0}{0}')]
       ]);
     },
     function () {
-      var a = ri(1, 3), b = a + ri(1, 3), k = ri(-5, 5);
-      var p = [2, -3 * (a + b), 6 * a * b, k], f = function (x) { return 2 * x * x * x - 3 * (a + b) * x * x + 6 * a * b * x + k; };
-      return Q('Find and classify the stationary points of ' + M('y = ' + poly(p)) + '.', [
-        ['Find ' + M('\\frac{dy}{dx}') + ' and solve ' + M('\\frac{dy}{dx} = 0') + '.', 3, M('6(x - ' + a + ')(x - ' + b + ')') + ': ' + M('x = ' + a + ', ' + b)],
-        ['Find the coordinates and nature of each.', 3, M(P(a, f(a))) + ' maximum, ' + M(P(b, f(b))) + ' minimum'],
-        ['For which ' + M('k') + ' would the curve touch the ' + M('x') + '-axis at its minimum?', 1, M('k = ' + (k - f(b)))]
+      var k = pick([1, 4, 9, 16, 25]), a = Math.sqrt(k);
+      return Q('Consider ' + M('y = x + \\frac{' + k + '}{x}') + '.', [
+        ['Find ' + M('\\frac{dy}{dx}') + ' and the stationary points.', 3, M('1 - \\frac{' + k + '}{x^2}') + '; ' + M(P(a, 2 * a)) + ' and ' + M(P(-a, -2 * a))],
+        ['Use ' + M('\\frac{d^2y}{dx^2}') + ' to classify them.', 2, M('\\frac{' + 2 * k + '}{x^3}') + ': minimum at ' + M('x = ' + a) + ', maximum at ' + M('x = -' + a)],
+        ['Explain why the “maximum” is lower than the “minimum”.', 1, 'They are local: the curve has two separate branches']
       ]);
     },
     function () {
-      var a = ri(1, 3), x0 = ri(1, 3);
-      var y0 = a * x0 * x0 * x0, m = 3 * a * x0 * x0, c = y0 - m * x0;
-      return Q('Find the tangent to ' + M('y = ' + c1(a, 'x^3')) + ' at ' + M('x = ' + x0) + '.', [
-        ['Find its equation.', 2, M('y = ' + m + 'x' + S0(c))],
-        ['Find the area of the triangle it forms with the axes.', 2, M(F(c * c, 2 * m))],
-        ['Find where the tangent meets the curve again.', 3, M('x = ' + (-2 * x0)) + ' (from ' + M((a === 1 ? '' : a) + '(x - ' + x0 + ')^2(x + ' + 2 * x0 + ') = 0') + ')']
-      ]);
-    },
-    function () {
-      var V = pick([250, 500, 1000, 2000]), r = Math.cbrt(V / (2 * Math.PI));
-      return Q('A closed cylinder has volume ' + V + ' cm³.', [
-        ['Show that the surface area is ' + M('A = 2\\pi r^2 + \\frac{' + 2 * V + '}{r}') + '.', 2, M('h = \\frac{' + V + '}{\\pi r^2}')],
-        ['Find the value of ' + M('r') + ' that minimises ' + M('A') + ', and show it is a minimum.', 4, M('r = ' + sf3(r)) + '; ' + M('\\frac{d^2A}{dr^2} = 4\\pi + \\frac{' + 4 * V + '}{r^3} > 0')],
-        ['Show that the height then equals the diameter.', 2, M('h = \\frac{' + V + '}{\\pi r^2} = 2r') + ' since ' + M('\\pi r^3 = ' + V / 2)]
-      ]);
-    },
-    function () {
-      var a = ri(1, 3), b = a + ri(1, 3), c = ri(-5, 5);
-      return Q('Let ' + M('f(x) = ' + poly([2, -3 * (a + b), 6 * a * b, c])) + '.', [
-        ['Find the interval on which ' + M('f') + ' is decreasing.', 3, M(a + ' < x < ' + b)],
-        ['Explain why ' + M('f(x) = 0') + ' has exactly one root less than ' + a + ' if ' + M('f(' + a + ') < 0') + '.', 2, M('f') + ' is increasing for ' + M('x < ' + a) + ' and tends to ' + M('-\\infty')],
-        ['Find the value of ' + M('f(' + a + ') - f(' + b + ')') + '.', 2, (2 * a * a * a - 3 * (a + b) * a * a + 6 * a * b * a) - (2 * b * b * b - 3 * (a + b) * b * b + 6 * a * b * b)]
-      ]);
-    },
-    function () {
-      var a = ri(2, 4), x0 = pick([1, 4, 9]);
-      var rx = Math.sqrt(x0), d = 1.5 * Math.sqrt(x0) + a - a * a / 2 / Math.pow(x0, 1.5) + 0;
-      var dd = 1.5 * rx + a / rx - a * a / (2 * x0 * rx);
-      return Q('Let ' + M('y = \\frac{(x + ' + a + ')^2}{\\sqrt{x}}') + '.', [
-        ['Write ' + M('y') + ' as a sum of powers of ' + M('x') + '.', 2, M('x^{3/2} + ' + 2 * a + 'x^{1/2} + ' + a * a + 'x^{-1/2}')],
-        ['Find ' + M('\\frac{dy}{dx}') + '.', 2, M('\\frac{3}{2}x^{1/2} + ' + c1(a, 'x^{-1/2}') + ' - ' + F(a * a, 2) + 'x^{-3/2}')],
-        ['Find the gradient at ' + M('x = ' + x0) + '.', 1, M(sf3(dd))]
-      ]);
-    },
-    function () {
-      var c = pick([1, 4, 9, 16]), t = Math.sqrt(c);
-      return Q('Tangents from the origin are drawn to ' + M('y = x^2 + ' + c) + '.', [
-        ['Write the tangent at ' + M('x = t') + '.', 2, M('y = 2tx - t^2 + ' + c)],
-        ['Find the values of ' + M('t') + ' for which it passes through the origin.', 2, M('t = \\pm ' + t)],
-        ['Find the equations of the tangents and the angle between them.', 2, M('y = \\pm ' + 2 * t + 'x') + '; ' + deg(180 - 2 * Math.atan(2 * t) * D)]
-      ]);
-    },
-    function () {
-      var r = ri(2, 6), k = ri(2, 5);
-      return Q('The radius of a circle increases at a constant ' + k + ' cm/s.', [
-        ['Find ' + M('\\frac{dA}{dr}') + ' and interpret it.', 2, M('2\\pi r') + ': the circumference — the rate the area grows per unit radius'],
-        ['Find the rate at which the area is increasing when ' + M('r = ' + r) + '.', 2, M(2 * r * k + '\\pi') + ' cm²/s'],
-        ['Explain why the area grows faster as the circle gets bigger, even though the radius grows steadily.', 1, 'A band of the same width has more area further out']
-      ]);
-    },
-    function () {
-      var a = nz(-3, 3), p = nz(-2, 2);
-      var b = -3 * a * p / 2, q = a * p * p * p + b * p * p;
-      if (b !== Math.round(b)) { p = 2; b = -3 * a; q = 8 * a + 4 * b; }
-      return Q('The curve ' + M('y = ax^3 + bx^2') + ' has a stationary point at ' + M(P(p, q)) + '.', [
-        ['Form two equations.', 2, M(3 * p * p + 'a + ' + 2 * p + 'b = 0').replace('+ -', '- ') + ' and ' + M(p * p * p + 'a + ' + p * p + 'b = ' + q).replace('+ -', '- ')],
-        ['Find ' + M('a') + ' and ' + M('b') + '.', 2, M('a = ' + a + ',\\ b = ' + b)],
-        ['Find the other stationary point.', 2, M(P(0, 0))]
-      ]);
-    },
-    function () {
-      var a = pick([1, 2, -1, 3]);
-      var x2 = -a - 1 / (2 * a);
+      var a = nz(-3, 3);
+      var other = -a - 1 / (2 * a);
       return Q('The normal to ' + M('y = x^2') + ' at ' + M(P(a, a * a)) + ' meets the curve again at ' + M('Q') + '.', [
-        ['Find the equation of the normal.', 2, M('y - ' + a * a + ' = ' + F(-1, 2 * a) + (a ? '(x' + S(-a) + ')' : 'x'))],
-        ['Find ' + M('Q') + '.', 3, M(P(sf3(x2), sf3(x2 * x2)))],
-        ['Explain why the normal always meets the parabola twice.', 1, 'It is not vertical, so it crosses the parabola, which opens upward and is unbounded']
+        ['Find the equation of the normal.', 3, M('y - ' + a * a + ' = ' + F(-1, 2 * a) + xm(a))],
+        ['Find the ' + M('x') + '-coordinate of ' + M('Q') + '.', 3, M(F(-2 * a * a - 1, 2 * a))],
+        ['Explain how you could have found it from the sum of the roots.', 1, 'The roots of ' + M('x^2 + \\frac{x}{' + 2 * a + '} - \\ldots = 0') + ' add to ' + M(F(-1, 2 * a))]
+      ]);
+    },
+    function () {
+      var V = pick([250, 500, 1000, 2000]);
+      var r = Math.cbrt(V / (2 * Math.PI)), A = 2 * Math.PI * r * r + 2 * V / r;
+      return Q('A closed cylinder has volume ' + V + ' cm³.', [
+        ['Show that its surface area is ' + M('A = 2\\pi r^2 + \\frac{' + 2 * V + '}{r}') + '.', 2, 'Use ' + M('h = \\frac{' + V + '}{\\pi r^2}')],
+        ['Find the value of ' + M('r') + ' that minimises ' + M('A') + ', and the minimum area.', 4, M('r = ' + sf3(r)) + ' cm, ' + M('A = ' + sf3(A)) + ' cm²'],
+        ['Show that at the minimum, the height equals the diameter.', 2, M('h = \\frac{' + V + '}{\\pi r^2} = 2r') + ' since ' + M('\\pi r^3 = ' + V / 2)]
+      ]);
+    },
+    function () {
+      var a = ri(2, 6), lim = 3 * a * a;
+      return Q('Consider ' + M('y = x^3 - ' + 3 * a + 'x^2 + kx') + '.', [
+        ['Find the range of ' + M('k') + ' for which ' + M('y') + ' is increasing for all ' + M('x') + '.', 4, M('3x^2 - ' + 6 * a + 'x + k \\ge 0') + ' always: ' + M('k \\ge ' + lim)],
+        ['When ' + M('k = ' + lim) + ', show the curve has one stationary point and classify it.', 2, M('x = ' + a) + ': a stationary point of inflection'],
+        ['Explain why a cubic with a positive ' + M('x^3') + ' coefficient can never be decreasing for all ' + M('x') + '.', 1, 'Its derivative is a positive quadratic, which is positive for large ' + M('|x|')]
+      ]);
+    },
+    function () {
+      var c = pick([1, 4, 9]), a = Math.sqrt(c);
+      return Q('Tangents to ' + M('y = x^2 + ' + c) + ' pass through the origin.', [
+        ['Write the tangent at ' + M('x = t') + '.', 2, M('y = 2tx - t^2 + ' + c)],
+        ['Find the values of ' + M('t') + ' for which it passes through the origin.', 2, M('t = \\pm ' + a)],
+        ['State the equations of the tangents.', 1, M('y = \\pm ' + c1(2 * a, 'x'))]
+      ]);
+    },
+    function () {
+      var a = ri(2, 9);
+      return Q('Let ' + M('f(x) = \\frac{x^2 + ' + a + '}{\\sqrt{x}}') + ', ' + M('x > 0') + '.', [
+        ['Write ' + M('f(x)') + ' as a sum of powers of ' + M('x') + '.', 1, M('x^{3/2} + ' + a + 'x^{-1/2}')],
+        ['Find ' + M("f'(x)") + '.', 2, M('\\frac{3}{2}x^{1/2} - ' + (a === 2 ? '' : F(a, 2)) + 'x^{-3/2}')],
+        ['Find the minimum value of ' + M('f') + '.', 3, M('3x^2 = ' + a) + ', ' + M('x = \\sqrt{' + F(a, 3) + '} = ' + sf3(Math.sqrt(a / 3))) + ', ' + M('f = ' + sf3((4 * a / 3) / Math.pow(a / 3, 0.25)))]
+      ]);
+    },
+    function () {
+      var a = ri(1, 3);
+      return Q('Consider ' + M('y = x^4 - ' + 2 * a * a + 'x^2') + '.', [
+        ['Find the three stationary points.', 3, M(P(0, 0)) + ', ' + M(P(a, -a * a * a * a)) + ', ' + M(P(-a, -a * a * a * a))],
+        ['Classify each using the second derivative.', 3, 'Maximum at 0, minima at ' + M('\\pm ' + a)],
+        ['Sketch the curve and explain its symmetry.', 1, 'W-shaped; only even powers, so symmetric in the ' + M('y') + '-axis']
+      ]);
+    },
+    function () {
+      var a = ri(2, 3), m = 3 * a * a - 3, t = 2 * a * a * a;
+      return Q('Find the points on ' + M('y = x^3 - 3x') + ' where the tangent is parallel to ' + M('y = ' + m + 'x + 1') + '.', [
+        ['Solve ' + M('3x^2 - 3 = ' + m) + '.', 2, M('x = \\pm ' + a)],
+        ['Find the points and the tangent equations.', 3, M(P(a, a * a * a - 3 * a)) + ', ' + M(P(-a, -a * a * a + 3 * a)) + '; ' + M('y = ' + m + 'x - ' + t) + ' and ' + M('y = ' + m + 'x + ' + t)],
+        ['Explain why there are always two such points (for gradients above −3).', 1, 'The gradient function is an even quadratic']
+      ]);
+    },
+    function () {
+      var x0 = ri(2, 9);
+      return Q('A square has side ' + M('x') + ' cm.', [
+        ['Find ' + M('\\frac{dA}{dx}') + ' for its area, and interpret it at ' + M('x = ' + x0) + '.', 2, M(2 * x0) + ': the area increases by about ' + 2 * x0 + ' cm² per cm of side'],
+        ['Use this to estimate the change in area when the side increases from ' + x0 + ' to ' + (x0 + 0.1) + ' cm, and compare with the true change.', 2, 'Estimate ' + num(0.2 * x0) + ', true ' + num(Math.round(((x0 + 0.1) * (x0 + 0.1) - x0 * x0) * 100) / 100)],
+        ['Explain the difference geometrically.', 1, 'The estimate misses the small corner square of area ' + M('0.1^2')]
       ]);
     }
   ]);
 
   X('al-integration', [
     function () {
-      var k = ri(2, 6);
-      return Q('Consider ' + M('y = x^2 - ' + k + 'x') + '.', [
-        ['Find the area between the curve and the ' + M('x') + '-axis.', 3, M(F(k * k * k, 6))],
-        ['Find ' + M('\\int_0^{' + 2 * k + '} (x^2 - ' + k + 'x)\\, dx') + ' and explain why it is not an area.', 2, M(F(2 * k * k * k, 3)) + ': part of the region is below the axis and counts negatively'],
-        ['Find the total area between the curve and the axis for ' + M('0 \\le x \\le ' + 2 * k) + '.', 2, M(F(k * k * k, 6) + ' + ' + F(5 * k * k * k, 6) + ' = ' + F(k * k * k, 1))]
+      var a = ri(1, 3), b = ri(1, 4);
+      var f = function (x) { return x * x * x / 3 - (a - b) * x * x / 2 - a * b * x; };
+      var neg = f(0) - f(-b), pos = f(a) - f(0);
+      return Q('The curve ' + M('y = x(x + ' + b + ')(x - ' + a + ')') + ' is considered between ' + M('x = -' + b) + ' and ' + M('x = ' + a) + '.', [
+        ['Expand and find ' + M('\\int_{-' + b + '}^{' + a + '} y\\,dx') + '.', 3, (function () { var F3 = function (x) { return Math.pow(x, 4) / 4 + (b - a) * x * x * x / 3 - a * b * x * x / 2; }; return sf3(F3(a) - F3(-b)); })()],
+        ['Explain why this is not the total area between the curve and the axis.', 1, 'The part below the axis counts negatively'],
+        ['Find the total area.', 3, (function () { var F3 = function (x) { return Math.pow(x, 4) / 4 + (b - a) * x * x * x / 3 - a * b * x * x / 2; }; return sf3(Math.abs(F3(0) - F3(-b)) + Math.abs(F3(a) - F3(0))); })()]
       ]);
     },
     function () {
-      var a = nz(-3, 3), b = nz(-4, 4), x0 = ri(1, 3), y0 = ri(-5, 5);
-      var c = y0 - (a * x0 * x0 * x0 / 3 * 3 / 3 + b * x0);
-      return Q('A curve has ' + M('\\frac{dy}{dx} = ' + c1(3 * a, 'x^2') + S(b)) + ' and passes through ' + M(P(x0, y0)) + '.', [
-        ['Find the equation of the curve.', 3, M('y = ' + c1(a, 'x^3') + S(b).replace(/ 1$/, ' ') + 'x' + S0(y0 - a * x0 * x0 * x0 - b * x0))],
-        ['Explain why the extra point is needed.', 1, 'Integration gives a family of curves; the point fixes the constant'],
-        ['Find the gradient where the curve crosses the ' + M('y') + '-axis.', 1, b]
+      var k = ri(1, 6);
+      return Q('Find the area enclosed by ' + M('y = x^2') + ' and ' + M('y = ' + c1(k, 'x')) + '.', [
+        ['Find where they meet.', 1, M('x = 0') + ' and ' + M('x = ' + k)],
+        ['Find the area.', 3, M('\\int_0^{' + k + '} (' + c1(k, 'x') + ' - x^2)\\,dx = ' + F(k * k * k, 6))],
+        ['Compare the area with the area of the triangle under the line from ' + M('x = 0') + ' to ' + M('x = ' + k) + '.', 2, 'The triangle has area ' + M(F(k * k * k, 2)) + '; the region is ' + M('\\frac{1}{3}') + ' of it']
       ]);
     },
     function () {
-      var m = ri(1, 6);
-      return Q('Find the area enclosed by ' + M('y = x^2') + ' and ' + M('y = ' + c1(m, 'x')) + '.', [
-        ['Find the intersections.', 1, M('x = 0') + ' and ' + M('x = ' + m)],
-        ['Find the area.', 3, M(F(m * m * m, 6))],
-        ['How does the area change if ' + M('m') + ' is doubled? Explain.', 1, 'It is multiplied by 8: the area is proportional to ' + M('m^3')]
+      var a = nz(-3, 3), b = ri(-4, 4), x0 = ri(1, 3), y0 = ri(-5, 5);
+      var c = y0 - (a * x0 * x0 * x0 + b * x0 * x0);
+      return Q('A curve has ' + M('\\frac{dy}{dx} = ' + poly([3 * a, 2 * b, 0])) + ' and passes through ' + M(P(x0, y0)) + '.', [
+        ['Find ' + M('y') + ' in terms of ' + M('x') + '.', 3, M('y = ' + poly([a, b, 0, c]))],
+        ['Find where the curve crosses the ' + M('y') + '-axis.', 1, M(P(0, c))],
+        ['Explain why a point is needed to find the curve.', 1, 'Integration gives a family of curves differing by a constant']
       ]);
     },
     function () {
-      var a = ri(2, 3), b = pick([1, 4]);
-      var F1 = function (x) { return 0.4 * Math.pow(x, 2.5) + (4 / 3) * a * Math.pow(x, 1.5) + 2 * a * a * Math.sqrt(x); };
-      return Q('Find ' + M('\\int_1^{' + (b === 1 ? 4 : 9) + '} \\frac{(x + ' + a + ')^2}{\\sqrt{x}}\\, dx') + '.', [
-        ['Write the integrand as powers of ' + M('x') + '.', 2, M('x^{3/2} + ' + 2 * a + 'x^{1/2} + ' + a * a + 'x^{-1/2}')],
-        ['Integrate.', 2, M('\\frac{2}{5}x^{5/2} + ' + F(4 * a, 3) + 'x^{3/2} + ' + 2 * a * a + 'x^{1/2}')],
-        ['Evaluate exactly.', 2, M(F(Math.round((F1(b === 1 ? 4 : 9) - F1(1)) * 15), 15))]
+      var a = ri(2, 9), b = ri(4, 9);
+      var val = (2 / 5) * (Math.pow(b, 2.5) - 1) + 2 * a * (Math.sqrt(b) - 1);
+      return Q('Find ' + M('\\int_1^{' + b + '} \\frac{x^2 + ' + a + '}{\\sqrt{x}}\\,dx') + '.', [
+        ['Write the integrand as powers of ' + M('x') + '.', 1, M('x^{3/2} + ' + a + 'x^{-1/2}')],
+        ['Integrate.', 2, M('\\frac{2}{5}x^{5/2} + ' + 2 * a + 'x^{1/2}')],
+        ['Evaluate.', 2, sf3(val)]
       ]);
     },
     function () {
-      var k = ri(2, 6), A = k * k + k;
-      return Q('Given ' + M('\\int_0^k (2x + 1)\\, dx = ' + A) + ', where ' + M('k > 0') + '.', [
-        ['Show that ' + M('k^2 + k - ' + A + ' = 0') + '.', 2, M('[x^2 + x]_0^k')],
-        ['Find ' + M('k') + ', explaining your choice.', 2, M('k = ' + k) + '; the other root ' + (-k - 1) + ' is negative'],
-        ['Check your answer using the area of a trapezium.', 1, M('\\frac{1 + ' + (2 * k + 1) + '}{2} \\times ' + k + ' = ' + A)]
+      var k = ri(2, 7), A = k * k + k - 2;
+      return Q('Given ' + M('\\int_1^k (2x + 1)\\,dx = ' + A) + ', where ' + M('k > 1') + '.', [
+        ['Show that ' + M('k^2 + k - ' + (A + 2) + ' = 0') + '.', 2, M('[x^2 + x]_1^k = k^2 + k - 2')],
+        ['Find ' + M('k') + '.', 2, M('k = ' + k)],
+        ['Explain why the other root is rejected.', 1, 'It is ' + (-k - 1) + ', not greater than 1']
+      ]);
+    },
+    function () {
+      var a = ri(2, 6);
+      return Q('Find the area enclosed by ' + M('y = x(' + a + ' - x)') + ' and the ' + M('x') + '-axis.', [
+        ['Find the area.', 3, M(F(a * a * a, 6))],
+        ['Show that for ' + M('y = x(a - x)') + ' in general the area is ' + M('\\frac{a^3}{6}') + '.', 2, M('\\left[\\frac{ax^2}{2} - \\frac{x^3}{3}\\right]_0^a')],
+        ['What fraction of the rectangle with base ' + M('a') + ' and height equal to the maximum value is this?', 2, M('\\frac{a^3/6}{a \\times a^2/4} = \\frac{2}{3}')]
+      ]);
+    },
+    function () {
+      var a = nz(-4, 4), b = nz(-4, 4), l = ri(0, 2), u = l + ri(1, 3);
+      var Fx = function (x) { return x * x * x / 3 + (a + b) * x * x / 2 + a * b * x; };
+      return Q('Evaluate ' + M('\\int_{' + l + '}^{' + u + '} ' + xm(-a) + xm(-b) + '\\,dx') + '.', [
+        ['Expand the integrand.', 1, M(poly([1, a + b, a * b]))],
+        ['Integrate and evaluate.', 3, M(F(Math.round((Fx(u) - Fx(l)) * 6), 6))],
+        ['Explain why you cannot integrate a product by integrating each bracket separately.', 1, 'The integral of a product is not the product of the integrals']
       ]);
     },
     function () {
       var a = ri(1, 4);
-      return Q('Consider ' + M('\\int_{-' + a + '}^{' + a + '} x^3\\, dx') + '.', [
-        ['Evaluate it.', 1, 0],
-        ['Explain the answer using the symmetry of the graph.', 2, M('y = x^3') + ' has rotational symmetry about the origin, so the areas cancel'],
-        ['Find the total area enclosed between the curve and the ' + M('x') + '-axis for ' + M('-' + a + ' \\le x \\le ' + a) + '.', 1, M(F(Math.pow(a, 4), 2))]
+      return Q('Areas with ' + M('y = x^2') + ' and ' + M('y = \\sqrt{x}') + '.', [
+        ['Find ' + M('\\int_0^{' + a + '} x^2\\,dx') + '.', 1, M(F(a * a * a, 3))],
+        ['Find the area between ' + M('y = \\sqrt{x}') + ' and the ' + M('y') + '-axis from ' + M('y = 0') + ' to ' + M('y = ' + a) + '.', 2, M(F(a * a * a, 3)) + ' (it is the same region reflected in ' + M('y = x') + ')'],
+        ['Find the area enclosed between ' + M('y = x^2') + ' and ' + M('y = \\sqrt{x}') + '.', 3, M('\\int_0^1 (\\sqrt{x} - x^2)\\,dx = \\frac{1}{3}')]
       ]);
     },
     function () {
-      var a = ri(1, 4);
-      return Q('The chord from ' + M(P(-a, a * a)) + ' to ' + M(P(2 * a, 4 * a * a)) + ' cuts off a region of ' + M('y = x^2') + '.', [
-        ['Find the equation of the chord.', 1, M('y = ' + c1(a, 'x') + ' + ' + 2 * a * a)],
-        ['Find the area between the chord and the curve.', 3, M(F(9 * a * a * a, 2))],
-        ['Find the area of the triangle with vertices at the ends of the chord and ' + M(P(num(a / 2), num(a * a / 4))) + ', and compare (Archimedes).', 2, M(F(27 * a * a * a, 8)) + '; the segment is ' + M('\\frac{4}{3}') + ' of the triangle']
+      var T = ri(4, 8);
+      return Q('A particle has velocity ' + M('v = ' + T + 't - t^2') + ' m/s.', [
+        ['When is it instantaneously at rest (after ' + M('t = 0') + ')?', 1, M('t = ' + T)],
+        ['Find the distance travelled in this time.', 3, M(F(T * T * T, 6)) + ' m'],
+        ['Find the maximum speed.', 2, M(F(T * T, 4)) + ' m/s at ' + M('t = ' + F(T, 2))]
       ]);
     },
     function () {
-      var k = ri(2, 10);
-      return Q('Consider ' + M('\\int_1^k \\frac{1}{x^2}\\, dx') + '.', [
-        ['Evaluate it in terms of ' + M('k') + ' and for ' + M('k = ' + k) + '.', 2, M('1 - \\frac{1}{k}') + ', ' + M(F(k - 1, k))],
-        ['What happens as ' + M('k \\to \\infty') + '? Interpret.', 2, 'It tends to 1: the infinite region has finite area'],
-        ['Does ' + M('\\int_0^1 \\frac{1}{x^2}\\, dx') + ' work the same way? Explain.', 1, 'No: ' + M('\\frac{1}{a} - 1 \\to \\infty') + ' as ' + M('a \\to 0')]
-      ]);
-    },
-    function () {
-      var p = ri(1, 2), q = p + ri(1, 3);
-      var s = function (t) { return t * t * t - 1.5 * (p + q) * t * t + 3 * p * q * t; };
-      return Q('A particle has velocity ' + M('v = ' + poly([3, -3 * (p + q), 3 * p * q]).replace(/x/g, 't')) + ' m/s and starts at the origin.', [
-        ['Find its displacement after ' + M('t') + ' seconds.', 2, M('s = t^3 - ' + num(1.5 * (p + q)) + 't^2 + ' + 3 * p * q + 't')],
-        ['Find the displacement after ' + q + ' seconds.', 1, num(s(q)) + ' m'],
-        ['Find the total distance travelled in that time.', 3, num(s(p) + (s(p) - s(q))) + ' m (it changes direction at ' + M('t = ' + p) + ')']
-      ]);
-    },
-    function () {
-      var A = ri(2, 9), k = ri(2, 5), c = ri(1, 4);
-      return Q('Given ' + M('\\int_0^2 f(x)\\, dx = ' + A) + '.', [
-        ['Find ' + M('\\int_0^2 (' + k + 'f(x) + ' + 2 * c + 'x)\\, dx') + '.', 2, k * A + 4 * c],
-        ['Find ' + M('\\int_2^0 f(x)\\, dx') + '.', 1, -A],
-        ['Find ' + M('\\int_0^2 (f(x) + ' + c + ')\\, dx') + ' and explain geometrically.', 2, (A + 2 * c) + ': adds a rectangle ' + 2 + ' by ' + c]
+      var k = ri(2, 5);
+      return Q('Find the value of ' + M('a > 0') + ' such that ' + M('\\int_0^a (x^2 - ' + k + 'x)\\,dx = 0') + '.', [
+        ['Integrate and form an equation.', 2, M('\\frac{a^3}{3} - \\frac{' + k + 'a^2}{2} = 0')],
+        ['Solve.', 2, M('a = ' + F(3 * k, 2))],
+        ['Interpret the result in terms of areas.', 1, 'The area below the axis (from 0 to ' + k + ') equals the area above it (from ' + k + ' to ' + F(3 * k, 2) + ')']
       ]);
     }
   ]);
