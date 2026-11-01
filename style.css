@@ -434,3 +434,11 @@ button.idea[aria-pressed="true"] { border-color: var(--pri); box-shadow: 0 0 0 2
 .slide .vq-opts li::before, .slide .vq-claim li::before { content: none; }
 .slide .vq-opts li { display: flex; align-items: baseline; gap: 4px; }
 .slide .vq-claim ul { list-style: disc; }
+.slide .vq-statements li, .slide .vq-mq li { counter-increment: none; display: flex; gap: 10px; align-items: baseline; }
+.slide .vq-statements li::before, .slide .vq-mq li::before { content: none; }
+.vq-statements { display: grid; gap: 8px; margin: 6px 0 4px; }
+.vq-statements li { border-left: 4px solid var(--pri); background: color-mix(in srgb, var(--pri) 6%, transparent); border-radius: 0 8px 8px 0; padding: 8px 12px; font-weight: 600; }
+.vq-statements b, .vq-mq b { font-family: var(--serif); color: var(--pri); }
+.vq-mq { display: grid; gap: 8px; margin: 6px 0 10px; }
+.vq-mq li { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
+.paper.show .vq-opts li.right { border-color: var(--ok); background: var(--ok-soft); }

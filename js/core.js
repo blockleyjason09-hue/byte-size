@@ -83,10 +83,18 @@
     return g.hi;
   };
   // Extension questions: BS.ext(['topic-id', ...], [{ f: fn }, ...]) adds them at the top level of each topic.
+  // remove floating-point noise such as 0.8200000000000001 or 1.3599999999999999 from generated text
+  BS.clean = function (str) {
+    return typeof str !== 'string' ? str : str.replace(/\d+\.\d{8,}/g, function (m) {
+      var v = parseFloat(m), r = parseFloat(v.toPrecision(10));
+      var t = String(r); return t.length < m.length - 3 ? t : m;
+    });
+  };
+  function cleanQ(q) { if (!q) return q; q.stem = BS.clean(q.stem); q.parts.forEach(function (p) { p.q = BS.clean(p.q); p.a = BS.clean(p.a); }); return q; }
   BS.ext = function (ids, gens) {
     [].concat(ids).forEach(function (id) {
       var t = BS.topics[id]; if (!t) return;
-      gens.forEach(function (g) { t.gens.push({ d: [3], x: true, f: g.f || g }); });
+      gens.forEach(function (g) { var f = g.f || g; t.gens.push({ d: [3], x: true, f: function (d) { return cleanQ(f(d)); } }); });
     });
   };
   BS.hist = BS.hist || {}; BS.tick = BS.tick || 0;

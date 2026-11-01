@@ -295,18 +295,28 @@
   /* ---------- Varied question types for Do Nows and Exit tickets ---------- */
   var KINDS = {
     mcq: 'Multiple choice', check: 'Check the answer', mistake: 'Spot the mistake', asn: 'Always, sometimes or never?',
-    tf: 'True or false?', explain: 'Explain the method', reverse: 'Work backwards'
+    tf: 'True or false?', explain: 'Explain the method', reverse: 'Work backwards', convince: 'Convince me',
+    example: 'Example and counterexample', whichfalse: 'Which one is false?', fix: 'Fix the statement',
+    match: 'Match up', order: 'Put them in order'
   };
+  var CONCEPT_KINDS = ['asn', 'tf', 'convince', 'example', 'whichfalse', 'fix'], QUESTION_KINDS = ['mcq', 'match', 'order', 'check', 'mistake', 'explain', 'reverse'];
   var NAMES = ['Sam', 'Priya', 'Alex', 'Jordan', 'Mia', 'Tom', 'Zara', 'Leo', 'Ava', 'Kai'];
-  // Which question types to use: about half the set, never the first question, rotated so consecutive sets differ.
+  function byAge(list, pre) { return list.slice().sort(function (a, b) { return (BS.hist[pre + a] || 0) - (BS.hist[pre + b] || 0) || Math.random() - 0.5; }); }
+  // Varied sets: at most one exam-style warm-up (only in longer sets); every other question is a different kind of task,
+  // mostly reasoning tasks, with no task type repeated in a set and the least recently used types first.
   function planKinds(n) {
-    var out = []; for (var i = 0; i < n; i++) out.push('std');
-    if (n < 2) return out;
-    var k = mode === 'exit' ? Math.min(n - 1, Math.max(1, Math.round(n * 0.5))) : Math.max(1, Math.round(n * 0.5));
-    var order = ['concept', 'mcq', 'check', 'explain', 'mistake', 'reverse'].sort(function (a, b) { return (BS.hist['k:' + a] || 0) - (BS.hist['k:' + b] || 0) || Math.random() - 0.5; });
-    var slots = BS.shuffle(out.map(function (_, j) { return j; }).slice(1)).slice(0, k).sort(function (a, b) { return a - b; });
-    slots.forEach(function (sl, j) { out[sl] = order[j % order.length]; });
-    return out;
+    var out = [], std = n >= 4 ? 1 : 0, rest = n - std;
+    var nc = Math.ceil(rest * 0.6), nq = rest - nc;
+    var cs = byAge(CONCEPT_KINDS, 'k:'), qs = byAge(QUESTION_KINDS, 'k:'), picks = [];
+    for (var i = 0; i < nc; i++) picks.push(cs[i % cs.length]);
+    for (i = 0; i < nq; i++) picks.push(qs[i % qs.length]);
+    picks = BS.shuffle(picks);
+    // avoid two reasoning statements next to each other where possible
+    for (i = 1; i < picks.length; i++) if (CONCEPT_KINDS.indexOf(picks[i]) > -1 && CONCEPT_KINDS.indexOf(picks[i - 1]) > -1) {
+      for (var k = i + 1; k < picks.length; k++) if (CONCEPT_KINDS.indexOf(picks[k]) < 0) { var tmp = picks[i]; picks[i] = picks[k]; picks[k] = tmp; break; }
+    }
+    if (std) out.push('std');
+    return out.concat(picks);
   }
   function stdItem(t, used) { return BS.make(t, state.diff, used, !!course(state.course).foundation); }
   function shell(n, kind, t, marks, inner, ans) {
@@ -327,21 +337,51 @@
     return null;
   }
   function makeItem(kind, t, used) {
-    var it = null;
-    try { it = kind === 'std' ? null : MAKE[kind](t, used); } catch (e) { it = null; }
-    if (it) { BS.hist['k:' + kind] = ++BS.tick; return it; }
+    if (kind === 'std') return stdItem(t, used);
+    var tries = [kind].concat(CONCEPT_KINDS.indexOf(kind) > -1 ? byAge(CONCEPT_KINDS, 'k:') : byAge(QUESTION_KINDS, 'k:'), byAge(CONCEPT_KINDS.indexOf(kind) > -1 ? QUESTION_KINDS : CONCEPT_KINDS, 'k:'));
+    for (var i = 0; i < tries.length; i++) {
+      var kd = tries[i]; if (kd === 'std' || used.has('kind:' + kd) && i > 0) continue;
+      var it = null;
+      try { it = MAKE[kd](t, used); } catch (e) { it = null; }
+      if (it) { BS.hist['k:' + kd] = ++BS.tick; used.add('kind:' + kd); return it; }
+      if (kind === 'std') break;
+    }
     return stdItem(t, used);
   }
+  // reasoning statements for a topic, least recently used first, optionally filtered by verdict
+  function statements(t, verdicts, used) {
+    var list = (BS.concepts && BS.concepts[t]) || [];
+    var idx = list.map(function (_, i) { return i; }).filter(function (i) { return verdicts.indexOf(list[i][0]) > -1 && !used.has('c:' + t + ':' + i); });
+    return byAge(idx, 'c:' + t + ':').map(function (i) { return { t: t, i: i, c: list[i] }; });
+  }
+  function takeStatement(st, used) { BS.hist['c:' + st.t + ':' + st.i] = ++BS.tick; used.add('c:' + st.t + ':' + st.i); return st.c; }
+  function verdictWord(v) { return { A: 'Always true', S: 'Sometimes true', N: 'Never true', T: 'True', F: 'False' }[v]; }
+  function marksTag(m) { return '<span class="marks">' + (isIB() ? '[' + m + ']' : '(' + m + ')') + '</span>'; }
+  function statementBlock(c) { return '<div class="stem"><p class="vq-statement">' + c[1] + '</p></div>'; }
+  function promptPart(text, m) { return '<div class="part"><div class="ptext">' + text + '</div>' + marksTag(m) + '</div>'; }
+  // short questions (one part, no diagram, numeric answer) for match-up and ordering tasks
+  function shortQs(t, used, n) {
+    var pool = state.sel.length > 1 ? state.sel : [t], out = [], seen = {};
+    for (var k = 0; k < 60 && out.length < n; k++) {
+      var tt = k < 25 ? t : BS.pick(pool), r = choiceFrom(stdItem(tt, used));
+      if (!r || !r.numeric) continue;
+      var q = r.q, txt = (q.stem || '') + q.parts[r.j].q;
+      if (r.j > 0 || /<(svg|figure|table)/i.test(txt) || txt.replace(/<[^>]+>/g, '').length > 260) continue;
+      var x = numAns(finalOf(q.parts[r.j].a)); if (!x || seen[x.v]) continue;
+      seen[x.v] = 1; out.push({ r: r, v: x.v, html: (q.stem ? q.stem + ' ' : '') + q.parts[r.j].q });
+    }
+    return out.length >= n ? out : null;
+  }
   var MAKE = {
-    concept: function (t) {
-      var list = BS.concepts && BS.concepts[t]; if (!list || !list.length) return null;
-      var idx = list.map(function (_, i) { return i; }).sort(function (a, b) { return (BS.hist['c:' + t + ':' + a] || 0) - (BS.hist['c:' + t + ':' + b] || 0) || Math.random() - 0.5; })[0];
-      BS.hist['c:' + t + ':' + idx] = ++BS.tick;
-      var c = list[idx], asn = 'ASN'.indexOf(c[0]) > -1, kind = asn ? 'asn' : 'tf';
-      var verdict = { A: 'Always true', S: 'Sometimes true', N: 'Never true', T: 'True', F: 'False' }[c[0]];
-      var inner = '<div class="stem"><p class="vq-statement">' + c[1] + '</p></div>' +
-        '<div class="part"><div class="ptext">' + (asn ? 'Is this statement always, sometimes or never true? Explain your answer, using an example or a counterexample.' : 'Is this statement true or false? Explain how you know.') + '</div><span class="marks">' + (isIB() ? '[2]' : '(2)') + '</span></div>';
-      return { topic: t, marks: 2, render: function (n) { return shell(n, kind, t, 2, inner, '<b>' + verdict + '.</b> ' + c[2]); } };
+    asn: function (t, used) {
+      var st = statements(t, ['A', 'S', 'N'], used)[0]; if (!st) return null; var c = takeStatement(st, used);
+      var inner = statementBlock(c) + promptPart('Is this statement always, sometimes or never true? Explain your answer, using an example or a counterexample.', 2);
+      return { topic: t, marks: 2, render: function (n) { return shell(n, 'asn', t, 2, inner, '<b>' + verdictWord(c[0]) + '.</b> ' + c[2]); } };
+    },
+    tf: function (t, used) {
+      var st = statements(t, ['T', 'F'], used)[0]; if (!st) return null; var c = takeStatement(st, used);
+      var inner = statementBlock(c) + promptPart('True or false? Explain how you know.', 2);
+      return { topic: t, marks: 2, render: function (n) { return shell(n, 'tf', t, 2, inner, '<b>' + verdictWord(c[0]) + '.</b> ' + c[2]); } };
     },
     mcq: function (t, used) {
       var r = choiceFor(t, used); if (!r) return null;
@@ -372,6 +412,46 @@
       var inner = (q.stem ? '<div class="stem">' + q.stem + '</div>' : '') + q.parts.map(function (p, i) { return '<div class="part">' + (q.parts.length > 1 ? '<span class="plabel">(' + LET[i] + ')</span>' : '') + '<div class="ptext">' + p.q + '</div></div>'; }).join('') +
         '<div class="part"><div class="ptext"><b>Do not work it out.</b> Write the steps you would take' + (q.parts.length > 1 ? ' for each part' : '') + ', in order, and say which facts or formulae you would use.</div><span class="marks">' + (isIB() ? '[2]' : '(2)') + '</span></div>';
       return { topic: t, marks: 2, render: function (n) { return shell(n, 'explain', t, 2, inner, 'Look for a clear method. Mark scheme for reference: ' + q.parts.map(function (p, i) { return (q.parts.length > 1 ? '(' + LET[i] + ') ' : '') + p.a; }).join('; ')); } };
+    },
+    convince: function (t, used) {
+      var st = statements(t, ['A', 'T'], used)[0]; if (!st) return null; var c = takeStatement(st, used);
+      var inner = statementBlock(c) + promptPart(c[0] === 'A' ? 'Convince me that this is always true. Use an algebraic argument, a diagram or a clear explanation, not just one example.' : 'Show clearly that this statement is true.', 2);
+      return { topic: t, marks: 2, render: function (n) { return shell(n, 'convince', t, 2, inner, c[2]); } };
+    },
+    example: function (t, used) {
+      var st = statements(t, ['S'], used)[0]; if (!st) return null; var c = takeStatement(st, used);
+      var inner = statementBlock(c) + promptPart('This statement is sometimes true. Give one example where it is true and one where it is false. Then describe exactly when it is true.', 3);
+      return { topic: t, marks: 3, render: function (n) { return shell(n, 'example', t, 3, inner, c[2]); } };
+    },
+    fix: function (t, used) {
+      var st = statements(t, ['F', 'N'], used)[0]; if (!st) return null; var c = takeStatement(st, used);
+      var inner = statementBlock(c) + promptPart('This statement is not true. Explain what is wrong, then rewrite it so that it is true.', 2);
+      return { topic: t, marks: 2, render: function (n) { return shell(n, 'fix', t, 2, inner, '<b>' + verdictWord(c[0]) + '.</b> ' + c[2]); } };
+    },
+    whichfalse: function (t, used) {
+      var pool = [t].concat(state.sel.length > 1 ? BS.shuffle(state.sel.filter(function (x) { return x !== t; })) : []);
+      var tr = [], fl = [];
+      pool.forEach(function (tt) { tr = tr.concat(statements(tt, ['A', 'T'], used)); fl = fl.concat(statements(tt, ['F', 'N'], used)); });
+      if (tr.length < 2 || !fl.length) return null;
+      var picks = [tr[0], tr[1], fl[0]].map(function (st) { return { st: st, c: takeStatement(st, used) }; }), order = BS.shuffle([0, 1, 2]), bad = order.indexOf(2);
+      var inner = '<p class="vq-ask">Two of these statements are true and one is false.</p><ol class="vq-statements">' + order.map(function (k, i) { return '<li><b>' + 'ABC'[i] + '</b> <span>' + picks[k].c[1] + '</span></li>'; }).join('') + '</ol>' +
+        promptPart('Which statement is false? Explain why, and correct it.', 2);
+      return { topic: t, marks: 2, render: function (n) { return shell(n, 'whichfalse', t, 2, inner, '<b>' + 'ABC'[bad] + ' is false.</b> ' + picks[2].c[2]); } };
+    },
+    match: function (t, used) {
+      var qs = shortQs(t, used, 3); if (!qs) return null;
+      var extra = qs[0].r.wrong.filter(function (w) { return qs.every(function (q) { return plain(q.r.right) !== plain(w); }); })[0]; if (!extra) return null;
+      var ans = BS.shuffle(qs.map(function (q, i) { return { h: q.r.right, k: i }; }).concat([{ h: extra, k: -1 }]));
+      var inner = '<p class="vq-ask">Match each question to its answer. One answer is not used.</p><div class="vq-match"><ol class="vq-mq">' + qs.map(function (q, i) { return '<li><b>' + (i + 1) + '</b> <span>' + q.html + '</span></li>'; }).join('') + '</ol>' +
+        '<ol class="pl-opts vq-opts">' + ans.map(function (a, i) { return '<li><b>' + 'ABCD'[i] + '</b> <span>' + a.h + '</span></li>'; }).join('') + '</ol></div>' + promptPart('Show the working that justifies each match.', 3);
+      var key = qs.map(function (q, i) { var p = -1; ans.forEach(function (a, j) { if (a.k === i) p = j; }); return (i + 1) + ' → ' + 'ABCD'[p]; }).join(', ');
+      return { topic: t, marks: 3, render: function (n) { return shell(n, 'match', t, 3, inner, '<b>' + key + '.</b> ' + 'ABCD'[ans.map(function (a) { return a.k; }).indexOf(-1)] + ' is not used.'); } };
+    },
+    order: function (t, used) {
+      var qs = shortQs(t, used, 3); if (!qs) return null;
+      var sorted = qs.map(function (q, i) { return { i: i, v: q.v }; }).sort(function (a, b) { return a.v - b.v; });
+      var inner = '<p class="vq-ask">Put these questions in order of the size of their answers, smallest first. Estimate first, then check.</p><ol class="vq-mq">' + qs.map(function (q, i) { return '<li><b>' + 'PQR'[i] + '</b> <span>' + q.html + '</span></li>'; }).join('') + '</ol>' + promptPart('Write the order and the answer to each.', 3);
+      return { topic: t, marks: 3, render: function (n) { return shell(n, 'order', t, 3, inner, '<b>' + sorted.map(function (s) { return 'PQR'[s.i]; }).join(', ') + '.</b> ' + sorted.map(function (s) { return 'PQR'[s.i] + ': ' + qs[s.i].r.right; }).join('; ')); } };
     },
     reverse: function (t, used) {
       var r = choiceFor(t, used, true); if (!r) return null;
