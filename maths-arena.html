@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maths Arena | Byte Size Classroom</title>
+<meta name="description" content="Maths Arena for the Year 12 TMUA and ESAT course: classwork and homework for every lesson, marked with worked answers.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="style.css?v=20261101o">
+<link rel="stylesheet" href="theme.css?v=20261101o">
+</head>
+<body class="">
+<header class="site-header">
+  <div class="wrap">
+    <div class="header-left">
+      <button class="back" type="button" data-parent="tmua-esat.html"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+      <a class="brand" href="index.html" aria-label="Byte Size Classroom home"><svg class="mark" viewBox="0 0 46 46" aria-hidden="true"><path class="pie" d="M21,25 L37.45,15.5 A19,19 0 1 1 21,6 Z"/><path class="bite" d="M23,21.54 L23,2.54 A19,19 0 0 1 39.45,12.04 Z"/><text class="pi" x="12.5" y="35" font-size="20">&#960;</text></svg><span class="bname">Byte Size <span class="cls">Classroom</span></span></a>
+    </div>
+    <div class="header-right">
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="maths.html">Maths</a></li>
+        <li><a href="computer-science.html">Computer Science</a></li>
+        <li><a href="tmua-esat.html" aria-current="page">TMUA &amp; ESAT</a></li>
+      </ul>
+    </nav>
+    <div class="role-switch" role="group" aria-label="I am a">
+      <button type="button" data-set-role="teacher" aria-pressed="false">Teacher</button><button type="button" data-set-role="pupil" aria-pressed="false">Pupil</button>
+    </div>
+    </div>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Maths Arena</h1>
+      <p class="lede">TMUA and ESAT Mathematics 1 and 2, Year 12.</p>
+    </section>
+    <section>
+      <div id="arena"><p class="note">Loading the questions&hellip;</p></div>
+      <noscript><p>Turn on JavaScript to answer the questions.</p></noscript>
+    </section>
+  </div>
+<script defer src="js/arena-data.js?v=20261101o"></script>
+<script defer src="js/arena.js?v=20261101o"></script>
+</main>
+<footer class="site">
+  <div class="wrap">
+    <span>&copy; 2026 Byte Size Classroom</span>
+    <span>Free to use in your own classroom.</span>
+  </div>
+</footer>
+<script>
+(function () {
+  // Teacher or pupil: remembered on this device, chosen on the home page or with the switch in the header
+  var KEY = 'bsc-role', role = null;
+  try { role = localStorage.getItem(KEY); } catch (e) {}
+  if (!role && document.body.getAttribute('data-role')) role = document.body.getAttribute('data-role');
+  function apply() {
+    document.querySelectorAll('[data-role-only]').forEach(function (el) { el.hidden = el.getAttribute('data-role-only') !== role; });
+    var ask = document.getElementById('role-ask'); if (ask) ask.hidden = !!role;
+    document.querySelectorAll('.role-switch [data-set-role]').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-set-role') === role); });
+  }
+  document.querySelectorAll('[data-set-role]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var r = b.getAttribute('data-set-role'), changed = r !== role; role = r;
+      try { localStorage.setItem(KEY, r); } catch (e) {}
+      var tool = document.querySelector('#tool[data-fixed]');
+      if (tool && changed) { location.href = 'course.html?m=' + (r === 'pupil' ? 'practise' : 'donow') + location.hash; return; }
+      apply();
+    });
+  });
+  apply();
+  // Back button: previous page if it was on this site, otherwise the parent page
+  var back = document.querySelector('.back');
+  if (back) back.addEventListener('click', function () {
+    var ref = document.referrer, same = false;
+    try { same = ref && new URL(ref).origin === location.origin; } catch (e) {}
+    if (same && history.length > 1) history.back(); else location.href = back.dataset.parent;
+  });
+  // Show / hide answers
+  document.querySelectorAll('[data-answers]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var s = b.closest('.slide'); var on = s.classList.toggle('show');
+      b.textContent = on ? 'Hide answers' : 'Show answers';
+      b.setAttribute('aria-pressed', on);
+    });
+  });
+  // Present full screen on the board
+  function stop(s) {
+    s.classList.remove('presenting'); document.body.classList.remove('is-presenting');
+    var p = s.querySelector('.present'); if (p) p.textContent = 'Present';
+    if (document.fullscreenElement) { document.exitFullscreen().catch(function () {}); }
+  }
+  document.querySelectorAll('.present').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var s = b.closest('.slide');
+      if (s.classList.contains('presenting')) { stop(s); return; }
+      s.classList.add('presenting'); document.body.classList.add('is-presenting'); b.textContent = 'Close';
+      if (document.documentElement.requestFullscreen) { document.documentElement.requestFullscreen().catch(function () {}); }
+    });
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { var s = document.querySelector('.slide.presenting'); if (s) stop(s); }
+  });
+  document.addEventListener('fullscreenchange', function () {
+    if (!document.fullscreenElement) { var s = document.querySelector('.slide.presenting'); if (s) stop(s); }
+  });
+  // Level filters
+  document.querySelectorAll('.filters').forEach(function (f) {
+    var grid = document.getElementById(f.dataset.for);
+    f.querySelectorAll('.chip').forEach(function (c) {
+      c.addEventListener('click', function () {
+        f.querySelectorAll('.chip').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+        c.setAttribute('aria-pressed', 'true');
+        var lvl = c.dataset.level;
+        grid.querySelectorAll('.slide').forEach(function (s) { s.hidden = !(lvl === 'all' || s.dataset.level === lvl); });
+      });
+    });
+  });
+  // Multiple-choice practice
+  document.querySelectorAll('.mcq').forEach(function (q) {
+    q.querySelectorAll('.opt').forEach(function (o) {
+      o.addEventListener('click', function () {
+        q.querySelectorAll('.opt').forEach(function (x) { x.classList.remove('right', 'wrong'); });
+        o.classList.add(o.dataset.correct ? 'right' : 'wrong');
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

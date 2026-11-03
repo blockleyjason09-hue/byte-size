@@ -225,6 +225,68 @@ h3 { font-weight: 700; }
 code.ic { font-family: var(--code); font-size: .92em; background: var(--pen-soft); padding: 0 4px; border-radius: 2px; }
 .slide .qcode { font-size: 1.05rem; }
 
+/* Maths Arena homework: an exam answer sheet, with lettered bubbles to fill in */
+#arena > .lede { margin: 0 0 22px; }
+.ar-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr)); gap: 12px; }
+.ar-lesson { display: flex; flex-direction: column; gap: 3px; height: 100%; color: var(--ink); background: var(--sheet); border: 1px solid var(--line); border-left: 3px solid var(--margin); border-radius: var(--radius); padding: 12px 14px; }
+.ar-pick { display: flex; gap: 8px; margin-top: auto; padding-top: 10px; }
+.ar-pick a { flex: 1; text-align: center; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); color: var(--pen); font-weight: 700; text-decoration: none; }
+.ar-pick a:hover { border-color: var(--pen); background: var(--pen-soft); }
+.ar-tabs { display: flex; gap: 6px; margin: 0 0 16px; border-bottom: 1px solid var(--line); }
+.ar-tabs a { padding: 8px 16px; margin-bottom: -1px; border: 1px solid var(--line); border-radius: var(--radius) var(--radius) 0 0; background: var(--tab); color: var(--muted); font-family: var(--head); font-weight: 700; text-decoration: none; }
+.ar-tabs a:hover { color: var(--ink); }
+.ar-tabs a[aria-current="page"] { background: var(--sheet); color: var(--ink); border-bottom-color: var(--sheet); box-shadow: inset 0 3px 0 var(--margin); }
+.ar-num { font-family: var(--head); font-style: italic; color: var(--muted); font-size: .95rem; }
+.ar-t { font-family: var(--head); font-weight: 800; font-size: 1.15rem; line-height: 1.2; }
+.ar-s { font-size: .9rem; color: var(--muted); }
+.ar-head { margin: 0 0 10px; }
+.ar-head h2 { margin: 0; }
+.ar-kicker { margin: 0; font-family: var(--head); font-style: italic; color: var(--muted); }
+.ar-note { color: var(--muted); margin: 0 0 18px; }
+.ar-score { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; background: var(--sheet); border: 1px solid var(--line); border-left: 3px solid var(--green); padding: 16px 18px; margin: 0 0 18px; }
+.ar-score:focus { outline: none; }
+.ar-score p { margin: 2px 0 0; color: var(--muted); }
+.ar-big { font-family: var(--head); font-weight: 800; font-size: 2.6rem; line-height: 1; color: var(--green); }
+.ar-q { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; margin: 0 0 14px; }
+.ar-q.ok { border-color: var(--green); }
+.ar-q.no { border-color: var(--bad); }
+.ar-qhead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 8px; }
+.ar-qnum { font-family: var(--head); font-weight: 800; min-width: 1.9rem; height: 1.9rem; display: grid; place-items: center; border: 1.5px solid var(--ink); border-radius: 2px; }
+.ar-lvl { font-family: var(--head); font-style: italic; color: var(--muted); }
+.ar-lvl.l3 { color: var(--ink); background: linear-gradient(transparent 55%, var(--hi) 55%); padding: 0 3px; }
+.ar-verdict { margin-left: auto; font-weight: 700; }
+.ar-q.ok .ar-verdict { color: var(--green); }
+.ar-q.no .ar-verdict { color: var(--bad); }
+.ar-text { font-size: 1.08rem; margin: 0 0 12px; max-width: none; }
+.ar-opts { display: grid; gap: 6px; }
+.ar-opts.two { grid-template-columns: 1fr 1fr; }
+@media (max-width: 560px) { .ar-opts.two { grid-template-columns: 1fr; } }
+.ar-opt { display: flex; align-items: center; gap: 12px; min-width: 0; text-align: left; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 7px 10px; cursor: pointer; }
+.ar-opt:hover:not(:disabled) { border-color: var(--ink); }
+.ar-opt:disabled { cursor: default; }
+.ar-bub { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--ink); display: grid; place-items: center; font-family: var(--head); font-weight: 700; }
+.ar-txt { min-width: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.ar-opt.sel { background: var(--sheet); border-color: var(--ink); }
+.ar-opt.sel .ar-bub { background: var(--ink); color: var(--sheet); }
+.ar-opt.right { background: var(--green-soft); border-color: var(--green); }
+.ar-opt.right .ar-bub { background: var(--green); border-color: var(--green); color: var(--sheet); }
+.ar-opt.wrong { border-color: var(--bad); }
+.ar-opt.wrong .ar-bub { background: var(--bad); border-color: var(--bad); color: var(--sheet); }
+.ar-opt.wrong .ar-txt { text-decoration: line-through; }
+.ar-why { margin-top: 12px; padding: 10px 12px; border-left: 2px solid var(--green); background: var(--green-soft); }
+.ar-bar { position: sticky; bottom: 12px; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; background: var(--sheet); border: 1.5px solid var(--ink); border-radius: var(--radius); padding: 10px 14px; box-shadow: 4px 5px 0 -1px var(--paper), 4px 5px 0 0 var(--line); }
+.ar-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.btn.ar-submit { background: var(--hi); color: #1D2B53 !important; }
+.btn.ar-submit:hover { background: var(--hi); box-shadow: inset 0 0 0 2px #1D2B53; }
+.btn.ar-ghost { background: transparent; color: var(--ink) !important; box-shadow: inset 0 0 0 1.5px var(--ink); }
+.btn.ar-ghost:hover { background: var(--pen-soft); }
+.ar-warn { color: var(--bad); font-weight: 700; }
+.arena-link { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; background: var(--sheet); border: 1px solid var(--line); border-left: 3px solid var(--margin); padding: 18px 20px; margin-bottom: 14px; }
+.arena-link p { margin: 0; max-width: 40rem; }
+.ar-jump { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.ar-jump a { display: inline-grid; place-items: center; min-width: 2.4rem; height: 2.4rem; padding: 0 6px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--sheet); color: var(--ink); text-decoration: none; font-family: var(--head); font-weight: 700; }
+.ar-jump a:hover { border-color: var(--ink); background: var(--pen-soft); }
+
 /* Extension question: a stuck-on slip */
 .ext-block { border: 1.5px dashed var(--pen); border-radius: var(--radius); background: var(--pen-soft); }
 .ext-badge { font-family: var(--head); font-style: italic; font-weight: 700; text-transform: none; letter-spacing: 0; font-size: .95rem; background: transparent; color: var(--pen); padding: 0; }
